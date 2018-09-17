@@ -1,0 +1,8 @@
+[run]
+branch = true
+
+[report]
+omit =
+    python/sdss_install/etc/*
+    python/sdss_install/utils/*
+    python/sdss_install/tests/*
