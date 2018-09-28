@@ -212,6 +212,7 @@ class Install:
                         self.logger.error("Current working directory, %(work)s, is inside the install directory, %(install)s, which will be deleted via the -F (or --force) option, so please cd to another working directory and try again!" % self.directory)
                         self.ready = False
                     else:
+                        
                         self.logger.info("Preparing to install in %(install)s (overwriting due to force option)" % self.directory)
                         rmtree(self.directory['install'])
                 else:
@@ -550,3 +551,5 @@ class Install:
         if finalize_ps: self.logger.info(finalize_ps)
 
 
+    def input(self):
+        input('Press enter to continue')
