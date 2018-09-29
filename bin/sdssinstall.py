@@ -7,8 +7,11 @@
 # @License: BSD 3-Clause
 # @Copyright: N Benjamin Murphy
 
+print('HI')
+#from sdss_install.install import install
 from sdss_install.application import Argument
-from sdss_install.install import Install
+from sdss_install.application import Logging
+#
+#options = Argument('sdss_install').options
+#install = Install(options=options) if options else None
 
-options = Argument('sdss_install').options
-install = Install(options=options) if options else None

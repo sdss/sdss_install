@@ -3,8 +3,10 @@
 #
 # $Id: sdss4install 70491 2016-06-15 19:16:07Z joelbrownstein $
 #
-from sdss4tools import __version__
-from sdss4tools.install import Install
+#from sdss4tools import __version__
+#from sdss4tools.install import Install
+from sdss_install import __version__
+from sdss_install.install4 import Install
 
 install = Install()
 install.set_options()
