@@ -4,6 +4,11 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
+
+from sdss_install.install.modules import Modules
+from sdss_install.application import Argument
+from sdss_install.install import Install
+
 import glob
 import logging
 import subprocess
@@ -16,15 +21,14 @@ from argparse import ArgumentParser
 try: from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError: from configparser import SafeConfigParser, RawConfigParser
 from .most_recent_tag import most_recent_tag
-from .modules import Modules
-from sdss_install.application import Argument
 
 
-class Install:
 
-    def __init__(self):
-        self.options = None
-        self.logger = None
+class Install4:
+
+    def __init__(self, logger=None, options=None):
+        self.logger = logger if logger else None
+        self.options = options if options else None
         self.ready = None
         self.package = None
         self.product = None
@@ -35,25 +39,6 @@ class Install:
         self.modules = None
         self.build_type = None
 
-    #
-    # Parse arguments
-    #
-    def set_options(self):
-        self.options = Argument('sdss4install').options
- 
-    #
-    # Set up self.logger
-    #
-    def set_logger(self):
-        debug = self.options.test or self.options.verbose
-        self.logger = logging.getLogger('sdss4install')
-        if debug: self.logger.setLevel(logging.DEBUG)
-        else: self.logger.setLevel(logging.INFO)
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-    
     #
     # Sanity check self.options
     #
@@ -493,5 +478,5 @@ class Install:
         if finalize_ps: self.logger.info(finalize_ps)
 
 
-    def input(self):
+    def pause(self):
         input('Press enter to continue')

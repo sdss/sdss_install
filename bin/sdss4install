@@ -3,50 +3,49 @@
 #
 # $Id: sdss4install 70491 2016-06-15 19:16:07Z joelbrownstein $
 #
-#from sdss4tools import __version__
-#from sdss4tools.install import Install
 from sdss_install import __version__
-from sdss_install.install4 import Install
+from sdss_install.application import Argument
+from sdss_install.install import Install
+from sdss_install.install4 import Install4
 
-install = Install()
-install.set_options()
+options = Argument('sdss4install').options
+install = Install(options=options)
+install4 = Install4(logger=install.logger, options=options)
 
-if install.options and install.options.version: print(__version__)
+if options and options.version: print(__version__)
 else:
+    install4.set_ready()
+    install4.set_product()
+    install4.set_directory()
+    install4.set_directory_install()
+    install4.set_directory_work()
 
-    install.set_logger()
-    install.set_ready()
-    install.set_product()
-    install.set_directory()
-    install.set_directory_install()
-    install.set_directory_work()
+    if not options.module_only:
+        install4.clean_directory_install()
+        install4.set_svncommand()
+        install4.set_exists()
+        install4.fetch()
 
-    if not install.options.module_only:
-        install.clean_directory_install()
-        install.set_svncommand()
-        install.set_exists()
-        install.fetch()
+    install4.reset_options_from_config()
+    install4.set_build_type()
+    if not options.module_only:
+        install4.logger_build_message()
+        install4.make_directory_install()
 
-    install.reset_options_from_config()
-    install.set_build_type()
-    if not install.options.module_only:
-        install.logger_build_message()
-        install.make_directory_install()
+    if install4.ready:
+        install4.set_modules()
+        install4.modules.set_ready()
+        install4.modules.set_file()
+        install4.modules.load_dependencies()
+        install4.modules.set_keywords()
+        install4.modules.set_directory()
+        install4.modules.build()
 
-    if install.ready:
-        install.set_modules()
-        install.modules.set_ready()
-        install.modules.set_file()
-        install.modules.load_dependencies()
-        install.modules.set_keywords()
-        install.modules.set_directory()
-        install.modules.build()
+    install4.set_environ()
+    if not options.module_only:
+        install4.build()
+        install4.build_documentation()
+        install4.build_package()
+        if not options.keep: install4.clean()
 
-    install.set_environ()
-    if not install.options.module_only:
-        install.build()
-        install.build_documentation()
-        install.build_package()
-        if not install.options.keep: install.clean()
-
-    install.finalize()
+    install4.finalize()
