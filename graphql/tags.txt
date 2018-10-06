@@ -1,0 +1,34 @@
+query{
+  organization(login: "%(organization_name)s") {
+    repository(name: "%(repository_name)s") {
+      tags: refs(refPrefix: "refs/tags/", last: 3) { ### DEBUG #### last: 100
+        edges {
+          tag: node {
+            name
+            target {
+              __typename
+              ... on Tag {
+                tagger {
+                  name
+                  date
+                }
+              }
+              ... on Commit {
+                author {
+                  name
+                  date
+                }
+              }
+            }
+          }
+        }
+        pageInfo{
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
+}
+
+

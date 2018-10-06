@@ -18,14 +18,15 @@ except ImportError: from configparser import SafeConfigParser, RawConfigParser
 #from .most_recent_tag import most_recent_tag
 from .modules import Modules
 from sdss_install.application import Argument
+from sdss_install.application import Logging
 
 
 class Install:
     '''Place install5 only related methods here. Place methods related to both install4 and install5 in another directory (install ?).'''
 
     def __init__(self, options=None):
-        self.options = options if options else None
-        self.logger = None
+        self.set_options(options=options)
+        self.set_logger(options=options)
         self.ready = None
         self.package = None
         self.product = None
@@ -35,17 +36,7 @@ class Install:
         self.exists = None
         self.modules = None
         self.build_type = None
-        self.set_logger(options=options)
 
-    #
-    # Parse arguments
-    #
-    def set_options(self, name=None):
-        self.options = Argument(name).options if name else None
-
-    #
-    # Set up self.logger
-    #
     def set_logger(self, options=None):
         if options:
             debug = self.options.test or self.options.verbose
@@ -57,6 +48,19 @@ class Install:
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
         else: print('ERROR: Unable to set_logger. options=%r' % options)
-    
 
+#    def set_logger(self, options=None):
+#        self.logger = None
+#        if options:
+#            self.logging = Logging(name=options._name,
+#                                   level=options.level) if options else None
+#            self.logger = self.logging.logger if self.logging else None
+#        if not options or not self.logger: print('ERROR: %r> Unable to set_logging.' % self.__class__)
+
+    def set_options(self, options=None):
+        self.options = options if options else None
+        if not self.options: self.logger.error('ERROR: Unable to set_options')
+
+    def pause(self):
+        input('Press enter to continue')
 

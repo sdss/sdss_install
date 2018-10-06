@@ -45,6 +45,7 @@ class Install4:
     def set_ready(self):
         self.ready = self.options is not None
         if self.ready:
+            # Question: What is an example of a self.url = join(self.options.url,'public') ?
             self.url = join(self.options.url,'public') if self.options.public else self.options.url
             if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
                 if self.options.bootstrap:
@@ -104,14 +105,14 @@ class Install4:
                             self.logger.error("mkdir: cannot create directory '{0}': {1}".format(self.options.root,ose.strerror))
                             self.ready = False
                     else:
-                        self.logger.error("Please set the --root keyword or SDSS4_PRODUCT_ROOT environmental variable to a valid directory.")
+                        self.logger.error("Please set the --root keyword or SDSS_INSTALL_PRODUCT_ROOT environmental variable to a valid directory.")
                         self.ready = False
                 else:
-                    self.logger.error("Please use the --root keyword or set a SDSS4_PRODUCT_ROOT environmental variable.")
+                    self.logger.error("Please use the --root keyword or set a SDSS_INSTALL_PRODUCT_ROOT environmental variable.")
                     self.ready = False
 
         if self.ready:
-            if self.options.root is not None: environ['SDSS4_PRODUCT_ROOT'] = self.options.root
+            if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
             if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
             self.directory['root'] = join(self.options.root, self.product['root']) if self.product['root'] else self.options.root
             self.directory['install'] = join(self.directory['root'],self.product['name'],self.product['version'])

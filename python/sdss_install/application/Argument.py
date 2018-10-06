@@ -15,6 +15,7 @@ class Argument:
 def sdss4install():
     xct = basename(argv[0])
     parser = ArgumentParser(description=__doc__,prog=xct)
+    parser.add_argument("-e", "--level", help="set logging level", metavar="LEVEL", choices=['debug','info','warning','error'], default='debug')
     parser.add_argument('-b', '--bootstrap', action='store_true', dest='bootstrap',
         help="Run in bootstrap mode to install the sdss4tools product.")
     mode = parser.add_mutually_exclusive_group()
@@ -50,8 +51,8 @@ def sdss4install():
     parser.add_argument('-p', '--python', action='store', dest='python',
         metavar='PYTHON',help="Use the Python executable PYTHON (e.g. /opt/local/bin/python2.7).  This option is only relevant when installing sdss4tools itself.")
     parser.add_argument('-r', '--root', action='store', dest='root',
-        metavar='DIR', help='Set or override the value of $SDSS4_PRODUCT_ROOT',
-        default=getenv('SDSS4_PRODUCT_ROOT'))
+        metavar='DIR', help='Set or override the value of $SDSS_INSTALL_PRODUCT_ROOT',
+        default=getenv('SDSS_INSTALL_PRODUCT_ROOT'))
     try: longpath = eval(environ['SDSS4TOOLS_LONGPATH'])
     except: longpath = False
     parser.add_argument('-l', '--longpath', action='store_true', dest='longpath',
@@ -78,6 +79,7 @@ def sdss4install():
 def sdssinstall():
     xct = basename(argv[0])
     parser = ArgumentParser(description=__doc__,prog=xct)
+    parser.add_argument("-e", "--level", help="set logging level", metavar="LEVEL", choices=['debug','info','warning','error'], default='debug')
     parser.add_argument('-b', '--bootstrap', action='store_true', dest='bootstrap',
         help="Run in bootstrap mode to install the sdss_install product.")
     mode = parser.add_mutually_exclusive_group()
@@ -123,7 +125,7 @@ def sdssinstall():
         help='Test mode.  Do not actually install anything.')
     parser.add_argument('-u', '--url', action='store',dest='url',
         metavar='URL',help="Download software from URL.",
-        default='https://svn.sdss.org')
+        default='https://github.com/sdss')
     parser.add_argument('-g', '--public', action='store_true',dest='public',
         help="Download software from public URL.")
     parser.add_argument('-U', '--username', action='store', dest='username',

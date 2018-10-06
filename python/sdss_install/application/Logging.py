@@ -58,7 +58,7 @@ class Logging:
         self.ready = True if self.dir is not None and self.logger is not None else False
     
     def set_logger(self):
-        self.logger = logging.getLogger('archive')
+        self.logger = logging.getLogger('sdss_install')
         if self.logger:
             if      self.level == 'debug':   self.logger.setLevel(logging.DEBUG)
             elif    self.level == 'info':    self.logger.setLevel(logging.INFO)
@@ -85,3 +85,5 @@ class Logging:
             self.smtphandler.setLevel(logging.CRITICAL)
             self.logger.addHandler(self.smtphandler)
 
+    def pause(self):
+        input('Press enter to continue')

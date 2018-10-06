@@ -1,4 +1,6 @@
 from .Argument import Argument
+from .Query import Query
+from .Client import Client
 from .Logging import Logging
-#from .Mailman import Mailman
-#from .Migrate import Migrate
+from .Store import Store
+

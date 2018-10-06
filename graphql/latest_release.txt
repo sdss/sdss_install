@@ -1,0 +1,17 @@
+query{
+  organization(login: "%(organization_name)s") {
+    repository(name: "%(repository_name)s") {
+      lastRelease: releases(last: 1) {
+        edges {
+          node {
+            name
+            tag {
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

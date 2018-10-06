@@ -1,0 +1,16 @@
+query{
+  organization(login: "sdss") {
+    repositories(first: 100) {
+      edges {
+        cursor
+        node {
+          name
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}

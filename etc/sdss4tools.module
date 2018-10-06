@@ -59,7 +59,7 @@ setenv [string toupper $product]_DIR $PRODUCT_DIR
 #
 # These lines retain the environment variables to use sdss4install with
 # a common install root option, and a common longpath option (see sdss4install -h)
-setenv SDSS4_PRODUCT_ROOT {sdss4tools_root}
+setenv SDSS_INSTALL_PRODUCT_ROOT {sdss4tools_root}
 setenv [string toupper $product]_LONGPATH {sdss4tools_longpath}
 #
 #
