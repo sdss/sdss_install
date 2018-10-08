@@ -57,6 +57,7 @@ class Install5:
                     self.options.product = 'marvin' ### DEBUG ### sdss_install
                     tags = Tags(logger=self.logger,options=self.options)
                     self.options.product_version = tags.most_recent_tag_name()
+                    print('self.options.product_version: %r' % self.options.product_version)
                     self.logger.info("Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
                 else:
                     self.logger.error("You must specify a product and the version (after a space)!")

@@ -1,7 +1,7 @@
 query{
   organization(login: "%(organization_name)s") {
     repository(name: "%(repository_name)s") {
-      tags: refs(refPrefix: "refs/tags/", first: 10) { ### DEBUG #### last: 100
+      tags: refs(refPrefix: "refs/tags/", first: 10 after: "%(end_cursor)s") { 
         edges {
           tag: node {
             name
