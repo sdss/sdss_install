@@ -1,5 +1,8 @@
 from sdss_install.application import Store
 from json import dumps
+import datetime
+#from datetime import datetime.strptime as strptime
+
 
 class Tags:
 
@@ -7,35 +10,52 @@ class Tags:
         self.set_logger(logger=logger)
         self.set_options(options=options)
         self.query_file_name = 'tags'
+        self.store = None
+        self.tag_list = None
 
 
     def set_logger(self, logger=None):
+        '''Set the class logger'''
         self.logger = logger if logger else None
         if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
 
     def set_options(self, options=None):
+        '''Set command line argument options'''
         self.options = options if options else None
         if not self.options: self.logger.error('ERROR: Unable to set_options')
 
-    def most_recent_tag(self):
+    def most_recent_tag_name(self):
+        '''Get the most recent GitHub tag name associated with the product'''
         self.set_tags()
+        self.set_most_recent_tag_name()
+        tag_name = self.most_recent_tag_name if self.most_recent_tag_name else None
+        return tag_name
         
     def set_tags(self):
+        '''
+        Set a list of dictionaries with all GitHub tag information
+        for the requested product
+        '''
+        ##### NEED TO PAGINATE #####
+        self.tags = None
         self.set_store()
-        self.set_data()
+        self.set_tag_data()
+        self.tags = self.tag_list if self.tag_list else None
+        if not self.tags: self.logger.error('ERROR: Failed to set_tags')
+#        print('self.tags:\n' + dumps(self.tags,indent=1))
 
     def set_store(self):
-        if self.options:
+        if self.options and not self.store:
             self.store = Store(logger=self.logger, options=self.options)
             self.store.set_organization_name()
             self.store.set_client()
         else: self.logger.error('ERROR: Unable to set_store')
 
-    def set_data(self):
+    def set_tag_data(self):
         '''Set query payload data and extract field edges and pagination information.'''
         self.set_tag_payload()
         self.set_tag_edges_and_page_info()
-        self.set_tag_data()
+        self.set_tag_list()
         
     def set_tag_payload(self):
         self.tag_payload = None
@@ -43,7 +63,7 @@ class Tags:
         if self.store.client and self.query_parameters:
             self.store.set_data(query_parameters=self.query_parameters)
             self.tag_payload = self.store.client.data if self.store.client.data else None
-        else: self.logger.error('ERROR: Unable to set_data')
+        else: self.logger.error('ERROR: Unable to set_tag_data')
 
     def set_query_parameters(self):
         '''Set GraphQL query parameters.'''
@@ -69,38 +89,82 @@ class Tags:
             data = data['organization']['repository']['tags'] if data else None
             self.tag_edges = data['edges']                   if data else None
             self.page_info = data['pageInfo']                 if data else None
-            print('self.tag_payload: \n' + dumps(self.tag_payload,indent=1))
-            print('self.page_info: \n' + dumps(self.page_info,indent=1))
+#            print('self.tag_payload: \n' + dumps(self.tag_payload,indent=1))
+#            print('self.page_info: \n' + dumps(self.page_info,indent=1))
         else: self.logger.error('ERROR: Unable to set_tag_edges_and_page_info')
 
-    def set_tag_data(self):
-        self.tag_data = list()
-        self.initialize_tag_dict()
-#        if self.tag_edges:
-#            for tag_ in self.tag_edges:
-#                tag = tag_['tag']
+    def set_tag_list(self):
+        self.tag_list = list()
+        if self.tag_edges:
+            for tag_ in self.tag_edges:
+                tag = tag_['tag']
+                self.initialize_tag_dict()
+                self.tag_dict['tag_name'] = tag['name']
+                if   tag['target']['__typename'] == 'Commit': key = 'author'
+                elif tag['target']['__typename'] == 'Tag': key = 'tagger'
+                else: self.logger.error('ERROR: Unexpected __typename')
+                self.tag_dict['tag_date']    = tag['target'][key]['date']
+                self.tag_dict['tagger_name'] = tag['target'][key]['name']
+                self.tag_list.append(self.tag_dict)
 #                print('tag: \n' + dumps(tag,indent=1))
-#                self.pause()
-#                self.tag_dict['tag_name'] = tag['name']
-#                if tag['target']['__typename'] == 'Commit': key = 'author'
-#                elif tag['target']['__typename'] == 'Tag': key = 'tagger'
-#                print('key: %s :' % key)
-#                self.pause()
-#                self.tag_dict['tagger_name'] = tag[key]['name']
-#                self.tag_dict['tagger_date'] = tag[key]['name']
-#                self.tag_data.append(self.tag_dict)
-#        else: self.logger.error('ERROR: Unable to set_tag_data')
-#        print('self.tag_data: \n' + dumps(self.tag_data,indent=1))
-#        self.pause()
+#                print('self.tag_dict: \n' + dumps(self.tag_dict,indent=1))
+#                print('self.tag_list: \n' + dumps(self.tag_list,indent=1))
+        else: self.logger.error('ERROR: Unable to set_tag_list')
 
     def initialize_tag_dict(self):
-        self.tag_dict = {
-            'tag_name'      :   None,
-            'tagger_name'   :   None,
-            'tagger_date'   :   None,
-                        }
+        if self.options:
+            self.tag_dict = {
+                'product'       :   self.options.product,
+                'tag_name'      :   None,
+                'tag_date'      :   None,
+                'tagger_name'   :   None,
+                            }
+        else: self.logger.error('ERROR: Unable to initialize_tag_dict')
     
+    def set_most_recent_tag_name(self):
+        if not self.tag_list: self.set_tag_data()
+        self.set_datetime_list()
+        self.process_datetime_list()
+        self.set_sorted_datetime_list()
+        self.set_most_recent_tag()
+        self.most_recent_tag_name = self.most_recent_tag['tag_name']
+#        print('self.most_recent_tag_name: %r' % self.most_recent_tag_name)
 
+    def set_datetime_list(self):
+        self.datetime_list = None
+        if self.tags:
+            self.datetime_list = [dl['tag_date'] for dl in self.tags]
+        else: self.logger.error('ERROR: Unable to set_list_from_dict_list_key')
+
+    def process_datetime_list(self):
+        '''Extract datetime from the two possible datetime formats'''
+        # There are two possible datetime formats:
+        # datetime = 2015-10-12T14:53:11Z
+        # datetime = 2017-06-12T15:48:49-04:00
+        datetime_list = [dt[0:19] for dt in self.datetime_list]
+        self.datetime_list = datetime_list
+
+    def set_sorted_datetime_list(self):
+        self.sorted_datetime_list = list()
+        if self.datetime_list:
+            dtl = self.datetime_list
+            dates = [datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S") for date in dtl]
+            dates.sort()
+            sorted_dates = [datetime.datetime.strftime(ts, "%Y-%m-%dT%H:%M:%S") for ts in dates]
+            self.sorted_datetime_list = sorted_dates
+#            print('sorted_dates:\n' + dumps(sorted_dates,indent=1))
+        else: self.logger.error('ERROR: Unable to set_sorted_datetime_list')
+
+    def set_most_recent_tag(self):
+        self.most_recent_tag = None
+        if self.sorted_datetime_list and self.tags:
+            most_recent_datetime = self.sorted_datetime_list[-1]
+            tag = [tag for tag in self.tags if most_recent_datetime in tag['tag_date']]
+            self.most_recent_tag = tag[0] if tag and len(tag)==1 else None
+#            print('self.sorted_datetime_list:\n' + dumps(self.sorted_datetime_list,indent=1))
+#            print('most_recent_datetime: %r' % most_recent_datetime)
+#            print('self.most_recent_tag:\n' + dumps(self.most_recent_tag,indent=1))
+        else: self.logger.error('ERROR: Unable to set_most_recent_tag')
 
     def pause(self):
         input('Press enter to continue')
