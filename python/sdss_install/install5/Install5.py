@@ -54,13 +54,15 @@ class Install5:
         self.ready = self.options is not None
         if self.ready:
             self.url = self.options.url
+#            print('self.options.product: %r' % self.options.product) ### DEBUG ###
+#            print('self.options.product_version: %r' % self.options.product_version) ### DEBUG ###
+#            print('self.options.bootstrap: %r' % self.options.bootstrap) ### DEBUG ###
             if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
                 if self.options.bootstrap:
                     self.options.default = True
                     self.options.product = 'marvin' ### DEBUG ### sdss_install
                     tags = Tags(logger=self.logger,options=self.options)
                     self.options.product_version = tags.most_recent_tag_name()
-#                    print('self.options.product_version: %r' % self.options.product_version)
                     self.logger.info("Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
                 else:
                     self.logger.error("You must specify a product and the version (after a space)!")
@@ -68,21 +70,18 @@ class Install5:
             elif self.options.product:
                 if self.options.product.endswith('/'): self.options.product = dirname(self.options.product)
                 product = self.options.product
-                version = self.options.version
-#                print('product: %r' % product)
-#                print('version: %r' % version)
-
+                version = self.options.product_version
                 repositories = Repositories(logger=self.logger,
                                             options=self.options).get_repository_names()
                 tags = Tags(logger=self.logger,options=self.options).get_tag_names()
                 valid_product = product in repositories
                 valid_version = version in tags
-#                print('repositories:\n' + dumps(repositories,indent=1))
-#                print('tags:\n' + dumps(tags,indent=1))
-#                print('valid_product: %r' % valid_product)
-#                print('valid_version: %r' % valid_version)
-
-#                self.pause()
+#                print('repositories:\n' + dumps(repositories,indent=1)) ### DEBUG ###
+#                print('tags:\n' + dumps(tags,indent=1)) ### DEBUG ###
+#                print('valid_product: %r' % valid_product) ### DEBUG ###
+#                print('valid_version: %r' % valid_version) ### DEBUG ###
+#                print('product: %r' % product) ### DEBUG ###
+#                print('version: %r' % version) ### DEBUG ###
         else: self.url = None
 
     def pause(self):

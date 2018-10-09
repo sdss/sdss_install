@@ -47,9 +47,9 @@ class Tags:
         self.set_query_parameters()
         self.set_tag_data()
         self.tags.extend(self.tag_list)
-#        print('self.tags:\n' + dumps(self.tags,indent=1))
-#        print('self.query_parameters:\n' + dumps(self.query_parameters,indent=1))
-#        print('len(self.tags): %r' % len(self.tags))
+#        print('self.tags:\n' + dumps(self.tags,indent=1)) ### DEBUG ###
+#        print('self.query_parameters:\n' + dumps(self.query_parameters,indent=1)) ### DEBUG ###
+#        print('len(self.tags): %r' % len(self.tags)) ### DEBUG ###
         pagination_flag = True
         while pagination_flag:
             if self.page_info['hasNextPage']:
@@ -57,12 +57,12 @@ class Tags:
                 self.set_pagination_parameters()
                 self.set_tag_data()
                 self.tags.extend(self.tag_list)
-#                print('self.tags:\n' + dumps(self.tags,indent=1))
-#                print('self.query_parameters:\n' + dumps(self.query_parameters,indent=1))
-#                print('len(self.tags): %r' % len(self.tags))
+#                print('self.tags:\n' + dumps(self.tags,indent=1)) ### DEBUG ###
+#                print('self.query_parameters:\n' + dumps(self.query_parameters,indent=1)) ### DEBUG ###
+#                print('len(self.tags): %r' % len(self.tags)) ### DEBUG ###
             else: pagination_flag = False
         if not self.tags: self.logger.error('ERROR: Failed to set_tags')
-#        print('self.tags:\n' + dumps(self.tags,indent=1))
+#        print('self.tags:\n' + dumps(self.tags,indent=1)) ### DEBUG ###
 
     def set_store(self):
         if self.options and not self.store:
@@ -108,8 +108,8 @@ class Tags:
             data = data['organization']['repository']['tags'] if data else None
             self.tag_edges = data['edges']                   if data else None
             self.page_info = data['pageInfo']                 if data else None
-#            print('self.tag_payload: \n' + dumps(self.tag_payload,indent=1))
-#            print('self.page_info: \n' + dumps(self.page_info,indent=1))
+#            print('self.tag_payload: \n' + dumps(self.tag_payload,indent=1)) ### DEBUG ###
+#            print('self.page_info: \n' + dumps(self.page_info,indent=1)) ### DEBUG ###
         else: self.logger.error('ERROR: Unable to set_tag_edges_and_page_info')
 
     def set_tag_list(self):
@@ -125,9 +125,9 @@ class Tags:
                 self.tag_dict['tag_date']    = tag['target'][key]['date']
                 self.tag_dict['tagger_name'] = tag['target'][key]['name']
                 self.tag_list.append(self.tag_dict)
-#                print('tag: \n' + dumps(tag,indent=1))
-#                print('self.tag_dict: \n' + dumps(self.tag_dict,indent=1))
-#                print('self.tag_list: \n' + dumps(self.tag_list,indent=1))
+#                print('tag: \n' + dumps(tag,indent=1)) ### DEBUG ###
+#                print('self.tag_dict: \n' + dumps(self.tag_dict,indent=1)) ### DEBUG ###
+#                print('self.tag_list: \n' + dumps(self.tag_list,indent=1)) ### DEBUG ###
         else: self.logger.error('ERROR: Unable to set_tag_list')
 
     def initialize_tag_dict(self):
@@ -158,7 +158,7 @@ class Tags:
         self.set_sorted_datetime_list()
         self.set_most_recent_tag()
         self.most_recent_tag_name = self.most_recent_tag['tag_name']
-#        print('self.most_recent_tag_name: %r' % self.most_recent_tag_name)
+#        print('self.most_recent_tag_name: %r' % self.most_recent_tag_name) ### DEBUG ###
 
     def set_datetime_list(self):
         self.datetime_list = None
@@ -182,7 +182,7 @@ class Tags:
             dates.sort()
             sorted_dates = [datetime.datetime.strftime(ts, "%Y-%m-%dT%H:%M:%S") for ts in dates]
             self.sorted_datetime_list = sorted_dates
-#            print('sorted_dates:\n' + dumps(sorted_dates,indent=1))
+#            print('sorted_dates:\n' + dumps(sorted_dates,indent=1)) ### DEBUG ###
         else: self.logger.error('ERROR: Unable to set_sorted_datetime_list')
 
     def set_most_recent_tag(self):
@@ -191,9 +191,9 @@ class Tags:
             most_recent_datetime = self.sorted_datetime_list[-1]
             tag = [tag for tag in self.tags if most_recent_datetime in tag['tag_date']]
             self.most_recent_tag = tag[0] if tag and len(tag)==1 else None
-#            print('self.sorted_datetime_list:\n' + dumps(self.sorted_datetime_list,indent=1))
-#            print('most_recent_datetime: %r' % most_recent_datetime)
-#            print('self.most_recent_tag:\n' + dumps(self.most_recent_tag,indent=1))
+#            print('self.sorted_datetime_list:\n' + dumps(self.sorted_datetime_list,indent=1)) ### DEBUG ###
+#            print('most_recent_datetime: %r' % most_recent_datetime) ### DEBUG ###
+#            print('self.most_recent_tag:\n' + dumps(self.most_recent_tag,indent=1)) ### DEBUG ###
         else: self.logger.error('ERROR: Unable to set_most_recent_tag')
 
     def pause(self):
