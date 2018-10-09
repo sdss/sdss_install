@@ -36,4 +36,4 @@ if os.path.exists(custom_config_fn):
     config = merge(yaml.load(open(custom_config_fn)), config)
 
 
-__version__ = '0.1.2dev'
+__version__ = '0.1.3dev'
