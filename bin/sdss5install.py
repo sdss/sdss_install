@@ -18,7 +18,7 @@ install5 = Install5(logger=install.logger, options=options)
 if options and options.version: print(__version__)
 else:
     install5.set_ready()
-
+#    install5.set_product()
 
 
 

@@ -22,6 +22,7 @@ from json import dumps
 
 from sdss_install.install5 import Tags
 from sdss_install.install5 import Repositories
+from sdss_install.install5 import Branches 
 
 class Install5:
     '''Place install5 only related methods here. Place methods related to both install4 and install5 in another directory (install ?).'''
@@ -30,6 +31,9 @@ class Install5:
         self.set_logger(logger=logger)
         self.set_options(options=options)
         self.ready = None
+        self.repositories = None
+        self.tags = None
+        self.branches = None
 #        self.package = None
 #        self.product = None
 #        self.url = None
@@ -71,18 +75,40 @@ class Install5:
                 if self.options.product.endswith('/'): self.options.product = dirname(self.options.product)
                 product = self.options.product
                 version = self.options.product_version
-                repositories = Repositories(logger=self.logger,
+                self.repositories = Repositories(logger=self.logger,
                                             options=self.options).get_repository_names()
-                tags = Tags(logger=self.logger,options=self.options).get_tag_names()
-                valid_product = product in repositories
-                valid_version = version in tags
-#                print('repositories:\n' + dumps(repositories,indent=1)) ### DEBUG ###
-#                print('tags:\n' + dumps(tags,indent=1)) ### DEBUG ###
+                self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
+                self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
+                valid_product = product in self.repositories
+                valid_version = version == 'master' or version in self.branches or version in self.tags
+                self.ready = valid_product and valid_version
+#                print('self.repositories:\n' + dumps(self.repositories,indent=1)) ### DEBUG ###
+#                print('self.branches:\n' + dumps(self.branches,indent=1)) ### DEBUG ###
+#                print('self.tags:\n' + dumps(self.tags,indent=1)) ### DEBUG ###
 #                print('valid_product: %r' % valid_product) ### DEBUG ###
 #                print('valid_version: %r' % valid_version) ### DEBUG ###
+#                print('self.ready: %r' % self.ready) ### DEBUG ###
 #                print('product: %r' % product) ### DEBUG ###
 #                print('version: %r' % version) ### DEBUG ###
         else: self.url = None
+#        print('self.ready: %r' % self.ready) ### DEBUG ###
+
+    #
+    # Determine the product and version names.
+    #
+#    def set_product(self):
+#        if self.ready:
+#            self.product = dict()
+#            self.product['name'] = self.options.product
+#            self.product['version'] = basename(self.options.product_version)
+#            self.product['is_master'] = self.options.product_version == 'master'
+#            self.product['is_branch'] = self.options.product_version.startswith('branches')
+#            self.product['is_trunk_or_branch'] = self.product['is_trunk'] or self.product['is_branch']
+#            self.product['url'] = self.options.product_version if self.product['is_trunk_or_branch'] else join('tags',self.options.product_version)
+#            self.product['url'] = join(self.url,self.options.product,self.product['url'])
+#            self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] and not self.options.public else 'export'
+
+
 
     def pause(self):
         input('Press enter to continue')

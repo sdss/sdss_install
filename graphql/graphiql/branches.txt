@@ -1,0 +1,18 @@
+query{
+  organization(login: "sdss") {
+    repository(name: "marvin") {
+      refs(refPrefix: "refs/heads/", first: 100) {
+        edges {
+          node {
+            name
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
+}
+

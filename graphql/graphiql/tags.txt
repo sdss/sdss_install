@@ -1,7 +1,7 @@
 query{
   organization(login: "sdss") {
     repository(name: "marvin") {
-      tags: refs(refPrefix: "refs/tags/", last: 100) {
+      tags: refs(refPrefix: "refs/tags/", first: 100) { ### DEBUG #### first: 100
         edges {
           tag: node {
             name

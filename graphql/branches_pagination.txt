@@ -1,0 +1,20 @@
+query{
+  organization(login: "%(organization_name)s") {
+    repository(name: "%(repository_name)s") {
+      refs(refPrefix: "refs/heads/", first: 5 after: "%(end_cursor)s") { ### DEBUG ### first: 100
+        edges {
+          node {
+            name
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
+}
+
+
+
