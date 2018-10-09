@@ -30,7 +30,13 @@ class Tags:
         self.set_most_recent_tag_name()
         tag_name = self.most_recent_tag_name if self.most_recent_tag_name else None
         return tag_name
-        
+
+    def get_tag_names(self):
+        self.set_tags()
+        tags = self.tags if self.tags else None
+        tag_names = [tag['tag_name'] for tag in tags]
+        return tag_names
+
     def set_tags(self):
         '''
         Set a list of dictionaries with all GitHub tag information
@@ -58,25 +64,12 @@ class Tags:
         if not self.tags: self.logger.error('ERROR: Failed to set_tags')
 #        print('self.tags:\n' + dumps(self.tags,indent=1))
 
-    def set_tag_data(self):
-        '''Set query payload data and extract field edges and pagination information.'''
-        self.set_tag_payload()
-        self.set_tag_edges_and_page_info()
-        self.set_tag_list()
-    
     def set_store(self):
         if self.options and not self.store:
             self.store = Store(logger=self.logger, options=self.options)
             self.store.set_organization_name()
             self.store.set_client()
         else: self.logger.error('ERROR: Unable to set_store')
-
-    def set_tag_payload(self):
-        self.tag_payload = None
-        if self.store.client and self.query_parameters:
-            self.store.set_data(query_parameters=self.query_parameters)
-            self.tag_payload = self.store.client.data if self.store.client.data else None
-        else: self.logger.error('ERROR: Unable to set_tag_data')
 
     def set_query_parameters(self):
         '''Set GraphQL query parameters.'''
@@ -92,6 +85,19 @@ class Tags:
                                     }
         else:
             self.logger.error('ERROR: Unable to set query_parameters. self.store = %r' % self.store)
+
+    def set_tag_data(self):
+        '''Set query payload data and extract field edges and pagination information.'''
+        self.set_tag_payload()
+        self.set_tag_edges_and_page_info()
+        self.set_tag_list()
+    
+    def set_tag_payload(self):
+        self.tag_payload = None
+        if self.store.client and self.query_parameters:
+            self.store.set_data(query_parameters=self.query_parameters)
+            self.tag_payload = self.store.client.data if self.store.client.data else None
+        else: self.logger.error('ERROR: Unable to set_tag_data')
 
     def set_tag_edges_and_page_info(self, data=None):
         '''Set a dictionary of page information and a list of dictionaries containing tag fields.'''
@@ -134,6 +140,17 @@ class Tags:
                             }
         else: self.logger.error('ERROR: Unable to initialize_tag_dict')
     
+    def set_pagination_parameters(self):
+        '''Set pagination parameters for next page.'''
+        if self.query_parameters and self.page_info:
+            self.query_parameters['pagination_flag']    = True
+            self.query_parameters['end_cursor']         = self.page_info['endCursor']
+            self.query_parameters['has_next_page']      = self.page_info['hasNextPage']
+        else:
+            s1 = 'ERROR: pagination parameters could not be set.\n'
+            s2 = 'query_parameters = %s\npage_info = %s' % (self.query_parameters, self.page_info)
+            self.logger.error(s1+s2)
+
     def set_most_recent_tag_name(self):
         if not self.tag_list: self.set_tag_data()
         self.set_datetime_list()
@@ -178,18 +195,6 @@ class Tags:
 #            print('most_recent_datetime: %r' % most_recent_datetime)
 #            print('self.most_recent_tag:\n' + dumps(self.most_recent_tag,indent=1))
         else: self.logger.error('ERROR: Unable to set_most_recent_tag')
-
-    def set_pagination_parameters(self):
-        '''Set pagination parameters for next page.'''
-        if self.query_parameters and self.page_info:
-            self.query_parameters['pagination_flag']    = True
-            self.query_parameters['end_cursor']         = self.page_info['endCursor']
-            self.query_parameters['has_next_page']      = self.page_info['hasNextPage']
-        else:
-            s1 = 'ERROR: pagination parameters could not be set.\n'
-            s2 = 'query_parameters = %s\npage_info = %s' % (self.query_parameters, self.page_info)
-            self.logger.error(s1+s2)
-
 
     def pause(self):
         input('Press enter to continue')

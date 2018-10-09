@@ -1,0 +1,16 @@
+query{
+  organization(login: "%(organization_name)s") {
+    # Debug: should be set to 100
+    repositories(first: 100) {
+      edges {
+        node {
+          name
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
