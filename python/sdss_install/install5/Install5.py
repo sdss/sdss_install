@@ -96,17 +96,19 @@ class Install5:
     #
     # Determine the product and version names.
     #
-#    def set_product(self):
-#        if self.ready:
-#            self.product = dict()
-#            self.product['name'] = self.options.product
-#            self.product['version'] = basename(self.options.product_version)
-#            self.product['is_master'] = self.options.product_version == 'master'
-#            self.product['is_branch'] = self.options.product_version.startswith('branches')
-#            self.product['is_trunk_or_branch'] = self.product['is_trunk'] or self.product['is_branch']
-#            self.product['url'] = self.options.product_version if self.product['is_trunk_or_branch'] else join('tags',self.options.product_version)
-#            self.product['url'] = join(self.url,self.options.product,self.product['url'])
-#            self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] and not self.options.public else 'export'
+    def set_product(self):
+        if self.ready:
+            self.product = dict()
+            self.product['name'] = self.options.product
+            self.product['version'] = self.options.product_version
+            self.product['is_master'] = self.options.product_version == 'master'
+            self.product['is_branch'] = self.options.product_version in self.branches
+            self.product['is_tag'] = self.options.product_version in self.tags
+            self.product['is_master_or_branch'] = self.product['is_master'] or self.product['is_branch']
+            self.product['checkout_or_export'] = 'checkout' if self.product['is_master_or_branch'] else 'export'
+            print('self.product:\n' + dumps(self.product,indent=1))
+            self.pause()
+            
 
 
 
