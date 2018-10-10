@@ -74,5 +74,5 @@ class Store:
             self.logger.debug('DEBUG:\nquery_string:\n' + str(query_string) )
             self.logger.debug('DEBUG:\nquery_string:\n' + str(query_string % self.query_parameters) )
  
-    def pause(self):
+    def pause(self): ### DEBUG ###
         input('Press enter to continue')

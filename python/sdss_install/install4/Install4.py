@@ -22,6 +22,7 @@ try: from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError: from configparser import SafeConfigParser, RawConfigParser
 from .most_recent_tag import most_recent_tag
 
+from json import dumps ### DEBUG ###
 
 
 class Install4:
@@ -116,6 +117,8 @@ class Install4:
             if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
             self.directory['root'] = join(self.options.root, self.product['root']) if self.product['root'] else self.options.root
             self.directory['install'] = join(self.directory['root'],self.product['name'],self.product['version'])
+#            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
+#            print('self.directory:\n' + dumps(self.directory,indent=1)) ### DEBUG ###
 
     #
     # Make a work directory
@@ -479,5 +482,5 @@ class Install4:
         if finalize_ps: self.logger.info(finalize_ps)
 
 
-    def pause(self):
+    def pause(self): ### DEBUG ###
         input('Press enter to continue')

@@ -10,14 +10,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 #import datetime
 #from sys import argv, executable, path
 #from shutil import copyfile, copytree, rmtree
-#from os import chdir, environ, getcwd, getenv, makedirs, walk
-from os.path import basename, dirname, exists, isdir, join
+from os import getcwd, environ, makedirs#, chdir, getenv, walk
+from os.path import isdir, join, exists#, basename, dirname
 #from argparse import ArgumentParser
 #try: from ConfigParser import SafeConfigParser, RawConfigParser
 #except ImportError: from configparser import SafeConfigParser, RawConfigParser
 #from .most_recent_tag import most_recent_tag
 #from .modules import Modules
-from json import dumps
+
+from json import dumps ### DEBUG ###
 
 
 from sdss_install.install5 import Tags
@@ -44,17 +45,17 @@ class Install5:
 #        self.build_type = None
 
     def set_logger(self, logger=None):
+        '''Set self.logger wrapper'''
         self.logger = logger if logger else None
         if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
 
     def set_options(self, options=None):
+        '''Set self.options wrapper'''
         self.options = options if options else None
         if not self.options: self.logger.error('ERROR: Unable to set_options')
 
-    #
-    # Sanity check self.options
-    #
     def set_ready(self):
+        '''Set self.ready after sanity check self.options'''
         self.ready = self.options is not None
         if self.ready:
             self.url = self.options.url
@@ -72,7 +73,6 @@ class Install5:
                     self.logger.error("You must specify a product and the version (after a space)!")
                     self.ready = False
             elif self.options.product:
-                if self.options.product.endswith('/'): self.options.product = dirname(self.options.product)
                 product = self.options.product
                 version = self.options.product_version
                 self.repositories = Repositories(logger=self.logger,
@@ -93,24 +93,66 @@ class Install5:
         else: self.url = None
 #        print('self.ready: %r' % self.ready) ### DEBUG ###
 
-    #
-    # Determine the product and version names.
-    #
     def set_product(self):
+        '''Set the self.product dictionary containing product and version names etc.'''
         if self.ready:
             self.product = dict()
             self.product['name'] = self.options.product
+            self.product['root'] = None # There's no GitHub directory structure to preserve (like svn)
             self.product['version'] = self.options.product_version
             self.product['is_master'] = self.options.product_version == 'master'
             self.product['is_branch'] = self.options.product_version in self.branches
             self.product['is_tag'] = self.options.product_version in self.tags
             self.product['is_master_or_branch'] = self.product['is_master'] or self.product['is_branch']
             self.product['checkout_or_export'] = 'checkout' if self.product['is_master_or_branch'] else 'export'
-            print('self.product:\n' + dumps(self.product,indent=1))
-            self.pause()
-            
+#            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
 
 
+    ### Same as install4 ###
+    def set_directory(self):
+        '''Initialize a dictionary of directories and set the key 'original' to the current working directory'''
+        if self.ready:
+            self.directory = dict()
+            try: self.directory['original'] = getcwd()
+            except OSError as ose:
+                self.logger.error("Check current directory: {0}".format(ose.strerror))
+                self.ready = False
+#            print('self.directory: %r' % self.directory) ### DEBUG ###
 
-    def pause(self):
+    def set_directory_install(self):
+        '''Set the directory keys 'root' and 'install' '''
+        if self.ready:
+#            print('self.options.root: %r' % self.options.root) ### DEBUG ###
+#            print('isdir(self.options.root): %r' % isdir(self.options.root)) ### DEBUG ###
+            # The default of self.options.root is $SDSS_INSTALL_PRODUCT_ROOT
+            # if self.options.root hasn't been set at the command line or to its default value,
+            # or if it has been set but the root directory hasn't been created
+            if self.options.root is None or not isdir(self.options.root):
+                # if self.options.root has been set at the command line or set to its default value
+                if self.options.root is not None:
+                    # if the root directory hasn't been created, then try to create it
+                    if not exists(self.options.root):
+                        try:
+                            makedirs(self.options.root)
+                            self.logger.info("Creating {0}".format(self.options.root))
+                        except OSError as ose:
+                            self.logger.error("mkdir: cannot create directory '{0}': {1}".format(self.options.root,ose.strerror))
+                            self.ready = False
+                    else:
+                        self.logger.error("Please set the --root keyword or SDSS_INSTALL_PRODUCT_ROOT environmental variable to a valid directory.")
+                        self.ready = False
+                else:
+                    self.logger.error("Please use the --root keyword or set a SDSS_INSTALL_PRODUCT_ROOT environmental variable.")
+                    self.ready = False
+        # if the root directory has been created
+        if self.ready:
+            if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
+            if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
+            self.directory['root'] = join(self.options.root, self.product['root']) if self.product['root'] else self.options.root
+            self.directory['install'] = join(self.directory['root'],'github',self.product['name'],self.product['version'])
+#            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
+#            print('self.directory:\n' + dumps(self.directory,indent=1)) ### DEBUG ###
+
+
+    def pause(self): ### DEBUG ###
         input('Press enter to continue')

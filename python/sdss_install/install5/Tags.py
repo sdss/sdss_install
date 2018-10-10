@@ -196,5 +196,5 @@ class Tags:
 #            print('self.most_recent_tag:\n' + dumps(self.most_recent_tag,indent=1)) ### DEBUG ###
         else: self.logger.error('ERROR: Unable to set_most_recent_tag')
 
-    def pause(self):
+    def pause(self): ### DEBUG ###
         input('Press enter to continue')

@@ -127,5 +127,5 @@ class Repositories:
             s2 = 'query_parameters = %s\npage_info = %s' % (self.query_parameters, self.page_info)
             self.logger.error(s1+s2)
 
-    def pause(self):
+    def pause(self): ### DEBUG ###
         input('Press enter to continue')

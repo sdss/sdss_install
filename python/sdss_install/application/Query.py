@@ -43,5 +43,5 @@ class Query():
                                 (self.file,self.graphql_dir))
         if not self.string: self.logger.error('ERROR: Unable to set the GraphQL query string.')
 
-    def pause(self):
+    def pause(self): ### DEBUG ###
         input('Press enter to continue')

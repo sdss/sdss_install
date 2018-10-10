@@ -19,7 +19,8 @@ if options and options.version: print(__version__)
 else:
     install5.set_ready()
     install5.set_product()
-
+    install5.set_directory()
+    install5.set_directory_install()
 
 
 

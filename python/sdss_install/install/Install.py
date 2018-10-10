@@ -38,6 +38,7 @@ class Install:
         self.build_type = None
 
     def set_logger(self, options=None):
+        '''Set the package logger'''
         if options:
             debug = self.options.test or self.options.verbose
             self.logger = logging.getLogger('sdss4install')
@@ -58,9 +59,11 @@ class Install:
 #        if not options or not self.logger: print('ERROR: %r> Unable to set_logging.' % self.__class__)
 
     def set_options(self, options=None):
+        '''Set self.options wrapper'''
         self.options = options if options else None
         if not self.options: self.logger.error('ERROR: Unable to set_options')
 
-    def pause(self):
+
+    def pause(self): ### DEBUG ###
         input('Press enter to continue')
 
