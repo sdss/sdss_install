@@ -9,8 +9,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 #import subprocess
 #import datetime
 #from sys import argv, executable, path
-#from shutil import copyfile, copytree, rmtree
-from os import getcwd, environ, makedirs#, chdir, getenv, walk
+from shutil import rmtree#, copyfile, copytree
+from os import getcwd, environ, makedirs, chdir, remove#, getenv, walk
 from os.path import isdir, join, exists#, basename, dirname
 #from argparse import ArgumentParser
 #try: from ConfigParser import SafeConfigParser, RawConfigParser
@@ -18,6 +18,7 @@ from os.path import isdir, join, exists#, basename, dirname
 #from .most_recent_tag import most_recent_tag
 #from .modules import Modules
 
+from subprocess import Popen, PIPE
 from json import dumps ### DEBUG ###
 
 
@@ -98,7 +99,7 @@ class Install5:
         if self.ready:
             self.product = dict()
             self.product['name'] = self.options.product
-            self.product['root'] = None # There's no GitHub directory structure to preserve (like svn)
+            self.product['root'] = None # There's no GitHub directory structure to preserve, as in svn
             self.product['version'] = self.options.product_version
             self.product['is_master'] = self.options.product_version == 'master'
             self.product['is_branch'] = self.options.product_version in self.branches
@@ -107,10 +108,8 @@ class Install5:
             self.product['checkout_or_export'] = 'checkout' if self.product['is_master_or_branch'] else 'export'
 #            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
 
-
-    ### Same as install4 ###
     def set_directory(self):
-        '''Initialize a dictionary of directories and set the key 'original' to the current working directory'''
+        '''Initialize a dictionary of directories and set 'original' to the current working directory'''
         if self.ready:
             self.directory = dict()
             try: self.directory['original'] = getcwd()
@@ -147,11 +146,81 @@ class Install5:
         # if the root directory has been created
         if self.ready:
             if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
-            if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
-            self.directory['root'] = join(self.options.root, self.product['root']) if self.product['root'] else self.options.root
-            self.directory['install'] = join(self.directory['root'],'github',self.product['name'],self.product['version'])
+            self.directory['root'] = self.options.root
+            self.directory['install'] = join(self.directory['root'],self.product['name'],self.product['version'])
 #            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
 #            print('self.directory:\n' + dumps(self.directory,indent=1)) ### DEBUG ###
+
+    def set_directory_work(self):
+        '''Make a work directory, to which the product and/or the module file is ultimately installed.'''
+        if self.ready:
+            if self.options.module_only:
+                self.directory['work']=self.directory['install']
+            else:
+                self.directory['work'] = join(self.directory['original'],
+                                                "%(name)s-%(version)s" % self.product)
+                if isdir(self.directory['work']):
+                    self.logger.info("Detected old working directory, %(work)s. Deleting..." % self.directory)
+                    rmtree(self.directory['work'])
+
+    def clean_directory_install(self):
+        '''Remove existing directory (if exists if --force)'''
+        if self.ready:
+            if isdir(self.directory['install']) and not self.options.test:
+                if self.options.force:
+                    if self.directory['work'].startswith(self.directory['install']):
+                        self.logger.error("Current working directory, %(work)s, is inside the install directory, %(install)s, which will be deleted via the -F (or --force) option, so please cd to another working directory and try again!" % self.directory)
+                        self.ready = False
+                    else:
+                        self.logger.info("Preparing to install in %(install)s (overwriting due to force option)" % self.directory)
+                        rmtree(self.directory['install'])
+                else:
+                    self.logger.error("Install directory, %(install)s, already exists!" % self.directory)
+                    self.logger.info("Use the -F (or --force) option to overwrite.")
+                    self.ready = False
+            else: self.logger.info("Preparing to install in %(install)s" % self.directory)
+
+    def set_github_remote_url(self):
+        '''Set the SDSS GitHub HTTPS remote URL'''
+        if self.ready:
+            product = self.options.product if self.options else None
+            self.github_remote_url = 'https://github.com/sdss/%s.git' % product if product else None
+
+    def fetch(self):
+        '''Fetch the code from GitHub'''
+        ### Look at Joel's Cli.py class and use it here ###
+        if self.ready:
+            self.command = ['git','clone',self.github_remote_url,self.directory['work']]
+            self.execute_command()
+            if self.ready:
+                self.logger.info("Completed GitHub clone of repository %(name)s" % self.product)
+    
+    def execute_command(self):
+        self.logger.info('Running command: %s' % ' '.join(self.command))
+        proc = Popen(self.command, stdout=PIPE, stderr=PIPE) if Popen else None
+        (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
+        # NOTE: self.stderr is non-empty even when git clone is successful.
+        self.ready = proc.returncode == 0
+        if not self.ready:
+            s = "Error encountered while running command: %s\n" % ' '.join(self.command)
+            s += self.stderr.decode('utf-8')
+            self.logger.error(s)
+
+    def checkout(self):
+        if self.ready:
+            if self.product['is_branch'] and not self.product['is_master']:
+                version = self.product['version']
+                s = "Completed checkout of branch %(version)s" % self.product
+            if self.product['is_tag']:
+                version = 'tags/' + self.product['version']
+                s = "Completed checkout of tag %(version)s and removal of .git" % self.product
+            chdir(self.directory['work'])
+            self.command = ['git','checkout',version]
+            self.execute_command()
+            if self.ready:
+                if self.product['is_tag']: remove('TODO.md') ### DEBUG remove('.git') ###
+                chdir(self.directory['original'])
+                self.logger.info(s)
 
 
     def pause(self): ### DEBUG ###

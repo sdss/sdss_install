@@ -21,6 +21,13 @@ else:
     install5.set_product()
     install5.set_directory()
     install5.set_directory_install()
+    install5.set_directory_work()
+
+    if not options.module_only:
+        install5.clean_directory_install()
+        install5.set_github_remote_url()
+        install5.fetch()
+        install5.checkout()
 
 
 
