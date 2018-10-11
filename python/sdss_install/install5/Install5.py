@@ -218,10 +218,9 @@ class Install5:
             self.command = ['git','checkout',version]
             self.execute_command()
             if self.ready:
-                if self.product['is_tag']: remove('TODO.md') ### DEBUG remove('.git') ###
+                if self.product['is_tag']: rmtree(join(self.directory['work'],'.git'))
                 chdir(self.directory['original'])
                 self.logger.info(s)
-
 
     def pause(self): ### DEBUG ###
         input('Press enter to continue')
