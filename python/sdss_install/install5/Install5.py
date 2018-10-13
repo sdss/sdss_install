@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 #from sys import argv, executable, path
 from shutil import rmtree#, copyfile, copytree
 from os import getcwd, environ, makedirs, chdir, remove#, getenv, walk
-from os.path import isdir, join, exists#, basename, dirname
+from os.path import isdir, join, exists, basename, dirname
 #from argparse import ArgumentParser
 #try: from ConfigParser import SafeConfigParser, RawConfigParser
 #except ImportError: from configparser import SafeConfigParser, RawConfigParser
@@ -20,7 +20,7 @@ from os.path import isdir, join, exists#, basename, dirname
 
 from subprocess import Popen, PIPE
 from json import dumps ### DEBUG ###
-
+from inspect import stack, getmodule
 
 from sdss_install.install5 import Tags
 from sdss_install.install5 import Repositories
@@ -30,36 +30,20 @@ class Install5:
     '''Place install5 only related methods here. Place methods related to both install4 and install5 in another directory (install ?).'''
 
     def __init__(self, logger=None, options=None):
-        self.set_logger(logger=logger)
-        self.set_options(options=options)
+        self.logger = logger if logger else None
+        self.options = options if options else None
         self.ready = None
         self.repositories = None
         self.tags = None
         self.branches = None
-#        self.package = None
-#        self.product = None
-#        self.url = None
-#        self.directory = None
-#        self.svncommand = None
-#        self.exists = None
-#        self.modules = None
-#        self.build_type = None
-
-    def set_logger(self, logger=None):
-        '''Set self.logger wrapper'''
-        self.logger = logger if logger else None
-        if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
-
-    def set_options(self, options=None):
-        '''Set self.options wrapper'''
-        self.options = options if options else None
-        if not self.options: self.logger.error('ERROR: Unable to set_options')
+        self.product = None
+        self.directory = None
+        self.github_remote_url = None
 
     def set_ready(self):
         '''Set self.ready after sanity check self.options'''
         self.ready = self.options is not None
         if self.ready:
-            self.url = self.options.url
 #            print('self.options.product: %r' % self.options.product) ### DEBUG ###
 #            print('self.options.product_version: %r' % self.options.product_version) ### DEBUG ###
 #            print('self.options.bootstrap: %r' % self.options.bootstrap) ### DEBUG ###
@@ -91,7 +75,6 @@ class Install5:
 #                print('self.ready: %r' % self.ready) ### DEBUG ###
 #                print('product: %r' % product) ### DEBUG ###
 #                print('version: %r' % version) ### DEBUG ###
-        else: self.url = None
 #        print('self.ready: %r' % self.ready) ### DEBUG ###
 
     def set_product(self):
@@ -108,78 +91,6 @@ class Install5:
             self.product['checkout_or_export'] = 'checkout' if self.product['is_master_or_branch'] else 'export'
 #            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
 
-    def set_directory(self):
-        '''Initialize a dictionary of directories and set 'original' to the current working directory'''
-        if self.ready:
-            self.directory = dict()
-            try: self.directory['original'] = getcwd()
-            except OSError as ose:
-                self.logger.error("Check current directory: {0}".format(ose.strerror))
-                self.ready = False
-#            print('self.directory: %r' % self.directory) ### DEBUG ###
-
-    def set_directory_install(self):
-        '''Set the directory keys 'root' and 'install' '''
-        if self.ready:
-#            print('self.options.root: %r' % self.options.root) ### DEBUG ###
-#            print('isdir(self.options.root): %r' % isdir(self.options.root)) ### DEBUG ###
-            # The default of self.options.root is $SDSS_INSTALL_PRODUCT_ROOT
-            # if self.options.root hasn't been set at the command line or to its default value,
-            # or if it has been set but the root directory hasn't been created
-            if self.options.root is None or not isdir(self.options.root):
-                # if self.options.root has been set at the command line or set to its default value
-                if self.options.root is not None:
-                    # if the root directory hasn't been created, then try to create it
-                    if not exists(self.options.root):
-                        try:
-                            makedirs(self.options.root)
-                            self.logger.info("Creating {0}".format(self.options.root))
-                        except OSError as ose:
-                            self.logger.error("mkdir: cannot create directory '{0}': {1}".format(self.options.root,ose.strerror))
-                            self.ready = False
-                    else:
-                        self.logger.error("Please set the --root keyword or SDSS_INSTALL_PRODUCT_ROOT environmental variable to a valid directory.")
-                        self.ready = False
-                else:
-                    self.logger.error("Please use the --root keyword or set a SDSS_INSTALL_PRODUCT_ROOT environmental variable.")
-                    self.ready = False
-        # if the root directory has been created
-        if self.ready:
-            if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
-            self.directory['root'] = self.options.root
-            self.directory['install'] = join(self.directory['root'],self.product['name'],self.product['version'])
-#            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
-#            print('self.directory:\n' + dumps(self.directory,indent=1)) ### DEBUG ###
-
-    def set_directory_work(self):
-        '''Make a work directory, to which the product and/or the module file is ultimately installed.'''
-        if self.ready:
-            if self.options.module_only:
-                self.directory['work']=self.directory['install']
-            else:
-                self.directory['work'] = join(self.directory['original'],
-                                                "%(name)s-%(version)s" % self.product)
-                if isdir(self.directory['work']):
-                    self.logger.info("Detected old working directory, %(work)s. Deleting..." % self.directory)
-                    rmtree(self.directory['work'])
-
-    def clean_directory_install(self):
-        '''Remove existing directory (if exists if --force)'''
-        if self.ready:
-            if isdir(self.directory['install']) and not self.options.test:
-                if self.options.force:
-                    if self.directory['work'].startswith(self.directory['install']):
-                        self.logger.error("Current working directory, %(work)s, is inside the install directory, %(install)s, which will be deleted via the -F (or --force) option, so please cd to another working directory and try again!" % self.directory)
-                        self.ready = False
-                    else:
-                        self.logger.info("Preparing to install in %(install)s (overwriting due to force option)" % self.directory)
-                        rmtree(self.directory['install'])
-                else:
-                    self.logger.error("Install directory, %(install)s, already exists!" % self.directory)
-                    self.logger.info("Use the -F (or --force) option to overwrite.")
-                    self.ready = False
-            else: self.logger.info("Preparing to install in %(install)s" % self.directory)
-
     def set_github_remote_url(self):
         '''Set the SDSS GitHub HTTPS remote URL'''
         if self.ready:
@@ -190,21 +101,25 @@ class Install5:
         '''Fetch the code from GitHub'''
         ### Look at Joel's Cli.py class and use it here ###
         if self.ready:
-            self.command = ['git','clone',self.github_remote_url,self.directory['work']]
-            self.execute_command()
+            command = ['git','clone',self.github_remote_url,self.directory['work']]
+#            command = ['git','clone',self.github_remote_url,basename(self.directory['work'])]
+            self.execute_command(command=command)
             if self.ready:
                 self.logger.info("Completed GitHub clone of repository %(name)s" % self.product)
-    
-    def execute_command(self):
-        self.logger.info('Running command: %s' % ' '.join(self.command))
-        proc = Popen(self.command, stdout=PIPE, stderr=PIPE) if Popen else None
-        (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
-        # NOTE: self.stderr is non-empty even when git clone is successful.
-        self.ready = proc.returncode == 0
-        if not self.ready:
-            s = "Error encountered while running command: %s\n" % ' '.join(self.command)
-            s += self.stderr.decode('utf-8')
-            self.logger.error(s)
+            self.checkout()
+
+    def execute_command(self, command=None):
+        if command:
+            self.logger.info('Running command: %s' % ' '.join(command))
+            proc = Popen(command, stdout=PIPE, stderr=PIPE) if Popen else None
+            (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
+            # NOTE: self.stderr is non-empty even when git clone is successful.
+            self.ready = proc.returncode == 0
+            if not self.ready:
+                s = "Error encountered while running command: %s\n" % ' '.join(self.command)
+                s += self.stderr.decode('utf-8')
+                self.logger.error(s)
+        else: self.logger.error('Unable to execute_command')
 
     def checkout(self):
         if self.ready:
@@ -213,10 +128,10 @@ class Install5:
                 s = "Completed checkout of branch %(version)s" % self.product
             if self.product['is_tag']:
                 version = 'tags/' + self.product['version']
-                s = "Completed checkout of tag %(version)s and removal of .git" % self.product
+                s = "Completed checkout of tag %(version)s and removal of .git directory" % self.product
             chdir(self.directory['work'])
-            self.command = ['git','checkout',version]
-            self.execute_command()
+            command = ['git','checkout',version]
+            self.execute_command(command=command)
             if self.ready:
                 if self.product['is_tag']: rmtree(join(self.directory['work'],'.git'))
                 chdir(self.directory['original'])

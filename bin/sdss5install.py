@@ -15,6 +15,7 @@ from sdss_install.install5 import Install5
 options = Argument('sdssinstall').options
 install = Install(options=options)
 install5 = Install5(logger=install.logger, options=options)
+
 if options and options.version: print(__version__)
 else:
     install5.set_ready()

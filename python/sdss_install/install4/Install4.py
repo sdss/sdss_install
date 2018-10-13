@@ -7,7 +7,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from sdss_install.install.modules import Modules
 from sdss_install.application import Argument
-from sdss_install.install import Install
 
 import glob
 import logging
@@ -31,9 +30,9 @@ class Install4:
         self.logger = logger if logger else None
         self.options = options if options else None
         self.ready = None
-        self.package = None
-        self.product = None
         self.url = None
+        self.product = None
+        self.package = None
         self.directory = None
         self.svncommand = None
         self.exists = None
@@ -46,7 +45,6 @@ class Install4:
     def set_ready(self):
         self.ready = self.options is not None
         if self.ready:
-            # Question: What is an example of a self.url = join(self.options.url,'public') ?
             self.url = join(self.options.url,'public') if self.options.public else self.options.url
             if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
                 if self.options.bootstrap:

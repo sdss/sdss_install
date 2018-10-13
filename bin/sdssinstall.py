@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# $Id: sdss4install 70491 2016-06-15 19:16:07Z joelbrownstein $
+#
+from sdss_install import __version__
+from sdss_install.application import Argument
+from sdss_install.install import Install
+
+options = Argument('sdssinstall').options
+install = Install(options=options)
+
+if options and options.version: print(__version__)
+else:
+    install.set_ready()
+    install.set_product()
+    install.set_directory()
+    install.set_directory_install()
+    install.set_directory_work()
+
+    if not options.module_only:
+        if options.github:
+            install.clean_directory_install()
+            install.set_github_remote_url()
+            install.fetch()
+        
+        else:
+            install.clean_directory_install()
+            install.set_svncommand()
+            install.set_exists()
+            install.fetch()
+#
+#    install.reset_options_from_config()
+#    install.set_build_type()
+#    if not options.module_only:
+#        install.logger_build_message()
+#        install.make_directory_install()
+#
+#    if install.ready:
+#        install.set_modules()
+#        install.modules.set_ready()
+#        install.modules.set_file()
+#        install.modules.load_dependencies()
+#        install.modules.set_keywords()
+#        install.modules.set_directory()
+#        install.modules.build()
+#
+#    install.set_environ()
+#    if not options.module_only:
+#        install.build()
+#        install.build_documentation()
+#        install.build_package()
+#        if not options.keep: install.clean()
+#
+#    install.finalize()
+
