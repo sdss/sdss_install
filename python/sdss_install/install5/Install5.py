@@ -19,12 +19,13 @@ from os.path import isdir, join, exists, basename, dirname
 #from .modules import Modules
 
 from subprocess import Popen, PIPE
-from json import dumps ### DEBUG ###
 from inspect import stack, getmodule
-
 from sdss_install.install5 import Tags
 from sdss_install.install5 import Repositories
 from sdss_install.install5 import Branches 
+
+from json import dumps ### DEBUG ###
+
 
 class Install5:
     '''Place install5 only related methods here. Place methods related to both install4 and install5 in another directory (install ?).'''
@@ -50,7 +51,7 @@ class Install5:
             if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
                 if self.options.bootstrap:
                     self.options.default = True
-                    self.options.product = 'marvin' ### DEBUG ### sdss_install
+                    self.options.product = 'sdss_install'
                     tags = Tags(logger=self.logger,options=self.options)
                     self.options.product_version = tags.most_recent_tag_name()
                     self.logger.info("Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
@@ -79,16 +80,20 @@ class Install5:
 
     def set_product(self):
         '''Set the self.product dictionary containing product and version names etc.'''
+        #
+        # For backwards compatibility, we will maintain the use of trunk used in sdss4install for svn,
+        # with the understanding that trunk is synonomuous with master for github
+        #
         if self.ready:
             self.product = dict()
-            self.product['name'] = self.options.product
             self.product['root'] = None # There's no GitHub directory structure to preserve, as in svn
+            self.product['name'] = self.options.product
             self.product['version'] = self.options.product_version
-            self.product['is_master'] = self.options.product_version == 'master'
+            self.product['is_trunk'] = self.options.product_version == 'master'
             self.product['is_branch'] = self.options.product_version in self.branches
             self.product['is_tag'] = self.options.product_version in self.tags
-            self.product['is_master_or_branch'] = self.product['is_master'] or self.product['is_branch']
-            self.product['checkout_or_export'] = 'checkout' if self.product['is_master_or_branch'] else 'export'
+            self.product['is_trunk_or_branch'] = self.product['is_trunk'] or self.product['is_branch']
+            self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] else 'export'
 #            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
 
     def set_github_remote_url(self):
@@ -126,7 +131,7 @@ class Install5:
 
     def checkout(self):
         if self.ready:
-            if self.product['is_branch'] and not self.product['is_master']:
+            if self.product['is_branch'] and not self.product['is_trunk']:
                 version = self.product['version']
                 s = "Completed checkout of branch %(version)s" % self.product
             if self.product['is_tag']:
@@ -139,20 +144,6 @@ class Install5:
                 if self.product['is_tag']: rmtree(join(self.directory['work'],'.git'))
                 chdir(self.directory['original'])
                 self.logger.info(s)
-    
-    def make_directory_install(self):
-        '''Make install directory'''
-        # If this is a trunk or branch install or nothing to build,
-        # this directory will be created by other means.
-        if self.ready:
-            if not (self.product['is_master_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type or self.options.test):
-                try:
-                    makedirs(self.directory['install'])
-                except OSError as ose:
-                    self.logger.error(ose.strerror)
-                    self.ready = False
-
-
 
     def pause(self): ### DEBUG ###
         input('Press enter to continue')

@@ -47,12 +47,12 @@ else:
         install.modules.set_directory()
         install.modules.build()
 
-#    install.set_environ()
-#    if not options.module_only:
-#        install.build()
-#        install.build_documentation()
-#        install.build_package()
-#        if not options.keep: install.clean()
-#
-#    install.finalize()
+    install.set_environ()
+    if not options.module_only:
+        install.build()
+        install.build_documentation()
+        install.build_package()
+        if not options.keep: install.clean()
+
+    install.finalize()
 
