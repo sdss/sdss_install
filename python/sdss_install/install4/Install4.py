@@ -5,7 +5,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
 
-from sdss_install.install.modules import Modules
 from sdss_install.application import Argument
 
 import glob
@@ -79,78 +78,6 @@ class Install4:
             self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] and not self.options.public else 'export'
 
     #
-    # Set the original and work directory
-    #
-    def set_directory(self):
-        if self.ready:
-            self.directory = {}
-            try: self.directory['original'] = getcwd()
-            except OSError as ose:
-                self.logger.error("Check current directory: {0}".format(ose.strerror))
-                self.ready = False
-
-    #
-    # Pick an install directory
-    #
-    def set_directory_install(self):
-        if self.ready:
-            if self.options.root is None or not isdir(self.options.root):
-                if self.options.root is not None:
-                    if not exists(self.options.root):
-                        try:
-                            makedirs(self.options.root)
-                            self.logger.info("Creating {0}".format(self.options.root))
-                        except OSError as ose:
-                            self.logger.error("mkdir: cannot create directory '{0}': {1}".format(self.options.root,ose.strerror))
-                            self.ready = False
-                    else:
-                        self.logger.error("Please set the --root keyword or SDSS_INSTALL_PRODUCT_ROOT environmental variable to a valid directory.")
-                        self.ready = False
-                else:
-                    self.logger.error("Please use the --root keyword or set a SDSS_INSTALL_PRODUCT_ROOT environmental variable.")
-                    self.ready = False
-
-        if self.ready:
-            if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
-            if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
-            self.directory['root'] = join(self.options.root, self.product['root']) if self.product['root'] else self.options.root
-            self.directory['install'] = join(self.directory['root'],self.product['name'],self.product['version'])
-#            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
-#            print('self.directory:\n' + dumps(self.directory,indent=1)) ### DEBUG ###
-
-    #
-    # Make a work directory
-    #
-    def set_directory_work(self):
-        if self.ready:
-            if self.options.module_only: self.directory['work']=self.directory['install']
-            else:
-                self.directory['work'] = join(self.directory['original'],"%(name)s-%(version)s" %self.product)
-                if isdir(self.directory['work']):
-                    self.logger.info("Detected old working directory, %(work)s. Deleting..." % self.directory)
-                    rmtree(self.directory['work'])
-
-    #
-    # Remove existing directory (if exists if --force)
-    #
-    def clean_directory_install(self):
-        if self.ready:
-            if isdir(self.directory['install']) and not self.options.test:
-                if self.options.force:
-                    if self.directory['work'].startswith(self.directory['install']):
-                        self.logger.error("Current working directory, %(work)s, is inside the install directory, %(install)s, which will be deleted via the -F (or --force) option, so please cd to another working directory and try again!" % self.directory)
-                        self.ready = False
-                    else:
-                        
-                        self.logger.info("Preparing to install in %(install)s (overwriting due to force option)" % self.directory)
-                        rmtree(self.directory['install'])
-                else:
-                    self.logger.error("Install directory, %(install)s, already exists!" % self.directory)
-                    self.logger.info("Use the -F (or --force) option to overwrite.")
-                    self.ready = False
-            else: self.logger.info("Preparing to install in %(install)s" % self.directory)
-
-    #
     # Set the svn command for public or add username.
     #
     def set_svncommand(self):
@@ -169,7 +96,7 @@ class Install4:
             proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
             out, err = proc.communicate()
             self.logger.debug(out)
-            self.exists = len(err)==0
+            self.exists = proc.returncode == 0
             if self.exists: self.logger.info("Found URL at %(url)s " % self.product)
             else:
                 self.logger.error("Nonexistent URL at %(url)s" % self.product)
@@ -190,89 +117,18 @@ class Install4:
             if self.ready: self.logger.info("Completed svn %(checkout_or_export)s of %(url)s" % self.product)
             else: self.logger.error("svn error during %(checkout_or_export)s of %(url)s: " % self.product + err)
 
-    #
-    # Some products may contain an optional etc/config.ini file to determine the config self.options to build
-    #
-    def reset_options_from_config(self):
-        if self.ready:
-            config_filename = join('etc','config.ini')
-            config_file = join(self.directory['work'],config_filename)
-            if exists(config_file):
-                config = SafeConfigParser()
-                try: config.optionxform = unicode
-                except: config.optionxform = str
-                if len(config.read(config_file))==1:
-                    if config.has_section('sdss4install'):
-                        for option in config.options('sdss4install'):
-                            if option=='no_build' and not self.options.no_build:
-                                try:
-                                    self.options.no_build = config.getboolean('sdss4install',option)
-                                    if self.options.no_build: self.logger.info("Using {0} to set --no-build option".format(config_filename))
-                                except: pass
-                            elif option=='skip_module' and not self.options.skip_module:
-                                try:
-                                    self.options.skip_module = config.getboolean('sdss4install',option)
-                                    if self.options.skip_module: self.logger.info("Using {0} to set --skip_module option".format(config_filename))
-                                except: pass
-                            elif option=='no_python_package' and not self.options.no_python_package:
-                                try:
-                                    self.options.no_python_package = config.getboolean('sdss4install',option)
-                                    if self.options.no_python_package: self.logger.info("Using {0} to set --no_python_package option".format(config_filename))
-                                except: pass
-                            elif option=='make_target' and not self.options.make_target:
-                                try:
-                                    self.options.make_target = config.get('sdss4install',option)
-                                    if self.options.make_target: self.logger.info("Using {0} to set --make_target {1} option".format(config_filename,self.options.make_target))
-                                except: pass
-                            elif option=='evilmake' and not self.options.evilmake:
-                                try:
-                                    self.options.evilmake = config.getboolean('sdss4install',option)
-                                    if self.options.evilmake: self.logger.info("Using {0} to set --evilmake option".format(config_filename))
-                                except: pass
-                    if config.has_section('envs'):
-                        missing = [env for key,env in config.items('envs') if not getenv(env,None)]
-                        for env in missing: self.logger.error("Required environment variable {0} must be set prior to sdss4install".format(env))
-                        if missing: self.ready = False
-
-
-    #
-    # Analyze the code to determine the build type
-    #
-    def set_build_type(self):
-        self.build_message = None
-        if self.ready:
-            self.build_type = []
-            if self.options.no_build: self.build_message = "Proceeding without build..."
-            else:
-                if exists(join(self.directory['work'],'Makefile')) and self.options.evilmake:
-                    self.build_message = "Installing via evilmake"
-                    self.build_type.append('evilmake')
-                elif exists(join(self.directory['work'],'setup.py')) and not self.options.force_build_type:
-                    self.build_type.append('python')
-                    if exists(join(self.directory['work'],'Makefile')): self.build_type.append('c')
-                elif exists(join(self.directory['work'],'Makefile')): self.build_type.append('c')
-                if not self.build_type: self.build_message = "Proceeding without a setup.py or Makefile..."
-
-    def logger_build_message(self):
-        if self.build_message: self.logger.info(self.build_message)
-
-    #
-    # make install directory. If this is a trunk or branch install or nothing to build,
-    # this directory will be created by other means.
-    #
     def make_directory_install(self):
+        '''Make install directory'''
+        # If this is a trunk or branch install or nothing to build,
+        # this directory will be created by other means.
         if self.ready:
+            print("self.directory['install']: %r" % self.directory['install'])
             if not (self.product['is_trunk_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type or self.options.test):
                 try:
                     makedirs(self.directory['install'])
                 except OSError as ose:
                     self.logger.error(ose.strerror)
                     self.ready = False
-    #
-    # Set up Modules
-    #
-    def set_modules(self):
-        self.modules = Modules(options=self.options, logger=self.logger, product=self.product, directory=self.directory, build_type=self.build_type)
 
     #
     # Set up some convenient environment variables.

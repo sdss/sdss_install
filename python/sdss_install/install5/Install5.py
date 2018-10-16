@@ -99,25 +99,28 @@ class Install5:
 
     def fetch(self):
         '''Fetch the code from GitHub'''
+        self.clone()
+        if self.product['is_tag']: self.checkout()
+        
+    def clone(self):
         ### Look at Joel's Cli.py class and use it here ###
         if self.ready:
-            command = ['git','clone',self.github_remote_url,self.directory['work']]
-#            command = ['git','clone',self.github_remote_url,basename(self.directory['work'])]
+            command = ['git','clone',self.github_remote_url,basename(self.directory['work'])]
+#            command = ['git','clone',self.github_remote_url,self.directory['work']]
             self.execute_command(command=command)
             if self.ready:
                 self.logger.info("Completed GitHub clone of repository %(name)s" % self.product)
-            self.checkout()
 
     def execute_command(self, command=None):
         if command:
             self.logger.info('Running command: %s' % ' '.join(command))
             proc = Popen(command, stdout=PIPE, stderr=PIPE) if Popen else None
-            (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
-            # NOTE: self.stderr is non-empty even when git clone is successful.
+            (stdout, stderr) = proc.communicate() if proc else (None,None)
+            # NOTE: stderr is non-empty even when git clone is successful.
             self.ready = proc.returncode == 0
             if not self.ready:
                 s = "Error encountered while running command: %s\n" % ' '.join(self.command)
-                s += self.stderr.decode('utf-8')
+                s += stderr.decode('utf-8')
                 self.logger.error(s)
         else: self.logger.error('Unable to execute_command')
 
@@ -136,6 +139,20 @@ class Install5:
                 if self.product['is_tag']: rmtree(join(self.directory['work'],'.git'))
                 chdir(self.directory['original'])
                 self.logger.info(s)
+    
+    def make_directory_install(self):
+        '''Make install directory'''
+        # If this is a trunk or branch install or nothing to build,
+        # this directory will be created by other means.
+        if self.ready:
+            if not (self.product['is_master_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type or self.options.test):
+                try:
+                    makedirs(self.directory['install'])
+                except OSError as ose:
+                    self.logger.error(ose.strerror)
+                    self.ready = False
+
+
 
     def pause(self): ### DEBUG ###
         input('Press enter to continue')

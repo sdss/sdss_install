@@ -239,8 +239,79 @@ class Install:
         '''Set the set_github_remote_url() of Install5'''
         if self.ready and self.options.github: self.install5.set_github_remote_url()
 
+    def reset_options_from_config(self):
+        '''Set absent command-line options from etc/config.ini file, if it exists.'''
+        # Some products may contain an optional etc/config.ini file to determine the config self.options to build
+        if self.ready:
+            config_filename = join('etc','config.ini')
+            config_file = join(self.directory['work'],config_filename)
+            if exists(config_file):
+                config = SafeConfigParser()
+                try: config.optionxform = unicode
+                except: config.optionxform = str
+                if len(config.read(config_file))==1:
+                    if config.has_section('sdss4install'):
+                        for option in config.options('sdss4install'):
+                            if option=='no_build' and not self.options.no_build:
+                                try:
+                                    self.options.no_build = config.getboolean('sdss4install',option)
+                                    if self.options.no_build: self.logger.info("Using {0} to set --no-build option".format(config_filename))
+                                except: pass
+                            elif option=='skip_module' and not self.options.skip_module:
+                                try:
+                                    self.options.skip_module = config.getboolean('sdss4install',option)
+                                    if self.options.skip_module: self.logger.info("Using {0} to set --skip_module option".format(config_filename))
+                                except: pass
+                            elif option=='no_python_package' and not self.options.no_python_package:
+                                try:
+                                    self.options.no_python_package = config.getboolean('sdss4install',option)
+                                    if self.options.no_python_package: self.logger.info("Using {0} to set --no_python_package option".format(config_filename))
+                                except: pass
+                            elif option=='make_target' and not self.options.make_target:
+                                try:
+                                    self.options.make_target = config.get('sdss4install',option)
+                                    if self.options.make_target: self.logger.info("Using {0} to set --make_target {1} option".format(config_filename,self.options.make_target))
+                                except: pass
+                            elif option=='evilmake' and not self.options.evilmake:
+                                try:
+                                    self.options.evilmake = config.getboolean('sdss4install',option)
+                                    if self.options.evilmake: self.logger.info("Using {0} to set --evilmake option".format(config_filename))
+                                except: pass
+                    else: self.logger.info('NOTE: In the product config.ini file, sdss4install might need to be replaced with sdss_install')
 
+                    if config.has_section('envs'):
+                        missing = [env for key,env in config.items('envs') if not getenv(env,None)]
+                        for env in missing: self.logger.error("Required environment variable {0} must be set prior to sdss4install".format(env))
+                        if missing: self.ready = False
 
+    def set_build_type(self):
+        '''Analyze the code to determine the build type'''
+        self.build_message = None
+        if self.ready:
+            self.build_type = list()
+            if self.options.no_build: self.build_message = "Proceeding without build..."
+            else:
+                if exists(join(self.directory['work'],'Makefile')) and self.options.evilmake:
+                    self.build_message = "Installing via evilmake"
+                    self.build_type.append('evilmake')
+                elif exists(join(self.directory['work'],'setup.py')) and not self.options.force_build_type:
+                    self.build_type.append('python')
+                    if exists(join(self.directory['work'],'Makefile')): self.build_type.append('c')
+                elif exists(join(self.directory['work'],'Makefile')): self.build_type.append('c')
+                if not self.build_type: self.build_message = "Proceeding without a setup.py or Makefile..."
+
+    def logger_build_message(self):
+        if self.build_message: self.logger.info(self.build_message)
+
+    def make_directory_install(self):
+        '''Call set_make_directory_install() of Install4 or Install5'''
+        if self.ready:
+            if self.options.github: self.install5.make_directory_install()
+            else:                   self.install4.make_directory_install()
+
+    def set_modules(self):
+        '''Set up Modules'''
+        self.modules = Modules(options=self.options, logger=self.logger, product=self.product, directory=self.directory, build_type=self.build_type)
 
 
 

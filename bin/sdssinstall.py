@@ -6,6 +6,8 @@
 from sdss_install import __version__
 from sdss_install.application import Argument
 from sdss_install.install import Install
+from sdss_install.install.modules import Modules
+
 
 options = Argument('sdssinstall').options
 install = Install(options=options)
@@ -29,22 +31,22 @@ else:
             install.set_svncommand()
             install.set_exists()
             install.fetch()
-#
-#    install.reset_options_from_config()
-#    install.set_build_type()
-#    if not options.module_only:
-#        install.logger_build_message()
-#        install.make_directory_install()
-#
-#    if install.ready:
-#        install.set_modules()
-#        install.modules.set_ready()
-#        install.modules.set_file()
-#        install.modules.load_dependencies()
-#        install.modules.set_keywords()
-#        install.modules.set_directory()
-#        install.modules.build()
-#
+
+    install.reset_options_from_config()
+    install.set_build_type()
+    if not options.module_only:
+        install.logger_build_message()
+        install.make_directory_install()
+
+    if install.ready:
+        install.set_modules()
+        install.modules.set_ready()
+        install.modules.set_file()
+        install.modules.load_dependencies()
+        install.modules.set_keywords()
+        install.modules.set_directory()
+        install.modules.build()
+
 #    install.set_environ()
 #    if not options.module_only:
 #        install.build()
