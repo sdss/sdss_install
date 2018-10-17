@@ -33,8 +33,7 @@ class Tags:
 
     def get_tag_names(self):
         self.set_tags()
-        tags = self.tags if self.tags else None
-        tag_names = [tag['tag_name'] for tag in tags]
+        tag_names = [tag['tag_name'] for tag in self.tags] if self.tags else None
         return tag_names
 
     def set_tags(self):
@@ -61,7 +60,7 @@ class Tags:
 #                print('self.query_parameters:\n' + dumps(self.query_parameters,indent=1)) ### DEBUG ###
 #                print('len(self.tags): %r' % len(self.tags)) ### DEBUG ###
             else: pagination_flag = False
-        if not self.tags: self.logger.error('ERROR: Failed to set_tags')
+        if not self.tags: self.logger.debug('No tags: self.tags=%r' % self.tags)
 #        print('self.tags:\n' + dumps(self.tags,indent=1)) ### DEBUG ###
 
     def set_store(self):
@@ -128,7 +127,7 @@ class Tags:
 #                print('tag: \n' + dumps(tag,indent=1)) ### DEBUG ###
 #                print('self.tag_dict: \n' + dumps(self.tag_dict,indent=1)) ### DEBUG ###
 #                print('self.tag_list: \n' + dumps(self.tag_list,indent=1)) ### DEBUG ###
-        else: self.logger.error('ERROR: Unable to set_tag_list')
+        else: self.logger.debug('No tag_edges: self.tag_edges=%r' % self.tag_edges)
 
     def initialize_tag_dict(self):
         if self.options:

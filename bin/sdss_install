@@ -21,16 +21,13 @@ else:
     install.set_directory_work()
 
     if not options.module_only:
+        install.clean_directory_install()
         if options.github:
-            install.clean_directory_install()
             install.set_github_remote_url()
-            install.fetch()
-        
         else:
-            install.clean_directory_install()
             install.set_svncommand()
             install.set_exists()
-            install.fetch()
+        install.fetch()
 
     install.reset_options_from_config()
     install.set_build_type()
