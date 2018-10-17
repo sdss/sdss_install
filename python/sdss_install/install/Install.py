@@ -501,8 +501,9 @@ class Install:
     # Clean up
     #
     def clean(self):
-        try: rmtree(self.directory['work'])
-        except: pass
+        if self.ready:
+            try: rmtree(self.directory['work'])
+            except: pass
 
     #
     # Done

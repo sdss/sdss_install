@@ -62,12 +62,17 @@ class Install5:
                 product = self.options.product
                 version = self.options.product_version
                 self.repositories = Repositories(logger=self.logger,
-                                            options=self.options).get_repository_names()
+                                                 options=self.options).get_repository_names()
                 self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
                 self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
+                is_master = version == 'master'
+                is_branch = version in self.branches if self.branches else False
+                is_tag = version in self.tags if self.tags else False
+                valid_version =  is_master or  is_branch or is_tag
                 valid_product = product in self.repositories
-                valid_version = version == 'master' or version in self.branches or version in self.tags
                 self.ready = valid_product and valid_version
+                if not valid_product: self.logger.error('Invalid product: %r' % product)
+                if not valid_version: self.logger.error('Invalid version: %r' % version)
 #                print('self.repositories:\n' + dumps(self.repositories,indent=1)) ### DEBUG ###
 #                print('self.branches:\n' + dumps(self.branches,indent=1)) ### DEBUG ###
 #                print('self.tags:\n' + dumps(self.tags,indent=1)) ### DEBUG ###
@@ -91,7 +96,7 @@ class Install5:
             self.product['version'] = self.options.product_version
             self.product['is_trunk'] = self.options.product_version == 'master'
             self.product['is_branch'] = self.options.product_version in self.branches
-            self.product['is_tag'] = self.options.product_version in self.tags
+            self.product['is_tag'] = self.options.product_version in self.tags if self.tags else False
             self.product['is_trunk_or_branch'] = self.product['is_trunk'] or self.product['is_branch']
             self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] else 'export'
 #            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###

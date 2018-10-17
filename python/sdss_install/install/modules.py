@@ -123,6 +123,7 @@ class Modules:
     def set_directory(self):
         '''Install the module file.'''
         self.check_options()
+#        print('self.options.github: %r' % self.options.github)
         self.directory['modules'] = join(self.options.moduledir,self.product['name'])
         if self.ready and not self.options.test:
             if not isdir(self.directory['modules']):
@@ -144,7 +145,10 @@ class Modules:
                     self.product['root'] = dirname(self.options.product) if self.options.longpath else None
                     productroot = self.product['root'][:self.product['root'].index(sep)] if self.product['root'] and sep in self.product['root'] else self.product['root']
                 else: productroot = None
-                self.options.moduledir = join(join(self.options.root, productroot) if productroot else self.options.root,'modulefiles')
+                if self.options.github: ### DEBUG ###
+                    self.options.moduledir = join(self.options.root,'repo','modulefiles') ### DEBUG ###
+                else: ### DEBUG ###
+                    self.options.moduledir = join(join(self.options.root, productroot) if productroot else self.options.root,'modulefiles')
                 if not self.options.test:
                     if not isdir(self.options.moduledir):
                         self.logger.info("Creating Modules directory {0}".format(self.options.moduledir))
