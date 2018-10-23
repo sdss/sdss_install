@@ -129,7 +129,7 @@ class Install5:
             # NOTE: stderr is non-empty even when git clone is successful.
             self.ready = proc.returncode == 0
             if not self.ready:
-                s = "Error encountered while running command: %s\n" % ' '.join(self.command)
+                s = "Error encountered while running command: %s\n" % ' '.join(command)
                 s += stderr.decode('utf-8')
                 self.logger.error(s)
         else: self.logger.error('Unable to execute_command')

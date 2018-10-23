@@ -17,7 +17,7 @@ Main
 .. _api-Repo:
 
 Repositories
--------------
+------------
 
 .. automodule:: sdss_install.install5.Repositories
    :members:

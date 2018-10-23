@@ -18,7 +18,7 @@ def sdssinstall():
     parser.add_argument('-e', '--level', help='set logging level', metavar='LEVEL', choices=['debug','info','warning','error'], default='debug')
     parser.add_argument('-b', '--bootstrap', action='store_true', dest='bootstrap',
         help='Run in bootstrap mode to install the sdss4tools product.')
-    parser.add_argument('-i', '--github', action='store_true', dest='github',
+    parser.add_argument('-G', '--github', action='store_true', dest='github',
         help='Run in bootstrap mode to install the sdss4tools product.')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('-C', '--compile-c', action='store_true', dest='force_build_type',

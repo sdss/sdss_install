@@ -115,7 +115,6 @@ class Modules:
                         path.insert(int(path[0] == ''),lib_dir)
             elif isdir(join(self.directory['work'],'python')):
                 self.keywords['needs_trunk_python'] = ''
-            
             if basename(self.options.product)=='sdss4tools':
                 self.keywords['sdss4tools_root'] = self.options.root
                 self.keywords['sdss4tools_longpath'] = self.options.longpath
@@ -145,10 +144,7 @@ class Modules:
                     self.product['root'] = dirname(self.options.product) if self.options.longpath else None
                     productroot = self.product['root'][:self.product['root'].index(sep)] if self.product['root'] and sep in self.product['root'] else self.product['root']
                 else: productroot = None
-                if self.options.github: ### DEBUG ###
-                    self.options.moduledir = join(self.options.root,'repo','modulefiles') ### DEBUG ###
-                else: ### DEBUG ###
-                    self.options.moduledir = join(join(self.options.root, productroot) if productroot else self.options.root,'modulefiles')
+                self.options.moduledir = join(join(self.options.root, productroot) if productroot else self.options.root,'modulefiles')
                 if not self.options.test:
                     if not isdir(self.options.moduledir):
                         self.logger.info("Creating Modules directory {0}".format(self.options.moduledir))
