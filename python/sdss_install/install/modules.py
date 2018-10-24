@@ -115,9 +115,13 @@ class Modules:
                         path.insert(int(path[0] == ''),lib_dir)
             elif isdir(join(self.directory['work'],'python')):
                 self.keywords['needs_trunk_python'] = ''
-            if basename(self.options.product)=='sdss4tools':
-                self.keywords['sdss4tools_root'] = self.options.root
-                self.keywords['sdss4tools_longpath'] = self.options.longpath
+                
+            if basename(self.options.product)=='sdss_install':
+                self.keywords['sdss_install_root'] = self.options.root
+                self.keywords['sdss_install_longpath'] = '# '
+            elif basename(self.options.product)=='sdss4tools':
+                self.keywords['sdss_install_root'] = self.options.root
+                self.keywords['sdss_install_longpath'] = self.options.longpath
 
     def set_directory(self):
         '''Install the module file.'''
@@ -158,6 +162,10 @@ class Modules:
         if self.ready:
             if exists(self.file):
                 self.product['modulefile'] = join(self.directory['modules'],self.product['version'])
+#                print("self.product['modulefile']: %r" % self.product['modulefile'])
+#                print("self.keywords: %r" % self.keywords)
+#                print("self.file: %r" % self.file)
+#                input('Pause')
                 with open(self.file) as file: mod = file.read().format(**self.keywords)
                 if self.options.test: self.logger.debug(mod)
                 else:

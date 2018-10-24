@@ -175,6 +175,7 @@ class Install:
                     self.logger.error("Please use the --root keyword or set a SDSS_INSTALL_PRODUCT_ROOT environmental variable.")
                     self.ready = False
         if self.ready:
+            if self.options.root.endswith('/'): self.options.root = dirname(self.options.root)
             if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
             if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
             self.directory['root'] = join(self.options.root, self.product['root']) if self.product['root'] else self.options.root
@@ -436,10 +437,10 @@ class Install:
                                 self.logger.error(ose.strerror)
                                 self.ready = False
                     if not exists(join('doc','Makefile')):
-                        copyfile(join(getenv('sdss4tools_DIR'),'etc','doc','sphinx','Makefile'),
+                        copyfile(join(getenv('sdss_install_DIR'),'etc','doc','sphinx','Makefile'),
                             join('doc','Makefile'))
                     if not exists(join('doc','conf.py')):
-                        with open(join(getenv('sdss4tools_DIR'),'etc','doc','sphinx','conf.py')) as conf:
+                        with open(join(getenv('sdss_install_DIR'),'etc','doc','sphinx','conf.py')) as conf:
                             newconf = conf.read().format(**sphinx_keywords)
                         with open(join('doc','conf.py'),'w') as conf2:
                             conf2.write(newconf)
@@ -468,10 +469,10 @@ class Install:
                         'version':self.product['version'],
                         'description':"Documentation for %(name)s built by sdss4install." % self.product}
                     if not exists(join('doc','Makefile')):
-                        copyfile(join(getenv('sdss4tools_DIR'),'etc','doc','doxygen','Makefile'),
+                        copyfile(join(getenv('sdss_install_DIR'),'etc','doc','doxygen','Makefile'),
                             join('doc','Makefile'))
                     if not exists(join('doc','Docyfile')):
-                        with open(join(getenv('sdss4tools_DIR'),'etc','doc','doxygen','Doxyfile')) as conf:
+                        with open(join(getenv('sdss_install_DIR'),'etc','doc','doxygen','Doxyfile')) as conf:
                             newconf = conf.read().format(**doxygen_keywords)
                         with open(join('doc','Doxyfile'),'w') as conf2:
                             conf2.write(newconf)

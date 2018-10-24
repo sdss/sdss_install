@@ -17,9 +17,9 @@ def sdssinstall():
     parser = ArgumentParser(description=__doc__,prog=xct)
     parser.add_argument('-e', '--level', help='set logging level', metavar='LEVEL', choices=['debug','info','warning','error'], default='debug')
     parser.add_argument('-b', '--bootstrap', action='store_true', dest='bootstrap',
-        help='Run in bootstrap mode to install the sdss4tools product.')
+        help='Run in bootstrap mode to install the sdss_install product.')
     parser.add_argument('-G', '--github', action='store_true', dest='github',
-        help='Run in bootstrap mode to install the sdss4tools product.')
+        help='Install products from GitHub, otherwise from SVN.')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('-C', '--compile-c', action='store_true', dest='force_build_type',
         help='Force C/C++ install mode, even if a setup.py file is detected (WARNING: this is for experts only).')
@@ -50,8 +50,10 @@ def sdssinstall():
         metavar='ALT_MODULE',help='specify an alternate module file')
     parser.add_argument('-M', '--module-dir', action='store', dest='moduledir',
         metavar='DIR',help='Install module files in DIR.',default='')
+    ### DEBUG ### Do we need this?
     parser.add_argument('-p', '--python', action='store', dest='python',
         metavar='PYTHON',help='Use the Python executable PYTHON (e.g. /opt/local/bin/python2.7).  This option is only relevant when installing sdss4tools itself.')
+    ### DEBUG ### 
     parser.add_argument('-r', '--root', action='store', dest='root',
         metavar='DIR', help='Set or override the value of $SDSS_INSTALL_PRODUCT_ROOT',
         default=getenv('SDSS_INSTALL_PRODUCT_ROOT'))
