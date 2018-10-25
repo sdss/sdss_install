@@ -23,7 +23,7 @@ from sdss_install.install4 import Install4
 from sdss_install.install5 import Install5
 
 class Install:
-    '''Place install5 only related methods here. Place methods related to both install4 and install5 in another directory (install ?).'''
+    '''Main class which calls Install4 and Install5 for SVN and GitHub installations, respectively'''
 
     def __init__(self, options=None):
         self.set_options(options=options)
@@ -36,6 +36,7 @@ class Install:
         if not self.options: self.logger.error('ERROR: Unable to set_options')
 
 #    def set_logger(self, options=None):
+#        '''Set self.logger'''
 #        self.logger = None
 #        if options:
 #            self.logging = Logging(name=options._name,
@@ -44,19 +45,23 @@ class Install:
 #        if not options or not self.logger: print('ERROR: %r> Unable to set_logging.' % self.__class__)
 
     def set_logger(self, options=None):
-        '''Set the package logger'''
-        if options:
+        '''Set the logger used by all classes in the package.'''
+        if options and logging:
             debug = self.options.test or self.options.verbose
             self.logger = logging.getLogger('sdssinstall')
-            if debug: self.logger.setLevel(logging.DEBUG)
-            else: self.logger.setLevel(logging.INFO)
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-        else: print('ERROR: Unable to set_logger. options=%r' % options)
+            if self.logger:
+                if debug: self.logger.setLevel(logging.DEBUG)
+                else: self.logger.setLevel(logging.INFO)
+                handler = logging.StreamHandler()
+                formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+                handler.setFormatter(formatter)
+                self.logger.addHandler(handler)
+            else: print('ERROR: Unable to set_logger')
+        else: print('ERROR: Unable to set_logger. options=%r, logging=%r'
+                    % (options,logging))
 
     def initialize_data(self):
+        '''Initialize class Install data.'''
         self.ready = None
         self.url = None
         self.product = None
@@ -72,14 +77,17 @@ class Install:
         self.github_remote_url = None
 
     def set_install4(self):
+        '''Set a class Install4 instance.'''
         self.install4 = Install4(logger=self.logger, options=self.options)
         if not self.install4: self.logger.error('Unable to set self.install4')
 
     def set_install5(self):
+        '''Set a class Install5 instance.'''
         self.install5 = Install5(logger=self.logger, options=self.options)
         if not self.install5: self.logger.error('Unable to set self.install5')
 
     def import_data(self):
+        '''Sync data from class Import4 or class Import5 to class Import.'''
         if self.options.github:
             if self.install5:
                 self.ready          = self.install5.ready
@@ -101,6 +109,7 @@ class Install:
                 self.build_type     = self.install4.build_type
 
     def export_data(self):
+        '''Sync class Import data to class Import4 or class Import5.'''
         if self.options.github:
             if self.install5:
                 self.install5.ready         = self.ready
@@ -124,7 +133,7 @@ class Install:
             else: self.logger.error('Unable to export_data to class Install5')
 
     def set_ready(self):
-        '''Call set_ready() of Install4 or Install5'''
+        '''Call set_ready() of class Install4 or class Install5.'''
         self.ready = self.logger and self.options
         if self.ready:
             if self.options.github:
@@ -138,25 +147,24 @@ class Install:
             if self.ready: self.import_data()
 
     def set_product(self):
-        '''Call set_product() of Install4 or Install5'''
+        '''Call set_product() of class Install4 or class Install5.'''
         if self.ready:
             if self.options.github: self.install5.set_product()
             else:                   self.install4.set_product()
             self.import_data()
 
     def set_directory(self):
-        '''Initialize a dictionary of directories and set 'original' to the current working directory'''
+        '''Initialize dict self.directory and set value for key 'original' to current working directory.'''
         if self.ready:
             self.directory = dict()
             try: self.directory['original'] = getcwd()
             except OSError as ose:
                 self.logger.error("Check current directory: {0}".format(ose.strerror))
                 self.ready = False
-#            print('self.directory: %r' % self.directory) ### DEBUG ###
             self.export_data()
 
     def set_directory_install(self):
-        '''Set the directory keys 'root' and 'install' '''
+        '''Set dict self.directory values for keys 'root' and 'install'.'''
         if self.ready:
             self.import_data()
             if self.options.root is None or not isdir(self.options.root):
@@ -183,7 +191,7 @@ class Install:
             self.export_data()
 
     def set_directory_work(self):
-        '''Make a work directory, to which the product and/or the module file is ultimately installed.'''
+        '''Set dict self.directory value for key 'work', used to install product and/or module file. Remove existing work directory.'''
         if self.ready:
             self.import_data()
             if self.options.module_only: self.directory['work']=self.directory['install']
@@ -195,7 +203,7 @@ class Install:
             self.export_data()
 
     def clean_directory_install(self):
-        '''Remove existing directory (if exists if --force)'''
+        '''Remove existing install directory if exists and if option --force.'''
         if self.ready:
             self.import_data()
             if isdir(self.directory['install']) and not self.options.test:
@@ -214,30 +222,30 @@ class Install:
             self.export_data()
 
     def set_github_remote_url():
+        '''Wrapper for method Install5.set_github_remote_url()'''
         if self.ready and self.options.github and self.install5:
             self.install5.set_github_remote_url()
             self.import_data()
 
     def set_svncommand(self):
-        '''Set the set_svncommand() of Install4'''
+        '''Wrapper for method Install4.set_svncommand()'''
         if self.ready and not self.options.github: self.install4.set_svncommand()
 
-
     def set_exists(self):
-        '''Call set_exists() of Install4 or Install5'''
+        '''Call set_exists() of class Install4 or class Install5'''
         if self.ready:
             if not self.options.github: self.install4.set_exists()
             self.import_data()
 
     def fetch(self):
-        '''Call set_fetch() of Install4 or Install5'''
+        '''Call set_fetch() of class Install4 or class Install5'''
         if self.ready:
             if self.options.github: self.install5.fetch()
             else:                   self.install4.fetch()
             self.import_data()
 
     def set_github_remote_url(self):
-        '''Set the set_github_remote_url() of Install5'''
+        '''Set the set_github_remote_url() of class Install5'''
         if self.ready and self.options.github: self.install5.set_github_remote_url()
 
     def reset_options_from_config(self):
@@ -302,10 +310,11 @@ class Install:
                 if not self.build_type: self.build_message = "Proceeding without a setup.py or Makefile..."
 
     def logger_build_message(self):
+        '''Log the build message.'''
         if self.build_message: self.logger.info(self.build_message)
 
     def make_directory_install(self):
-        '''Make install directory'''
+        '''Make install directory.'''
         # If this is a trunk or branch install or nothing to build,
         # this directory will be created by other means.
         if self.ready:
@@ -317,19 +326,17 @@ class Install:
                     self.ready = False
 
     def set_modules(self):
-        '''Set up Modules'''
+        '''Set a class Modules instance.'''
         self.modules = Modules(options=self.options, logger=self.logger, product=self.product, directory=self.directory, build_type=self.build_type)
 
     def set_environ(self):
-        '''Set up some convenient environment variables.'''
+        '''Set environment variables WORKING_DIR and INSTALL_DIR.'''
         if self.ready:
             environ['WORKING_DIR'] = self.directory['work']
             environ['INSTALL_DIR'] = self.directory['install']
 
-    #
-    # Build the install
-    #
     def build(self):
+        '''Build the installed product.'''
         if self.ready:
             if self.product['is_trunk_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type:
                 if self.options.test:
@@ -412,10 +419,9 @@ class Install:
                             self.logger.debug('Copying {0} -> {1}'.format(src,dst))
                             if not self.options.test:
                                 copyfile(src,dst)
-    #
-    # Build documentation
-    #
+
     def build_documentation(self):
+        '''Build the documentaion of the installed product.'''
         if self.ready and self.options.documentation:
             if 'python' in self.build_type:
                 if exists(join('doc','index.rst')):
@@ -485,6 +491,7 @@ class Install:
     # doc/Makefile first).
     #
     def build_package(self):
+        '''Build the C/C++ product.'''
         if self.ready and 'c' in self.build_type and self.package:
             environ[self.product['name'].upper()+'_DIR'] = self.directory['work']
             command = ['make', 'install']
@@ -498,18 +505,14 @@ class Install:
                     self.logger.error(err)
                     self.ready = False
 
-    #
-    # Clean up
-    #
     def clean(self):
+        '''Remove the work directory tree.'''
         if self.ready:
             try: rmtree(self.directory['work'])
             except: pass
 
-    #
-    # Done
-    #
     def finalize(self):
+        '''Log installation final result message.'''
         if self.directory['original']: chdir(self.directory['original'])
         finalize = "Done" if self.ready else "Fail"
         finalize_ps = None
@@ -523,12 +526,3 @@ class Install:
         elif self.modules and self.modules.built: finalize_ps = "Ready to load module %(name)s/%(version)s" % self.product
         self.logger.info(finalize)
         if finalize_ps: self.logger.info(finalize_ps)
-
-
-
-
-
-
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')
-

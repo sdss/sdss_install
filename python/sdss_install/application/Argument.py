@@ -12,7 +12,8 @@ class Argument:
         self.options = self.get_options() if self.get_options else None
         self.options._name = name if self.options else None
 
-def sdssinstall():
+def sdss_install():
+    '''Add command line arguments for bin file sdss_install'''
     xct = basename(argv[0])
     parser = ArgumentParser(description=__doc__,prog=xct)
     parser.add_argument('-e', '--level', help='set logging level', metavar='LEVEL', choices=['debug','info','warning','error'], default='debug')

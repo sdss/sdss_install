@@ -25,23 +25,18 @@ class Repositories:
         if not self.options: self.logger.error('ERROR: Unable to set_options')
 
     def get_repository_names(self):
+        '''Get a list of SDSS GitHub repository names.'''
         self.set_repositories()
         repository_names = self.repositories if self.repositories else None
         return repository_names
 
     def set_repositories(self):
-        '''
-        Set a list of dictionaries with all GitHub repository information
-        for the requested product
-        '''
+        '''Concatenate repository names from all GraphQL pages.'''
         self.repositories = list()
         self.set_store()
         self.set_query_parameters()
         self.set_repository_data()
         self.repositories.extend(self.repository_list)
-#        print('self.repositories:\n' + dumps(self.repositories,indent=1)) ### DEBUG ###
-#        print('self.query_parameters:\n' + dumps(self.query_parameters,indent=1)) ### DEBUG ###
-#        print('len(self.repositories): %r' % len(self.repositories)) ### DEBUG ###
         pagination_flag = True
         while pagination_flag:
             if self.page_info['hasNextPage']:
@@ -49,14 +44,11 @@ class Repositories:
                 self.set_pagination_parameters()
                 self.set_repository_data()
                 self.repositories.extend(self.repository_list)
-#                print('self.repositories:\n' + dumps(self.repositories,indent=1)) ### DEBUG ###
-#                print('self.query_parameters:\n' + dumps(self.query_parameters,indent=1)) ### DEBUG ###
-#                print('len(self.repositories): %r' % len(self.repositories)) ### DEBUG ###
             else: pagination_flag = False
         if not self.repositories: self.logger.error('ERROR: Failed to set_repositories')
-#        print('self.repositories:\n' + dumps(self.repositories,indent=1)) ### DEBUG ###
 
     def set_store(self):
+        '''Set a class Store instance and its attributes: organization name and a class Client instance.'''
         if self.options and not self.store:
             self.store = Store(logger=self.logger, options=self.options)
             self.store.set_organization_name()
@@ -85,6 +77,7 @@ class Repositories:
         self.set_repository_list()
     
     def set_repository_payload(self):
+        '''Set GraphQL query payload data then extract field edges and pagination information.'''
         self.repository_payload = None
         if self.store.client and self.query_parameters:
             self.store.set_data(query_parameters=self.query_parameters)
@@ -92,32 +85,27 @@ class Repositories:
         else: self.logger.error('ERROR: Unable to set_repository_data')
 
     def set_repository_edges_and_page_info(self, data=None):
-        '''Set a dictionary of page information and a list of dictionaries containing repository fields.'''
+        '''From the GraphQL query payload data, set a pagination information dictionary and a list of dictionaries containing repository fields.'''
         self.repository_edges = None
         self.page_info = None
         data = self.repository_payload if self.repository_payload else None
-#        print('data:\n' + dumps(data,indent=1)) ### DEBUG ###
         if data:
             data = data['organization']['repositories'] if data else None
             self.repository_edges = data['edges']                   if data else None
             self.page_info = data['pageInfo']                 if data else None
-#            print('self.repository_payload: \n' + dumps(self.repository_payload,indent=1)) ### DEBUG ###
-#            print('self.page_info: \n' + dumps(self.page_info,indent=1)) ### DEBUG ###
         else: self.logger.error('ERROR: Unable to set_repository_edges_and_page_info')
 
     def set_repository_list(self):
+        '''Set a list of repository names from the repository field list of dictionaries.'''
         self.repository_list = list()
         if self.repository_edges:
             for repository in self.repository_edges:
                 repository_name = repository['node']['name']
                 self.repository_list.append(repository_name)
-#                print('repository: \n' + dumps(repository,indent=1)) ### DEBUG ###
-#                print('self.repository_dict: \n' + dumps(self.repository_dict,indent=1)) ### DEBUG ###
-#                print('self.repository_list: \n' + dumps(self.repository_list,indent=1)) ### DEBUG ###
         else: self.logger.error('ERROR: Unable to set_repository_list')
 
     def set_pagination_parameters(self):
-        '''Set pagination parameters for next page.'''
+        '''Set pagination parameters for next page from pagination infomation dictionary.'''
         if self.query_parameters and self.page_info:
             self.query_parameters['pagination_flag']    = True
             self.query_parameters['end_cursor']         = self.page_info['endCursor']
@@ -126,6 +114,3 @@ class Repositories:
             s1 = 'ERROR: pagination parameters could not be set.\n'
             s2 = 'query_parameters = %s\npage_info = %s' % (self.query_parameters, self.page_info)
             self.logger.error(s1+s2)
-
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')

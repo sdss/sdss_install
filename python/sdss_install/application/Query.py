@@ -42,6 +42,3 @@ class Query():
         else: self.logger.error('ERROR: The file named %r does not exist in the directory %r.' %
                                 (self.file,self.graphql_dir))
         if not self.string: self.logger.error('ERROR: Unable to set the GraphQL query string.')
-
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')

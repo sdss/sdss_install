@@ -6,9 +6,6 @@ from sys import path, version_info
 from os import environ, makedirs, sep
 from os.path import basename, dirname, exists, isdir, join
 
-from json import dumps ### DEBUG ###
-
-
 class Modules:
 
     def __init__(self, options=None, logger=None, product=None, directory=None, build_type=None):
@@ -23,7 +20,7 @@ class Modules:
     
 
     def set_ready(self):
-        '''Set up Modules'''
+        '''Set up Modules.'''
         self.ready = self.logger and self.options and self.product and self.directory
         if self.ready:
             if self.options.moduleshome is None or not isdir(self.options.moduleshome):
@@ -45,13 +42,13 @@ class Modules:
                 self.ready = False
 
     def set_file(self, ext='.module'):
-        '''Set product module file path'''
+        '''Set product module file path.'''
         alt = "_%s" % self.options.alt_module if self.options.alt_module else ""
         filename = self.product['name']+alt+ext if 'name' in self.product and ext else None
         self.file = join(self.directory['work'],'etc',filename) if filename and 'work' in self.directory else None
 
     def load_dependencies(self):
-        '''Load dependencies'''
+        '''Load dependencies.'''
         if self.ready:
             self.set_dependencies()
             for (product,version) in self.dependencies: self.load(product=product,version=version)
@@ -66,7 +63,7 @@ class Modules:
                 self.dependencies.append(product_version.split('/',1) if '/' in product_version else (product_version, None))
 
     def load(self,product=None,version=None):
-        '''Hook to module load function'''
+        '''Hook to module load function.'''
         if product:
             product_version = join(product,version) if version else product
             try:
@@ -76,7 +73,7 @@ class Modules:
         else: self.logger.error("module load command requires a product [version optional]")
 
     def set_keywords(self, build_type=None):
-        '''Set keywords to configure module'''
+        '''Set keywords to configure module.'''
         if self.ready:
             self.keywords = dict()
             self.keywords['name'] = self.product['name']
@@ -120,13 +117,12 @@ class Modules:
                 self.keywords['sdss_install_root'] = self.options.root
                 self.keywords['sdss_install_longpath'] = '# '
             elif basename(self.options.product)=='sdss4tools':
-                self.keywords['sdss_install_root'] = self.options.root
-                self.keywords['sdss_install_longpath'] = self.options.longpath
+                self.keywords['sdss4tools_root'] = self.options.root
+                self.keywords['sdss4tools_longpath'] = self.options.longpath
 
     def set_directory(self):
-        '''Install the module file.'''
+        '''Make module file installation directory.'''
         self.check_options()
-#        print('self.options.github: %r' % self.options.github)
         self.directory['modules'] = join(self.options.moduledir,self.product['name'])
         if self.ready and not self.options.test:
             if not isdir(self.directory['modules']):
@@ -162,10 +158,6 @@ class Modules:
         if self.ready:
             if exists(self.file):
                 self.product['modulefile'] = join(self.directory['modules'],self.product['version'])
-#                print("self.product['modulefile']: %r" % self.product['modulefile'])
-#                print("self.keywords: %r" % self.keywords)
-#                print("self.file: %r" % self.file)
-#                input('Pause')
                 with open(self.file) as file: mod = file.read().format(**self.keywords)
                 if self.options.test: self.logger.debug(mod)
                 else:

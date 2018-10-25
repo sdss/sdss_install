@@ -9,7 +9,7 @@ from sdss_install.install import Install
 from sdss_install.install.modules import Modules
 
 
-options = Argument('sdssinstall').options
+options = Argument('sdss_install').options
 install = Install(options=options)
 
 if options and options.version: print(__version__)

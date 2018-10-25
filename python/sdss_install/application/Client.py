@@ -77,6 +77,3 @@ class Client():
             s = 'ERROR: Unable to set client data.\n'
             s += 'method = %r\nendpoint = %r\nauthorization = %r' % (self.method, self.endpoint, self.authorization)
             self.logger.error(s)
-
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')

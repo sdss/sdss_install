@@ -5,16 +5,8 @@ import json
 class Store:
     
     def __init__(self, logger=None, options=None):
-        self.set_logger(logger=logger)
-        self.set_options(options=options)
-
-    def set_logger(self, logger=None):
         self.logger = logger if logger else None
-        if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
-
-    def set_options(self, options=None):
         self.options = options if options else None
-        if not self.options: self.logger.error('ERROR: Unable to set_options')
 
     def set_organization_name(self):
         '''Set the GitHub organization.'''
@@ -73,6 +65,3 @@ class Store:
             self.logger.debug('DEBUG:\nquery_parameters:\n' + json.dumps(self.query_parameters, indent=2) )
             self.logger.debug('DEBUG:\nquery_string:\n' + str(query_string) )
             self.logger.debug('DEBUG:\nquery_string:\n' + str(query_string % self.query_parameters) )
- 
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')

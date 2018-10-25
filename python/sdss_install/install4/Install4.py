@@ -20,14 +20,11 @@ try: from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError: from configparser import SafeConfigParser, RawConfigParser
 from .most_recent_tag import most_recent_tag
 
-from json import dumps ### DEBUG ###
-
-
 class Install4:
 
     def __init__(self, logger=None, options=None):
-        self.logger = logger if logger else None
-        self.options = options if options else None
+        self.set_logger(logger=logger)
+        self.set_options(options=options)
         self.ready = None
         self.url = None
         self.product = None
@@ -38,11 +35,21 @@ class Install4:
         self.modules = None
         self.build_type = None
 
-    #
-    # Sanity check self.options
-    #
+    def set_logger(self, logger=None):
+        '''Set the class logger'''
+        self.logger = logger if logger else None
+        if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
+
+    def set_options(self, options=None):
+        '''Set command line argument options'''
+        self.options = options if options else None
+        if not self.options:
+            if self.logger: self.logger.error('Unable to set_options')
+            else:           print('ERROR: Unable to set_options')
+
     def set_ready(self):
-        self.ready = self.options is not None
+        '''Set self.ready after sanity check self.options.'''
+        self.ready = self.options and self.logger
         if self.ready:
             self.url = join(self.options.url,'public') if self.options.public else self.options.url
             if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
@@ -61,10 +68,9 @@ class Install4:
                 if self.options.product.endswith('/'): self.options.product = dirname(self.options.product)
         else: self.url = None
 
-    #
-    # Determine the product and version names.
-    #
     def set_product(self):
+        '''Set self.product dict containing product and version names etc.'''
+        # Determine the product and version names.
         if self.ready:
             self.product = {}
             self.product['root'] = dirname(self.options.product) if self.options.longpath else None
@@ -77,18 +83,14 @@ class Install4:
             self.product['url'] = join(self.url,self.options.product,self.product['url'])
             self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] and not self.options.public else 'export'
 
-    #
-    # Set the svn command for public or add username.
-    #
     def set_svncommand(self):
+        '''Set the SVN command for public, otherwise add username to SVN command.'''
         if self.ready:
             self.svncommand = ['svn']
             if not self.options.public and self.options.username: self.svncommand += ['--username', self.options.username]
 
-    #
-    # Check for existence of the product URL.
-    #
     def set_exists(self):
+        '''Check for existence of the product URL.'''
         if self.ready:
             self.logger.info("Contacting {url} ".format(url=self.url))
             command = self.svncommand + ['ls',self.product['url']]
@@ -102,10 +104,9 @@ class Install4:
                 self.logger.error("Nonexistent URL at %(url)s" % self.product)
                 self.logger.error(err)
                 self.ready = False
-    #
-    # Fetch the code from svn
-    #
+
     def fetch(self):
+        '''SVN checkout or export the product version.'''
         if self.ready:
             command = self.svncommand + [self.product['checkout_or_export'],self.product['url'],self.directory['work']]
             self.logger.info("Running %(checkout_or_export)s of %(url)s" % self.product)
@@ -116,6 +117,3 @@ class Install4:
             self.ready = not len(err)
             if self.ready: self.logger.info("Completed svn %(checkout_or_export)s of %(url)s" % self.product)
             else: self.logger.error("svn error during %(checkout_or_export)s of %(url)s: " % self.product + err)
-
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')

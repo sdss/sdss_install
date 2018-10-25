@@ -84,6 +84,3 @@ class Logging:
             self.smtphandler.setFormatter(formatter)
             self.smtphandler.setLevel(logging.CRITICAL)
             self.logger.addHandler(self.smtphandler)
-
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')

@@ -24,15 +24,13 @@ from sdss_install.install5 import Tags
 from sdss_install.install5 import Repositories
 from sdss_install.install5 import Branches 
 
-from json import dumps ### DEBUG ###
-
 
 class Install5:
     '''Place install5 only related methods here. Place methods related to both install4 and install5 in another directory (install ?).'''
 
     def __init__(self, logger=None, options=None):
-        self.logger = logger if logger else None
-        self.options = options if options else None
+        self.set_logger(logger=logger)
+        self.set_options(options=options)
         self.ready = None
         self.repositories = None
         self.tags = None
@@ -41,13 +39,22 @@ class Install5:
         self.directory = None
         self.github_remote_url = None
 
+    def set_logger(self, logger=None):
+        '''Set the class logger'''
+        self.logger = logger if logger else None
+        if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
+
+    def set_options(self, options=None):
+        '''Set command line argument options'''
+        self.options = options if options else None
+        if not self.options:
+            if self.logger: self.logger.error('Unable to set_options')
+            else:           print('ERROR: Unable to set_options')
+
     def set_ready(self):
-        '''Set self.ready after sanity check self.options'''
-        self.ready = self.options is not None
+        '''Set self.ready after sanity check self.options and product/version validation'''
+        self.ready = self.options and self.logger
         if self.ready:
-#            print('self.options.product: %r' % self.options.product) ### DEBUG ###
-#            print('self.options.product_version: %r' % self.options.product_version) ### DEBUG ###
-#            print('self.options.bootstrap: %r' % self.options.bootstrap) ### DEBUG ###
             if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
                 if self.options.bootstrap:
                     self.options.default = True
@@ -73,21 +80,12 @@ class Install5:
                 self.ready = valid_product and valid_version
                 if not valid_product: self.logger.error('Invalid product: %r' % product)
                 if not valid_version: self.logger.error('Invalid version: %r' % version)
-#                print('self.repositories:\n' + dumps(self.repositories,indent=1)) ### DEBUG ###
-#                print('self.branches:\n' + dumps(self.branches,indent=1)) ### DEBUG ###
-#                print('self.tags:\n' + dumps(self.tags,indent=1)) ### DEBUG ###
-#                print('valid_product: %r' % valid_product) ### DEBUG ###
-#                print('valid_version: %r' % valid_version) ### DEBUG ###
-#                print('self.ready: %r' % self.ready) ### DEBUG ###
-#                print('product: %r' % product) ### DEBUG ###
-#                print('version: %r' % version) ### DEBUG ###
-#        print('self.ready: %r' % self.ready) ### DEBUG ###
 
     def set_product(self):
-        '''Set the self.product dictionary containing product and version names etc.'''
+        '''Set self.product dict containing product and version names etc.'''
         #
-        # For backwards compatibility, we will maintain the use of trunk used in sdss4install for svn,
-        # with the understanding that trunk is synonomuous with master for github
+        # For backwards compatibility, we will maintain the use of trunk used in sdss4install for SVN,
+        # with the understanding that trunk is synonomuous with master for GitHub.
         #
         if self.ready:
             self.product = dict()
@@ -99,7 +97,6 @@ class Install5:
             self.product['is_tag'] = self.options.product_version in self.tags if self.tags else False
             self.product['is_trunk_or_branch'] = self.product['is_trunk'] or self.product['is_branch']
             self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] else 'export'
-#            print('self.product:\n' + dumps(self.product,indent=1)) ### DEBUG ###
 
     def set_github_remote_url(self):
         '''Set the SDSS GitHub HTTPS remote URL'''
@@ -108,20 +105,21 @@ class Install5:
             self.github_remote_url = 'https://github.com/sdss/%s.git' % product if product else None
 
     def fetch(self):
-        '''Fetch the code from GitHub'''
+        '''Clone master branch of product version from GitHub then checkout other branch or tag if necessary.'''
         self.clone()
-        if self.product['is_tag']: self.checkout()
+        if not self.product['is_trunk']: self.checkout()
         
     def clone(self):
-        ### Look at Joel's Cli.py class and use it here ###
+        '''Clone the GitHub repository for the product.'''
         if self.ready:
             command = ['git','clone',self.github_remote_url,basename(self.directory['work'])]
-#            command = ['git','clone',self.github_remote_url,self.directory['work']]
             self.execute_command(command=command)
             if self.ready:
                 self.logger.info("Completed GitHub clone of repository %(name)s" % self.product)
 
     def execute_command(self, command=None):
+        '''Execute the passed terminal command.'''
+        ### Look at Joel's Cli.py class and use it here ###
         if command:
             self.logger.info('Running command: %s' % ' '.join(command))
             proc = Popen(command, stdout=PIPE, stderr=PIPE) if Popen else None
@@ -135,8 +133,9 @@ class Install5:
         else: self.logger.error('Unable to execute_command')
 
     def checkout(self):
+        '''Checkout branch or tag, and delete .git directory if tag.'''
         if self.ready:
-            if self.product['is_branch'] and not self.product['is_trunk']:
+            if self.product['is_branch']:
                 version = self.product['version']
                 s = "Completed checkout of branch %(version)s" % self.product
             if self.product['is_tag']:
@@ -149,6 +148,3 @@ class Install5:
                 if self.product['is_tag']: rmtree(join(self.directory['work'],'.git'))
                 chdir(self.directory['original'])
                 self.logger.info(s)
-
-    def pause(self): ### DEBUG ###
-        input('Press enter to continue')
