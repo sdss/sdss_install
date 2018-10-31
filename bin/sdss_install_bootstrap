@@ -52,7 +52,6 @@ fi
 if [[ -n "${root}" ]]; then
     if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - root = \"-r ${root}\" "; fi
     root = "-r ${root}"
-    echo "root = ${root}"
 fi
 if [[ -z "${MODULESHOME}" ]]; then
     echo "sdss_install_bootstrap - INFO - You do not appear to have Modules installed."
@@ -73,14 +72,11 @@ else
     export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}
 fi
 if [[ -z "${python}" ]]; then
-    echo "root = ${root}"
-    echo "test = ${test}"
-    echo "verbose = ${verbose}"
-    echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap -r ${root} ${test} ${verbose}"
-    sdss_install --bootstrap ${root} ${test} ${verbose}
+    echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap --module-only --root ${root} ${test} ${verbose}"
+    sdss_install --github --bootstrap --module-only --root ${root} ${test} ${verbose}
 else
-    echo "sdss_install_bootstrap - INFO - ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --bootstrap -r ${root} -p ${python} ${test} ${verbose}"
-    ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --bootstrap ${root} -p ${python} ${test} ${verbose}
+    echo "sdss_install_bootstrap - INFO - ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only --root ${root} --python ${python} ${test} ${verbose}"
+    ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only --root ${root} --python ${python} ${test} ${verbose}
 fi
 
 sdss_install --github --bootstrap /software/github/
