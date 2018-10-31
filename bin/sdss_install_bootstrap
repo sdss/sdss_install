@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# $Id: sdss_install_bootstrap 2018-10-30 n.benjamin.murphy $
+#
+function usage() {
+    local execName=$(basename $0)
+    (
+    echo "${execName} [-h] [-m MODULESHOME] [-p PYTHON] [-r ROOT] [-l] [-t] [-U USER] [-v]"
+    echo ""
+    echo "Install sdss_install on a bare system."
+    echo ""
+    echo "    -h = Print this message and exit."
+    echo "    -m = Look for the Modules install in MODULESHOME."
+    echo "    -p = Use the Python executable PYTHON (e.g. /opt/local/bin/python2.7)."
+    echo "    -r = Set or override the product root for sdss_install"
+    echo "    -l = Long paths to maintain long paths in svn.sdss.org including repo/data/deprecated"
+    echo "    -t = Test mode.  Do not make any changes.  Implies -v."
+    echo "    -v = Verbose mode. Print lots of extra information."
+    ) >&2
+}
+#
+# Get options
+#
+test=''
+verbose=''
+modules=''
+py=''
+while getopts hm:p:r:ltU:v argname; do
+    case ${argname} in
+        h) usage; exit 0 ;;
+        m) modules=${OPTARG} ;;
+        p) python=${OPTARG} ;;
+        r) root=${OPTARG} ;;
+        l) longpath='-l' ;;
+        t) test='-t' ;;
+        v) verbose='-v' ;;
+        *) usage; exit 1 ;;
+    esac
+done
+shift $((OPTIND-1))
+#
+# Install
+#
+if [[ -z "${SDSS_INSTALL_PRODUCT_ROOT}" && -z "${NERSC_HOST}" ]]; then
+    echo "sdss_install_bootstrap - INFO - Please set the SDSS_INSTALL_PRODUCT_ROOT environment variable to the directory where you want your SDSS-IV products installed."
+    exit 1
+fi
+if [[ -n "${modules}" ]]; then
+    if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - MODULESHOME=${modules}"; fi
+    export MODULESHOME=${modules}
+fi
+if [[ -n "${root}" ]]; then
+    if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - root = \"-r ${root}\" "; fi
+    root = "-r ${root}"
+    echo "root = ${root}"
+fi
+if [[ -z "${MODULESHOME}" ]]; then
+    echo "sdss_install_bootstrap - INFO - You do not appear to have Modules installed."
+    exit 1
+fi
+
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - git clone https://github.com/sdss/sdss_install.git sdss_install-master"; fi
+git clone https://github.com/sdss/sdss_install.git sdss_install-master
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=$(pwd)/sdss_install-master"; fi
+export SDSS_INSTALL_DIR=$(pwd)/sdss_install-master
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}"; fi
+export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}
+if [[ -z "${PYTHONPATH}" ]]; then
+    if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PYTHONPATH=${SDSS_INSTALL_DIR}/python"; fi
+    export PYTHONPATH=${SDSS_INSTALL_DIR}/python
+else
+    if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}"; fi
+    export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}
+fi
+if [[ -z "${python}" ]]; then
+    echo "root = ${root}"
+    echo "test = ${test}"
+    echo "verbose = ${verbose}"
+    echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap -r ${root} ${test} ${verbose}"
+    sdss_install --bootstrap ${root} ${test} ${verbose}
+else
+    echo "sdss_install_bootstrap - INFO - ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --bootstrap -r ${root} -p ${python} ${test} ${verbose}"
+    ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --bootstrap ${root} -p ${python} ${test} ${verbose}
+fi
+
+sdss_install --github --bootstrap /software/github/
+
+

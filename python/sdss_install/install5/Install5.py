@@ -60,8 +60,10 @@ class Install5:
                     self.options.default = True
                     self.options.product = 'sdss_install'
                     tags = Tags(logger=self.logger,options=self.options)
-                    self.options.product_version = tags.most_recent_tag_name()
-                    self.logger.info("Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
+                    tag_names = tags.get_tag_names()
+                    self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
+                    s = 'No GitHub tags found for %s. ' % self.options.product if not tag_names else ''
+                    self.logger.info(s + "Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
                 else:
                     self.logger.error("You must specify a product and the version (after a space)!")
                     self.ready = False
@@ -72,10 +74,10 @@ class Install5:
                                                  options=self.options).get_repository_names()
                 self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
                 self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
-                is_master = version == 'master'
+                is_trunk = version == 'master'
                 is_branch = version in self.branches if self.branches else False
                 is_tag = version in self.tags if self.tags else False
-                valid_version =  is_master or  is_branch or is_tag
+                valid_version =  is_trunk or is_branch or is_tag
                 valid_product = product in self.repositories
                 self.ready = valid_product and valid_version
                 if not valid_product: self.logger.error('Invalid product: %r' % product)
@@ -93,7 +95,7 @@ class Install5:
             self.product['name'] = self.options.product
             self.product['version'] = self.options.product_version
             self.product['is_trunk'] = self.options.product_version == 'master'
-            self.product['is_branch'] = self.options.product_version in self.branches
+            self.product['is_branch'] = self.options.product_version in self.branches if self.branches else False
             self.product['is_tag'] = self.options.product_version in self.tags if self.tags else False
             self.product['is_trunk_or_branch'] = self.product['is_trunk'] or self.product['is_branch']
             self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] else 'export'

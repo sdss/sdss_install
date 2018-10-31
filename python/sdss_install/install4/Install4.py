@@ -53,14 +53,8 @@ class Install4:
         if self.ready:
             self.url = join(self.options.url,'public') if self.options.public else self.options.url
             if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
-                if self.options.bootstrap:
-                    self.options.default = True
-                    self.options.product = 'repo/sdss/sdss4tools'
-                    self.options.product_version = most_recent_tag(join(self.url,self.options.product,'tags'))
-                    self.logger.info("Selected sdss4tools/{0} for bootstrap installation.".format(self.options.product_version))
-                else:
-                    self.logger.error("You must specify a product and the version (after a space)!")
-                    self.ready = False
+                self.logger.error("You must specify a product and the version (after a space)!")
+                self.ready = False
             elif self.options.product:
                 svnroots = ['repo','data','deprecated']
                 validproduct = [svnroot for svnroot in svnroots if self.options.product.startswith(svnroot)]
