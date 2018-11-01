@@ -77,6 +77,6 @@ else
     ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} --python ${python} ${test} ${verbose}
 fi
 
-/bin/rm -rf sdss_install-master
+
 
 

@@ -1,0 +1,30 @@
+#%Module1.0
+proc ModulesHelp { } {
+    global product version
+    puts stderr "This module adds $product/$version to your environment."
+}
+# Define variables
+#
+set product sdss_install
+set version master
+conflict $product
+#
+# module-whatis
+#
+module-whatis "Sets up $product/$version in your environment."
+module load sdss_access
+prereq sdss_access
+#
+# Set environment
+#
+set PRODUCT_DIR /Users/ben/Compute/Python/$product/$version
+setenv [string toupper $product]_DIR $PRODUCT_DIR
+setenv [string toupper $product]_GRAPHQL_DIR $PRODUCT_DIR/graphql
+setenv [string toupper $product]_SPHINX_DIR $PRODUCT_DIR/docs/sphinx
+setenv [string toupper $product]_KEY 0d2752517b043d5a91922a319d107c866c706b76
+setenv [string toupper $product]_LONGPATH False
+
+prepend-path PATH $PRODUCT_DIR/bin
+prepend-path PYTHONPATH $PRODUCT_DIR/python
+
+
