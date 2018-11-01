@@ -17,14 +17,13 @@ prereq sdss_access
 #
 # Set environment
 #
-set PRODUCT_DIR /Users/ben/Compute/Python/$product/$version
+set PRODUCT_DIR ~/software/sdss/$product/$version
 setenv [string toupper $product]_DIR $PRODUCT_DIR
 setenv [string toupper $product]_GRAPHQL_DIR $PRODUCT_DIR/graphql
-setenv [string toupper $product]_SPHINX_DIR $PRODUCT_DIR/docs/sphinx
-setenv [string toupper $product]_KEY 0d2752517b043d5a91922a319d107c866c706b76
+setenv [string toupper $product]_KEY XXXX
 setenv [string toupper $product]_LONGPATH False
+
 
 prepend-path PATH $PRODUCT_DIR/bin
 prepend-path PYTHONPATH $PRODUCT_DIR/python
-
 
