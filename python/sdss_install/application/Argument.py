@@ -51,8 +51,6 @@ def sdss_install():
         metavar='ALT_MODULE',help='specify an alternate module file')
     parser.add_argument('-M', '--module-dir', action='store', dest='moduledir',
         metavar='DIR',help='Install module files in DIR.',default='')
-    parser.add_argument('-p', '--python', action='store', dest='python',
-        metavar='PYTHON',help='Use the Python executable PYTHON (e.g. /opt/local/bin/python2.7).  This option is only relevant when installing sdss_install itself.')
     parser.add_argument('-r', '--root', action='store', dest='root',
         metavar='DIR', help='Set or override the value of $SDSS_INSTALL_PRODUCT_ROOT',
         default=getenv('SDSS_INSTALL_PRODUCT_ROOT'))

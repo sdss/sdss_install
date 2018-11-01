@@ -35,15 +35,6 @@ class Install:
         self.options = options if options else None
         if not self.options: self.logger.error('ERROR: Unable to set_options')
 
-#    def set_logger(self, options=None):
-#        '''Set self.logger'''
-#        self.logger = None
-#        if options:
-#            self.logging = Logging(name=options._name,
-#                                   level=options.level) if options else None
-#            self.logger = self.logging.logger if self.logging else None
-#        if not options or not self.logger: print('ERROR: %r> Unable to set_logging.' % self.__class__)
-
     def set_logger(self, options=None):
         '''Set the logger used by all classes in the package.'''
         if options and logging:
