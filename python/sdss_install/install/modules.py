@@ -89,7 +89,7 @@ class Modules:
             if isdir(join(self.directory['work'],'lib')): self.keywords['needs_ld_lib'] = ''
             if isdir(join(self.directory['work'],'pro')): self.keywords['needs_idl'] = ''
             if 'python' in self.build_type:
-                if self.product['is_branch'] or self.product['is_trunk'] or self.options.no_python_package:
+                if self.product['is_branch'] or self.product['is_master'] or self.options.no_python_package:
                     self.keywords['needs_trunk_python'] = ''
                 else:
                     self.keywords['needs_python'] = ''

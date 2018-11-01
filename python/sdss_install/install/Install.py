@@ -250,6 +250,9 @@ class Install:
 
     def reset_options_from_config(self):
         '''Set absent command-line options from etc/config.ini file, if it exists.'''
+        # NOTE: Initially, all of the config files only have the option [sdss4install].
+        #       Need to duplicate these options for [sdss_install] in order to transition
+        #       from sdss4install to sdss_instal].
         # Some products may contain an optional etc/config.ini file to determine the config self.options to build
         if self.ready:
             config_filename = join('etc','config.ini')
@@ -318,7 +321,7 @@ class Install:
         # If this is a trunk or branch install or nothing to build,
         # this directory will be created by other means.
         if self.ready:
-            if not (self.product['is_trunk_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type or self.options.test):
+            if not (self.product['is_master_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type or self.options.test):
                 try:
                     makedirs(self.directory['install'])
                 except OSError as ose:
@@ -338,7 +341,7 @@ class Install:
     def build(self):
         '''Build the installed product.'''
         if self.ready:
-            if self.product['is_trunk_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type:
+            if self.product['is_master_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type:
                 if self.options.test:
                     self.logger.info("Skipping install in %(install)s (--test)" % self.directory)
                 else:

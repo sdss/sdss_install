@@ -70,13 +70,13 @@ else
     export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}
 fi
 if [[ -z "${python}" ]]; then
-    echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap --module-only --root ${root} ${test} ${verbose}"
-    sdss_install --github --bootstrap --module-only --root ${root} ${test} ${verbose}
+    echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}"
+    sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}
 else
-    echo "sdss_install_bootstrap - INFO - ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only --root ${root} --python ${python} ${test} ${verbose}"
-    ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only --root ${root} --python ${python} ${test} ${verbose}
+    echo "sdss_install_bootstrap - INFO - ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} --python ${python} ${test} ${verbose}"
+    ${python} ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} --python ${python} ${test} ${verbose}
 fi
 
-sdss_install --github --bootstrap /software/github/
+/bin/rm -rf sdss_install-master
 
 

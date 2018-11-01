@@ -59,6 +59,7 @@ class Install5:
                 if self.options.bootstrap:
                     self.options.default = True
                     self.options.product = 'sdss_install'
+                    self.options.product_version = 'master'
                     tags = Tags(logger=self.logger,options=self.options)
                     tag_names = tags.get_tag_names()
                     self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
@@ -68,20 +69,20 @@ class Install5:
                     self.logger.error("You must specify a product and the version (after a space)!")
                     self.ready = False
             elif self.options.product:
-                product = self.options.product
-                version = self.options.product_version
-                self.repositories = Repositories(logger=self.logger,
-                                                 options=self.options).get_repository_names()
-                self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
-                self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
-                is_trunk = version == 'master'
-                is_branch = version in self.branches if self.branches else False
-                is_tag = version in self.tags if self.tags else False
-                valid_version =  is_trunk or is_branch or is_tag
-                valid_product = product in self.repositories
-                self.ready = valid_product and valid_version
-                if not valid_product: self.logger.error('Invalid product: %r' % product)
-                if not valid_version: self.logger.error('Invalid version: %r' % version)
+                    self.repositories = Repositories(logger=self.logger,
+                                                     options=self.options).get_repository_names()
+                    self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
+                    self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
+                    product = self.options.product
+                    version = self.options.product_version
+                    is_master = version == 'master'
+                    is_branch = version in self.branches if self.branches else False
+                    is_tag = version in self.tags if self.tags else False
+                    valid_version =  is_master or is_branch or is_tag
+                    valid_product = product in self.repositories
+                    self.ready = valid_product and valid_version
+                    if not valid_product: self.logger.error('Invalid product: %r' % product)
+                    if not valid_version: self.logger.error('Invalid version: %r' % version)
 
     def set_product(self):
         '''Set self.product dict containing product and version names etc.'''
@@ -94,11 +95,11 @@ class Install5:
             self.product['root'] = None # There's no GitHub directory structure to preserve, as in svn
             self.product['name'] = self.options.product
             self.product['version'] = self.options.product_version
-            self.product['is_trunk'] = self.options.product_version == 'master'
+            self.product['is_master'] = self.options.product_version == 'master'
             self.product['is_branch'] = self.options.product_version in self.branches if self.branches else False
             self.product['is_tag'] = self.options.product_version in self.tags if self.tags else False
-            self.product['is_trunk_or_branch'] = self.product['is_trunk'] or self.product['is_branch']
-            self.product['checkout_or_export'] = 'checkout' if self.product['is_trunk_or_branch'] else 'export'
+            self.product['is_master_or_branch'] = self.product['is_master'] or self.product['is_branch']
+            self.product['checkout_or_export'] = 'checkout' if self.product['is_master_or_branch'] else 'export'
 
     def set_github_remote_url(self):
         '''Set the SDSS GitHub HTTPS remote URL'''
@@ -109,7 +110,7 @@ class Install5:
     def fetch(self):
         '''Clone master branch of product version from GitHub then checkout other branch or tag if necessary.'''
         self.clone()
-        if not self.product['is_trunk']: self.checkout()
+        if not self.product['is_master']: self.checkout()
         
     def clone(self):
         '''Clone the GitHub repository for the product.'''
