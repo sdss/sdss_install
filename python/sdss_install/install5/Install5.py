@@ -111,7 +111,8 @@ class Install5:
     def fetch(self):
         '''Clone master branch of product version from GitHub then checkout other branch or tag if necessary.'''
         self.clone()
-        if not self.product['is_master']: self.checkout()
+        if not self.product['is_master'] or self.options.bootstrap:
+            self.checkout()
         
     def clone(self):
         '''Clone the GitHub repository for the product.'''
@@ -142,13 +143,19 @@ class Install5:
             if self.product['is_branch']:
                 version = self.product['version']
                 s = "Completed checkout of branch %(version)s" % self.product
-            if self.product['is_tag']:
+                remove = False
+            elif self.product['is_tag']:
                 version = 'tags/' + self.product['version']
                 s = "Completed checkout of tag %(version)s and removal of .git directory" % self.product
+                remove = True
+            elif self.product['is_master'] and self.options.bootstrap:
+                version = self.product['version']
+                s = "Completed checkout of master and removal of .git directory" % self.product
+                remove = True
             chdir(self.directory['work'])
             command = ['git','checkout',version]
             self.execute_command(command=command)
             if self.ready:
-                if self.product['is_tag']: rmtree(join(self.directory['work'],'.git'))
+                if remove: rmtree(join(self.directory['work'],'.git'))
                 chdir(self.directory['original'])
                 self.logger.info(s)

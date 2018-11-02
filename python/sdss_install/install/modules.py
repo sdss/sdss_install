@@ -31,13 +31,8 @@ class Modules:
                 initpy = join(self.options.moduleshome,'init',modpy)
                 if exists(initpy):
                     initpy_found = True
-
-#                    with open(initpy) as execfile:
-#                        code = compile(execfile.read(), initpy, 'exec')
-#                        exec(code, globals())
-
                     try: execfile(initpy,globals())
-                    except (NameError,SyntaxError):
+                    except NameError:
                         with open(initpy) as execfile:
                             code = compile(execfile.read(), initpy, 'exec')
                             exec(code, globals())

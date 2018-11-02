@@ -185,7 +185,8 @@ class Install:
         '''Set dict self.directory value for key 'work', used to install product and/or module file. Remove existing work directory.'''
         if self.ready:
             self.import_data()
-            if self.options.module_only: self.directory['work']=self.directory['install']
+            if self.options.module_only:
+                self.directory['work']=self.directory['install']
             else:
                 self.directory['work'] = join(self.directory['original'],"%(name)s-%(version)s" % self.product)
                 if isdir(self.directory['work']):
@@ -509,6 +510,8 @@ class Install:
         '''Log installation final result message.'''
         if self.directory['original']: chdir(self.directory['original'])
         finalize = "Done" if self.ready else "Fail"
+#        if self.options.github and self.options.module_only:
+#            rmtree(join(self.product['name'],self.product['version']))
         finalize_ps = None
         if self.options.test: finalize = "Test " + finalize
         else: finalize += "!"
