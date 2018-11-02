@@ -32,15 +32,15 @@ class Modules:
                 if exists(initpy):
                     initpy_found = True
 
-                    with open(initpy) as execfile:
-                        code = compile(execfile.read(), initpy, 'exec')
-                        exec(code, globals())
+#                    with open(initpy) as execfile:
+#                        code = compile(execfile.read(), initpy, 'exec')
+#                        exec(code, globals())
 
-#                    try: execfile(initpy,globals())
-#                    except NameError:
-#                        with open(initpy) as execfile:
-#                            code = compile(execfile.read(), initpy, 'exec')
-#                            exec(code, globals())
+                    try: execfile(initpy,globals())
+                    except (NameError,SyntaxError):
+                        with open(initpy) as execfile:
+                            code = compile(execfile.read(), initpy, 'exec')
+                            exec(code, globals())
                 break
             if not initpy_found:
                 self.logger.error("Could not find the Python file in {0}/init!".format(self.options.moduleshome))
