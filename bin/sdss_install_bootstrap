@@ -88,8 +88,8 @@ cp $(pwd)/sdss_install/master/etc/sdss_install-module $(pwd)/modulefiles/sdss_in
 #if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - module load $(pwd)/modulefiles/sdss_install/master"  ; fi
 #module load $(pwd)/modulefiles/sdss_install/master
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install -G --bootstrap ${root} ${test} ${verbose}" ; fi
-sdss_install -G --bootstrap ${root} ${test} ${verbose}
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install -G -F --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
+sdss_install -G -F --bootstrap --module-only ${root} ${test} ${verbose}
 
 
 
