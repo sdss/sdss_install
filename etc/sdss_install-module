@@ -20,7 +20,7 @@ prereq sdss_access
 set PRODUCT_DIR ~/software/sdss/$product/$version
 setenv [string toupper $product]_DIR $PRODUCT_DIR
 setenv [string toupper $product]_GRAPHQL_DIR $PRODUCT_DIR/graphql
-setenv [string toupper $product]_KEY XXXX
+setenv [string toupper $product]_KEY REPLACE_ME_WITH_GITHUB_PERSONAL_ACCESS_KEY
 setenv [string toupper $product]_LONGPATH False
 
 
