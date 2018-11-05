@@ -12,15 +12,13 @@ conflict $product
 # module-whatis
 #
 module-whatis "Sets up $product/$version in your environment."
-module load sdss_access
-prereq sdss_access
 #
 # Set environment
 #
 set PRODUCT_DIR ~/software/sdss/$product/$version
 setenv [string toupper $product]_DIR $PRODUCT_DIR
 setenv [string toupper $product]_GRAPHQL_DIR $PRODUCT_DIR/graphql
-setenv [string toupper $product]_KEY REPLACE_ME_WITH_GITHUB_PERSONAL_ACCESS_KEY
+setenv [string toupper $product]_KEY GITHUB_PERSONAL_ACCESS_TOKEN
 setenv [string toupper $product]_LONGPATH False
 
 
