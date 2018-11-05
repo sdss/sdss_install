@@ -390,6 +390,8 @@ class Install:
                 #
                 # Copy additional files
                 #
+                md = None
+                cf = None
                 if isdir('etc'):
                     md = list()
                     cf = list()
