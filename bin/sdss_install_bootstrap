@@ -55,11 +55,11 @@ if [[ -z "${MODULESHOME}" ]]; then
 fi
 
 ### If using cURL ###
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - git clone https://github.com/sdss/sdss_install.git sdss_install/master "; fi
-git clone https://github.com/sdss/sdss_install.git sdss_install/master
+#if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - git clone https://github.com/sdss/sdss_install.git sdss_install/master "; fi
+#git clone https://github.com/sdss/sdss_install.git sdss_install/master
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - removing directory .git/ "; fi
-rm -rf $(pwd)/sdss_install/master/.git/
+#if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - removing directory .git/ "; fi
+#rm -rf $(pwd)/sdss_install/master/.git/
 ### If using cURL ###
 
 
