@@ -62,11 +62,9 @@ rm -rf $(pwd)/sdss_install-master/.git/
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=$(pwd)/sdss_install-master"; fi
 export SDSS_INSTALL_DIR=$(pwd)/sdss_install-master
-#echo $SDSS_INSTALL_DIR ### DEBUG ###
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}"; fi
 export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}
-#echo $PATH ### DEBUG ###
 
 if [[ -z "${PYTHONPATH}" ]]; then
     if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PYTHONPATH=${SDSS_INSTALL_DIR}/python"; fi
@@ -75,7 +73,6 @@ else
     if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}"; fi
     export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}
 fi
-#echo $PYTHONPATH ### DEBUG ###
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - mkdir -p $(pwd)/modulefiles/sdss_install/"  ; fi
 mkdir -p $(pwd)/modulefiles/sdss_install/
@@ -87,6 +84,3 @@ if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_instal
 ${SDSS_INSTALL_DIR}/bin/sdss_install -G --bootstrap --module-only ${root} ${test} ${verbose}
 
 /bin/rm -rf sdss_install-master
-
-#mkdir -p $(pwd)/modulefiles/sdss_install/
-#cp $(pwd)/sdss_install/master/etc/sdss_install-module $(pwd)/modulefiles/sdss_install/master
