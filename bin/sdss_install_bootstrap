@@ -77,6 +77,9 @@ else
     export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}
 fi
 
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_GRAPHQL_DIR=${SDSS_INSTALL_DIR}/graphql"; fi
+export SDSS_INSTALL_GRAPHQL_DIR=${SDSS_INSTALL_DIR}/graphql
+
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
 ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}
 
