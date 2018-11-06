@@ -36,7 +36,7 @@ class Client():
             self.authorization = authorization
         else:
             key = None
-            if self.api == 'graphql': key = 'SDSS_INSTALL_KEY'
+            if self.api == 'graphql': key = 'SDSS_GITHUB_KEY'
             elif self.api == 'rest':  key = 'SDSSSANDBOX_KEY'
             else: self.logger.error('ERROR: Authorization key not set. Unknown API given: %s.' % self.api)
             if key:
