@@ -42,7 +42,7 @@ if [[ -z "${SDSS_INSTALL_PRODUCT_ROOT}" && -z "${NERSC_HOST}" ]]; then
     exit 1
 fi
 if [[ -n "${modules}" ]]; then
-    if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - MODULESHOME=${modules}"; fi
+    if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export MODULESHOME=${modules}"; fi
     export MODULESHOME=${modules}
 fi
 if [[ -n "${root}" ]]; then
@@ -71,7 +71,8 @@ fi
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_GRAPHQL_DIR=${SDSS_INSTALL_DIR}/graphql"; fi
 export SDSS_INSTALL_GRAPHQL_DIR=${SDSS_INSTALL_DIR}/graphql
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - {SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
 ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}
 
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - /bin/rm -rf sdss_install/master/.git/"; fi
 /bin/rm -rf sdss_install/master/.git/
