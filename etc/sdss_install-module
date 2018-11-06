@@ -18,7 +18,7 @@ module-whatis "Sets up $product/$version in your environment."
 set PRODUCT_DIR ~/software/sdss/$product/$version
 setenv [string toupper $product]_DIR $PRODUCT_DIR
 setenv [string toupper $product]_GRAPHQL_DIR $PRODUCT_DIR/graphql
-setenv [string toupper $product]_KEY GITHUB_PERSONAL_ACCESS_TOKEN
+setenv [string toupper $product]_KEY Replace_Me_With_Personal_Access_Token
 setenv [string toupper $product]_LONGPATH False
 
 

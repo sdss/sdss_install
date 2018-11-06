@@ -80,7 +80,7 @@ mkdir -p $(pwd)/modulefiles/sdss_install/
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - cp $(pwd)/sdss_install/master/etc/sdss_install-module $(pwd)/modulefiles/sdss_install/master"  ; fi
 cp $(pwd)/sdss_install/master/etc/sdss_install-module $(pwd)/modulefiles/sdss_install/master
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install -G --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
-${SDSS_INSTALL_DIR}/bin/sdss_install -G --bootstrap --module-only ${root} ${test} ${verbose}
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
+${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}
 
 /bin/rm -rf sdss_install-master
