@@ -84,7 +84,7 @@ if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - cp $(pwd)/s
 cp $(pwd)/sdss_install/master/etc/sdss_install-module $(pwd)/modulefiles/sdss_install/master
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install -G --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
-sdss_install -G --bootstrap --module-only ${root} ${test} ${verbose}
+./sdss_install/master/bin/sdss_install -G --bootstrap --module-only ${root} ${test} ${verbose}
 
 /bin/rm -rf sdss_install-master
 
