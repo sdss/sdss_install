@@ -54,14 +54,14 @@ if [[ -z "${MODULESHOME}" ]]; then
     exit 1
 fi
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - git clone https://github.com/sdss/sdss_install.git sdss_install-master "; fi
-git clone https://github.com/sdss/sdss_install.git sdss_install-master
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - git clone https://github.com/sdss/sdss_install.git sdss_install/master "; fi
+git clone https://github.com/sdss/sdss_install.git sdss_install/master
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - removing directory .git/ "; fi
-rm -rf $(pwd)/sdss_install-master/.git/
+rm -rf $(pwd)/sdss_install/master/.git/
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=$(pwd)/sdss_install-master"; fi
-export SDSS_INSTALL_DIR=$(pwd)/sdss_install-master
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=$(pwd)/sdss_install/master"; fi
+export SDSS_INSTALL_DIR=$(pwd)/sdss_install/master
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}"; fi
 export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}
@@ -77,4 +77,4 @@ fi
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
 ${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}
 
-/bin/rm -rf sdss_install-master
+#/bin/rm -rf sdss_install/master
