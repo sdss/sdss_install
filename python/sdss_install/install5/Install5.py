@@ -60,7 +60,7 @@ class Install5:
                     self.options.default = True
                     self.options.product = 'sdss_install'
                     self.options.product_version = 'master'
-                    if not self.options.module-only:
+                    if not self.options.module_only:
                         tags = Tags(logger=self.logger,options=self.options)
                         tag_names = tags.get_tag_names()
                         self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
