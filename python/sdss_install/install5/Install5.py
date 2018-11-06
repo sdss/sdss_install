@@ -60,11 +60,12 @@ class Install5:
                     self.options.default = True
                     self.options.product = 'sdss_install'
                     self.options.product_version = 'master'
-#                    tags = Tags(logger=self.logger,options=self.options)
-#                    tag_names = tags.get_tag_names()
-#                    self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
-#                    s = 'No GitHub tags found for %s. ' % self.options.product if not tag_names else ''
-#                    self.logger.info(s + "Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
+                    if not self.options.module-only:
+                        tags = Tags(logger=self.logger,options=self.options)
+                        tag_names = tags.get_tag_names()
+                        self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
+                        s = 'No GitHub tags found for %s. ' % self.options.product if not tag_names else ''
+                        self.logger.info(s + "Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
                 else:
                     self.logger.error("You must specify a product and the version (after a space)!")
                     self.ready = False
