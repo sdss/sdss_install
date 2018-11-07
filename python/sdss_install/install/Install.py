@@ -242,9 +242,9 @@ class Install:
 
     def reset_options_from_config(self):
         '''Set absent command-line options from etc/config.ini file, if it exists.'''
-        # NOTE: Initially, all of the config files only have the option [sdss4install].
-        #       Need to duplicate these options for [sdss_install] in order to transition
-        #       from sdss4install to sdss_instal].
+        # NOTE: Initially, config files only have the option [sdss4install].
+        #       These options need to be duplicated for [sdss_install] in order to transition
+        #       from sdss4install to sdss_install.
         # Some products may contain an optional etc/config.ini file to determine the config self.options to build
         if self.ready:
             config_filename = join('etc','config.ini')
@@ -285,7 +285,7 @@ class Install:
 
                     if config.has_section('envs'):
                         missing = [env for key,env in config.items('envs') if not getenv(env,None)]
-                        for env in missing: self.logger.error("Required environment variable {0} must be set prior to sdss4install".format(env))
+                        for env in missing: self.logger.error("Required environment variable {0} must be set prior to sdss_install".format(env))
                         if missing: self.ready = False
 
     def set_build_type(self):
@@ -345,18 +345,18 @@ class Install:
                         command = ['evilmake','clean']
                         self.logger.info('Running "{0}" in {1}'.format(' '.join(command),self.directory['install']))
                         proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                        out, err = proc.communicate()
+                        (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
-                        if len(err) > 0:
+                        if proc.returncode != 0:
                             self.logger.error("Evilmake response:")
                             self.logger.error(err)
                         command = ['evilmake']
                         if self.options.make_target: command += [self.options.make_target]
                         self.logger.info('Running "{0}" in {1}'.format(' '.join(command),self.directory['install']))
                         proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                        out, err = proc.communicate()
+                        (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
-                        if len(err) > 0:
+                        if proc.returncode != 0:
                             self.logger.error("Evilmake response:")
                             self.logger.error(unicode(err, errors='ignore'))
                     elif 'c' in self.build_type:
@@ -365,12 +365,19 @@ class Install:
                         if self.options.make_target: command += [self.options.make_target]
                         self.logger.info('Running "{0}" in {1}'.format(' '.join(command),self.directory['install']))
                         proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                        out, err = proc.communicate()
+                        (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
-                        if len(err) > 0:
+                        if proc.returncode != 0:
                             self.logger.error("Error during compile:")
                             self.logger.error(err)
                             self.ready = False
+                        print("self.product['is_master_or_branch']: %r" % self.product['is_master_or_branch'])
+                        print("self.options.no_python_package: %r" % self.options.no_python_package)
+                        print("self.options.evilmake: %r" % self.options.evilmake)
+                        print("self.build_type: %r" % self.build_type)
+                        print("self.directory['work']: %r" % self.directory['work'])
+                        print("command: %r" % command)
+                        input('pause')
                 if self.options.documentation:
                     self.logger.warn('Documentation will not be built for trunk or branch installs!')
             else:
@@ -381,9 +388,9 @@ class Install:
                     self.logger.debug(' '.join(command))
                     if not self.options.test:
                         proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                        out, err = proc.communicate()
+                        (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
-                        if len(err) > 0:
+                        if proc.returncode != 0:
                             self.logger.error("Error during installation:")
                             self.logger.error(err)
                             self.ready = False
@@ -451,9 +458,9 @@ class Install:
                     self.logger.debug(' '.join(command))
                     if not self.options.test:
                         proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                        out, err = proc.communicate()
+                        (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
-                        if len(err) > 0:
+                        if proc.returncode != 0:
                             self.logger.error("Error during documentation build:")
                             self.logger.error(err)
                             self.ready = False
@@ -495,9 +502,9 @@ class Install:
             self.logger.debug(' '.join(command))
             if not self.options.test:
                 proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                out, err = proc.communicate()
+                (out, err) = proc.communicate() if proc else (None,None)
                 self.logger.debug(out)
-                if len(err) > 0:
+                if proc.returncode != 0:
                     self.logger.error("Error during compile:")
                     self.logger.error(err)
                     self.ready = False
