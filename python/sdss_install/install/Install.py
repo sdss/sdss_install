@@ -177,7 +177,8 @@ class Install:
             if self.options.root.endswith('/'): self.options.root = dirname(self.options.root)
             if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
             if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
-            self.directory['root'] = join(self.options.root, self.product['root']) if self.product['root'] else self.options.root
+            repo_type = 'github' if self.options.github else 'svn'
+            self.directory['root'] = join(self.options.root,repo_type,self.product['root']) if self.product['root'] else join(self.options.root,repo_type)
             self.directory['install'] = join(self.directory['root'],self.product['name'],self.product['version'])
             self.export_data()
 
@@ -255,38 +256,45 @@ class Install:
                 except: config.optionxform = str
                 if len(config.read(config_file))==1:
                     if config.has_section('sdss4install'):
-                        for option in config.options('sdss4install'):
-                            if option=='no_build' and not self.options.no_build:
-                                try:
-                                    self.options.no_build = config.getboolean('sdss4install',option)
-                                    if self.options.no_build: self.logger.info("Using {0} to set --no-build option".format(config_filename))
-                                except: pass
-                            elif option=='skip_module' and not self.options.skip_module:
-                                try:
-                                    self.options.skip_module = config.getboolean('sdss4install',option)
-                                    if self.options.skip_module: self.logger.info("Using {0} to set --skip_module option".format(config_filename))
-                                except: pass
-                            elif option=='no_python_package' and not self.options.no_python_package:
-                                try:
-                                    self.options.no_python_package = config.getboolean('sdss4install',option)
-                                    if self.options.no_python_package: self.logger.info("Using {0} to set --no_python_package option".format(config_filename))
-                                except: pass
-                            elif option=='make_target' and not self.options.make_target:
-                                try:
-                                    self.options.make_target = config.get('sdss4install',option)
-                                    if self.options.make_target: self.logger.info("Using {0} to set --make_target {1} option".format(config_filename,self.options.make_target))
-                                except: pass
-                            elif option=='evilmake' and not self.options.evilmake:
-                                try:
-                                    self.options.evilmake = config.getboolean('sdss4install',option)
-                                    if self.options.evilmake: self.logger.info("Using {0} to set --evilmake option".format(config_filename))
-                                except: pass
-                    else: self.logger.info('NOTE: In the product config.ini file, sdss4install might need to be replaced with sdss_install')
-
+                        self.process_install_section(config=config,section='sdss4install')
+                    if config.has_section('sdss_install'):
+                        self.process_install_section(config=config,section='sdss_install')
                     if config.has_section('envs'):
                         missing = [env for key,env in config.items('envs') if not getenv(env,None)]
                         for env in missing: self.logger.error("Required environment variable {0} must be set prior to sdss_install".format(env))
                         if missing: self.ready = False
+
+    def process_install_section(self,config=None,section=None):
+        if config and section:
+            for option in config.options(section):
+                if option=='no_build' and not self.options.no_build:
+                    try:
+                        self.options.no_build = config.getboolean(section,option)
+                        if self.options.no_build: self.logger.info("Using {0} to set --no-build option".format(config_filename))
+                    except: pass
+                elif option=='skip_module' and not self.options.skip_module:
+                    try:
+                        self.options.skip_module = config.getboolean(section,option)
+                        if self.options.skip_module: self.logger.info("Using {0} to set --skip_module option".format(config_filename))
+                    except: pass
+                elif option=='no_python_package' and not self.options.no_python_package:
+                    try:
+                        self.options.no_python_package = config.getboolean(section,option)
+                        if self.options.no_python_package: self.logger.info("Using {0} to set --no_python_package option".format(config_filename))
+                    except: pass
+                elif option=='make_target' and not self.options.make_target:
+                    try:
+                        self.options.make_target = config.get(section,option)
+                        if self.options.make_target: self.logger.info("Using {0} to set --make_target {1} option".format(config_filename,self.options.make_target))
+                    except: pass
+                elif option=='evilmake' and not self.options.evilmake:
+                    try:
+                        self.options.evilmake = config.getboolean(section,option)
+                        if self.options.evilmake: self.logger.info("Using {0} to set --evilmake option".format(config_filename))
+                    except: pass
+        else: self.logger.error('Unable to process_install_section. config=%r, section=%r' % (config,section))
+
+
 
     def set_build_type(self):
         '''Analyze the code to determine the build type'''
@@ -510,7 +518,7 @@ class Install:
 
     def finalize(self):
         '''Log installation final result message.'''
-        if self.directory['original']: chdir(self.directory['original'])
+        if self.directory and self.directory['original']: chdir(self.directory['original'])
         finalize = "Done" if self.ready else "Fail"
 #        if self.options.github and self.options.module_only:
 #            rmtree(join(self.product['name'],self.product['version']))

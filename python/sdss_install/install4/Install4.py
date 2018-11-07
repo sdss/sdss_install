@@ -56,10 +56,13 @@ class Install4:
                 self.logger.error("You must specify a product and the version (after a space)!")
                 self.ready = False
             elif self.options.product:
+                if self.options.product.endswith('/'):
+                    self.options.product = dirname(self.options.product)
+                if self.options.product_version.endswith('/'):
+                    self.options.product_version = dirname(self.options.product_version)
                 svnroots = ['repo','data','deprecated']
                 validproduct = [svnroot for svnroot in svnroots if self.options.product.startswith(svnroot)]
-                if not validproduct: self.options.product = join('repo', self.options.product)
-                if self.options.product.endswith('/'): self.options.product = dirname(self.options.product)
+                if not validproduct: self.options.product = join('repo',self.options.product)
         else: self.url = None
 
     def set_product(self):

@@ -145,11 +145,20 @@ class Modules:
                 #
                 # We didn't set a module dir, so derive it from self.options.root
                 #
-                if self.options.longpath:
-                    self.product['root'] = dirname(self.options.product) if self.options.longpath else None
-                    productroot = self.product['root'][:self.product['root'].index(sep)] if self.product['root'] and sep in self.product['root'] else self.product['root']
-                else: productroot = None
-                self.options.moduledir = join(join(self.options.root, productroot) if productroot else self.options.root,'modulefiles')
+#                if self.options.longpath:
+#                    self.product['root'] = dirname(self.options.product) if self.options.longpath else None
+#                    productroot = self.product['root'][:self.product['root'].index(sep)] if self.product['root'] and sep in self.product['root'] else self.product['root']
+#                else: productroot = None
+#                self.options.moduledir = join(join(self.options.root, productroot) if productroot else self.options.root,'modulefiles')
+                repo_type = 'github' if self.options.github else 'svn'
+                self.options.moduledir = join(self.options.root,repo_type,'modulefiles')
+#                print("self.options.product: %r" % self.options.product)
+#                print("self.product['root']: %r" % self.product['root'])
+##                print("productroot: %r" % productroot)
+#                print("self.options.root: %r" % self.options.root)
+#                print("self.options.moduledir: %r" % self.options.moduledir)
+#                input('pause')
+
                 if not self.options.test:
                     if not isdir(self.options.moduledir):
                         self.logger.info("Creating Modules directory {0}".format(self.options.moduledir))

@@ -61,28 +61,39 @@ class Install5:
                     self.options.product = 'sdss_install'
                     self.options.product_version = 'master'
                     tags = Tags(logger=self.logger,options=self.options)
-                    tag_names = tags.get_tag_names()
-                    self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
-                    s = 'No GitHub tags found for %s. ' % self.options.product if not tag_names else ''
-                    self.logger.info(s + "Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
+                    self.ready = tags
+                    if self.ready:
+                        tag_names = tags.get_tag_names()
+                        self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
+                        s = 'No GitHub tags found for %s. ' % self.options.product if not tag_names else ''
+                        self.logger.info(s + "Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
                 else:
                     self.logger.error("You must specify a product and the version (after a space)!")
                     self.ready = False
             elif self.options.product:
+                    if self.options.product.endswith('/'):
+                        self.options.product = dirname(self.options.product)
+                    if self.options.product_version.endswith('/'):
+                        self.options.product_version = dirname(self.options.product_version)
                     self.repositories = Repositories(logger=self.logger,
                                                      options=self.options).get_repository_names()
-                    self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
-                    self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
-                    product = self.options.product
-                    version = self.options.product_version
-                    is_master = version == 'master'
-                    is_branch = version in self.branches if self.branches else False
-                    is_tag = version in self.tags if self.tags else False
-                    valid_version =  is_master or is_branch or is_tag
-                    valid_product = product in self.repositories
-                    self.ready = valid_product and valid_version
-                    if not valid_product: self.logger.error('Invalid product: %r' % product)
-                    if not valid_version: self.logger.error('Invalid version: %r' % version)
+                    valid_product = self.options.product in self.repositories
+                    if valid_product:
+                        self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
+                        self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
+                        self.ready = self.tags and self.branches
+                        if self.ready:
+                            version = self.options.product_version
+                            is_master = version == 'master'
+                            is_branch = version in self.branches
+                            is_tag = version in self.tags
+                            valid_version =  is_master or is_branch or is_tag
+                            if not valid_version:
+                                self.logger.error('Invalid version: %r' % version)
+                                self.ready = False
+                    else:
+                        self.logger.error('Invalid product: %r' % self.options.product)
+                        self.ready = False
 
     def set_product(self):
         '''Set self.product dict containing product and version names etc.'''
@@ -137,7 +148,7 @@ class Install5:
 
     def checkout(self):
         '''Checkout branch or tag, and delete .git directory if tag.'''
-        if self.ready:
+        if self.ready and not self.product['is_master']:
             if self.product['is_branch']:
                 version = self.product['version']
                 s = "Completed checkout of branch %(version)s" % self.product
