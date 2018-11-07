@@ -371,13 +371,6 @@ class Install:
                             self.logger.error("Error during compile:")
                             self.logger.error(err)
                             self.ready = False
-                        print("self.product['is_master_or_branch']: %r" % self.product['is_master_or_branch'])
-                        print("self.options.no_python_package: %r" % self.options.no_python_package)
-                        print("self.options.evilmake: %r" % self.options.evilmake)
-                        print("self.build_type: %r" % self.build_type)
-                        print("self.directory['work']: %r" % self.directory['work'])
-                        print("command: %r" % command)
-                        input('pause')
                 if self.options.documentation:
                     self.logger.warn('Documentation will not be built for trunk or branch installs!')
             else:
@@ -477,7 +470,7 @@ class Install:
                     doxygen_keywords = {
                         'name':self.product['name'],
                         'version':self.product['version'],
-                        'description':"Documentation for %(name)s built by sdss4install." % self.product}
+                        'description':"Documentation for %(name)s built by sdss_install." % self.product}
                     if not exists(join('doc','Makefile')):
                         copyfile(join(getenv('sdss_install_DIR'),'etc','doc','doxygen','Makefile'),
                             join('doc','Makefile'))
