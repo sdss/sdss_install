@@ -55,7 +55,7 @@ if [[ -z "${MODULESHOME}" ]]; then
 fi
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=$(pwd)/github/sdss_install/master"; fi
-export SDSS_INSTALL_DIR=$(pwd)/sdss_install/master
+export SDSS_INSTALL_DIR=$(pwd)/github/sdss_install/master
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}"; fi
 export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}
