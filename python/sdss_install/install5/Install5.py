@@ -75,18 +75,18 @@ class Install5:
                         self.options.product = dirname(self.options.product)
                     if self.options.product_version.endswith('/'):
                         self.options.product_version = dirname(self.options.product_version)
-                    self.repository_names = Repositories(logger=self.logger,
+                    self.repositories = Repositories(logger=self.logger,
                                                          options=self.options).get_repository_names()
-                    valid_product = self.options.product in self.repository_names
+                    valid_product = self.options.product in self.repositories
                     if valid_product:
-                        self.tag_names = Tags(logger=self.logger,options=self.options).get_tag_names()
-                        self.branch_names = Branches(logger=self.logger,options=self.options).get_branch_names()
-                        self.ready = self.tag_names or self.branch_names
+                        self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
+                        self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
+                        self.ready = self.tags or self.branches
                         if self.ready:
                             version = self.options.product_version
                             is_master = version == 'master'
-                            is_branch = version in self.branch_names if self.branch_names else None
-                            is_tag = version in self.tag_names if self.tag_names else None
+                            is_branch = version in self.branches if self.branches else None
+                            is_tag = version in self.tags if self.tags else None
                             valid_version =  is_master or is_branch or is_tag
                             if not valid_version:
                                 self.logger.error('Invalid version: %r' % version)
