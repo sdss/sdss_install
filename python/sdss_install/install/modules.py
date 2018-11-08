@@ -18,8 +18,26 @@ class Modules:
         self.dependencies = None
         self.built = None
     
-
     def set_ready(self):
+        '''Set up Modules.'''
+        self.ready = self.logger and self.options and self.product and self.directory
+        if self.ready:
+            if self.options.moduleshome is None or not isdir(self.options.moduleshome):
+                self.logger.error("You do not appear to have Modules set up.")
+                self.ready = False
+            initpy_found = False
+            for modpy in ('python','python.py'):
+                initpy = join(self.options.moduleshome,'init',modpy)
+                if exists(initpy):
+                    initpy_found = True
+            if not initpy_found:
+                self.logger.error("Could not find the Python file in {0}/init!".format(self.options.moduleshome))
+                self.ready = False
+
+    #
+    #   Old fragile code
+    #
+    def set_ready0(self):
         '''Set up Modules.'''
         self.ready = self.logger and self.options and self.product and self.directory
         if self.ready:
@@ -36,6 +54,8 @@ class Modules:
                         with open(initpy) as execfile:
                             code = compile(execfile.read(), initpy, 'exec')
                             exec(code, globals())
+                            print('ran in cypher with no crash')
+                            input('pause')
                 break
             if not initpy_found:
                 self.logger.error("Could not find the Python file in {0}/init!".format(self.options.moduleshome))
