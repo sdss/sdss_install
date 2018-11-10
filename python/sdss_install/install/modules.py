@@ -39,7 +39,7 @@ class Modules:
                                 exec(code, globals())
                                 self.ready = True
                         except SyntaxError as e: self.logger.critical('Aborting because: %r' % e)
-                        except: self.logger.error('Could not exec modules python shell')
+                        except Exception as e: self.logger.error('Could not exec modules python shell. %r' % e)
             if not initpy_found:
                 self.logger.error("Could not find the Python file in {0}/init!".format(self.options.moduleshome))
                 self.ready = False
