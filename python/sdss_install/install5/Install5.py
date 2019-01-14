@@ -26,7 +26,7 @@ from sdss_install.install5 import Branches
 
 
 class Install5:
-    '''Place install5 only related methods here. Place methods related to both install4 and install5 in another directory (install ?).'''
+    '''Class for sdss_install'ation of GitHub repositories.'''
 
     def __init__(self, logger=None, options=None):
         self.set_logger(logger=logger)
@@ -42,7 +42,8 @@ class Install5:
     def set_logger(self, logger=None):
         '''Set the class logger'''
         self.logger = logger if logger else None
-        if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
+        if not self.logger:
+            print('ERROR: %r> Unable to set logger.' % self.__class__)
 
     def set_options(self, options=None):
         '''Set command line argument options'''
@@ -52,10 +53,14 @@ class Install5:
             else:           print('ERROR: Unable to set_options')
 
     def set_ready(self):
-        '''Set self.ready after sanity check self.options and product/version validation'''
+        '''
+            Set self.ready after sanity check self.options and
+            product/version validation
+        '''
         self.ready = self.options and self.logger
         if self.ready:
-            if self.options.product == 'NO PACKAGE' or self.options.product_version == 'NO VERSION':
+            if (self.options.product == 'NO PACKAGE' or
+                self.options.product_version == 'NO VERSION'):
                 if self.options.bootstrap:
                     self.options.default = True
                     self.options.product = 'sdss_install'
@@ -64,72 +69,111 @@ class Install5:
                     self.ready = tags
                     if self.ready:
                         tag_names = tags.get_tag_names()
-                        self.options.product_version = tags.most_recent_tag_name() if tag_names else 'master'
-                        s = 'No GitHub tags found for %s. ' % self.options.product if not tag_names else ''
-                        self.logger.info(s + "Selected sdss_install/{0} for bootstrap installation.".format(self.options.product_version))
+                        self.options.product_version = (
+                            tags.most_recent_tag_name()
+                            if tag_names
+                            else 'master')
+                        s = ('No GitHub tags found for %s. '
+                             % self.options.product
+                             if not tag_names
+                             else '')
+                        s += ("Selected sdss_install/{0} " +
+                              "for bootstrap installation."
+                              .format(self.options.product_version))
+                        self.logger.info(s)
                 else:
-                    self.logger.error("You must specify a product and the version (after a space)!")
+                    self.logger.error("You must specify a product " +
+                                      "and the version (after a space)!")
                     self.ready = False
             elif self.options.product:
                     if self.options.product.endswith('/'):
                         self.options.product = dirname(self.options.product)
                     if self.options.product_version.endswith('/'):
-                        self.options.product_version = dirname(self.options.product_version)
-                    self.repositories = Repositories(logger=self.logger,
-                                                         options=self.options).get_repository_names()
+                        self.options.product_version = (
+                            dirname(self.options.product_version))
+                    self.repositories = (Repositories(logger=self.logger,
+                                                     options=self.options)
+                                                     .get_repository_names())
                     valid_product = self.options.product in self.repositories
                     if valid_product:
-                        self.tags = Tags(logger=self.logger,options=self.options).get_tag_names()
-                        self.branches = Branches(logger=self.logger,options=self.options).get_branch_names()
+                        self.tags = Tags(logger=self.logger,
+                                         options=self.options).get_tag_names()
+                        self.branches = (Branches(logger=self.logger,
+                                                  options=self.options)
+                                                  .get_branch_names())
                         self.ready = self.tags or self.branches
                         if self.ready:
                             version = self.options.product_version
                             is_master = version == 'master'
-                            is_branch = version in self.branches if self.branches else None
+                            is_branch = (version in self.branches
+                                         if self.branches
+                                         else None)
                             is_tag = version in self.tags if self.tags else None
                             valid_version =  is_master or is_branch or is_tag
                             if not valid_version:
-                                self.logger.error('Invalid version: %r' % version)
+                                self.logger.error('Invalid version: %r'
+                                                    % version)
                                 self.ready = False
                     else:
-                        self.logger.error('Invalid product: %r' % self.options.product)
+                        self.logger.error('Invalid product: %r'
+                                            % self.options.product)
                         self.ready = False
 
     def set_product(self):
         '''Set self.product dict containing product and version names etc.'''
         #
-        # For backwards compatibility, we will maintain the use of trunk used in sdss4install for SVN,
-        # with the understanding that trunk is synonomuous with master for GitHub.
+        # For backwards compatibility, we will maintain the use of trunk
+        # used in sdss4install for SVN, with the understanding that trunk is
+        # synonomuous with master for GitHub.
         #
         if self.ready:
             self.product = dict()
-            self.product['root'] = None # There's no GitHub directory structure to preserve, as in svn
+            self.product['root'] = None # There's o GitHub directory structure to preserve, as in svn
             self.product['name'] = self.options.product
             self.product['version'] = self.options.product_version
             self.product['is_master'] = self.options.product_version == 'master'
-            self.product['is_branch'] = self.options.product_version in self.branches if self.branches else False
-            self.product['is_tag'] = self.options.product_version in self.tags if self.tags else False
-            self.product['is_master_or_branch'] = self.product['is_master'] or self.product['is_branch']
-            self.product['checkout_or_export'] = 'checkout' if self.product['is_master_or_branch'] else 'export'
+            self.product['is_branch'] = (
+                self.options.product_version in self.branches
+                if self.branches
+                else False)
+            self.product['is_tag'] = (
+                self.options.product_version in self.tags
+                if self.tags
+                else False)
+            self.product['is_master_or_branch'] = (
+                self.product['is_master'] or self.product['is_branch'])
+            self.product['checkout_or_export'] = (
+                'checkout'
+                if self.product['is_master_or_branch']
+                else 'export')
 
     def set_github_remote_url(self):
         '''Set the SDSS GitHub HTTPS remote URL'''
         if self.ready:
             product = self.options.product if self.options else None
-            self.github_remote_url = 'https://github.com/sdss/%s.git' % product if product else None
+            self.github_remote_url = ('https://github.com/sdss/%s.git' % product
+                                      if product
+                                      else None)
 
     def fetch(self):
-        '''Clone master branch of product version from GitHub then checkout other branch or tag if necessary.'''
+        '''
+            Clone master branch of product version from GitHub then checkout
+            other branch or tag if necessary.
+        '''
         self.clone()
         self.checkout()
         
     def clone(self):
         '''Clone the GitHub repository for the product.'''
         if self.ready:
-            command = ['git','clone',self.github_remote_url,basename(self.directory['work'])]
+            command = ['git',
+                       'clone',
+                       self.github_remote_url,
+                       basename(self.directory['work'])]
             self.execute_command(command=command)
             if self.ready:
-                self.logger.info("Completed GitHub clone of repository %(name)s" % self.product)
+                self.logger.info("Completed GitHub clone of repository %(name)s"
+                                    % self.product)
 
     def execute_command(self, command=None):
         '''Execute the passed terminal command.'''
@@ -141,7 +185,8 @@ class Install5:
             # NOTE: stderr is non-empty even when git clone is successful.
             self.ready = proc.returncode == 0
             if not self.ready:
-                s = "Error encountered while running command: %s\n" % ' '.join(command)
+                s = ("Error encountered while running command: %s\n"
+                        % ' '.join(command))
                 s += stderr.decode('utf-8')
                 self.logger.error(s)
         else: self.logger.error('Unable to execute_command')
@@ -155,7 +200,8 @@ class Install5:
                 remove = False
             elif self.product['is_tag']:
                 version = 'tags/' + self.product['version']
-                s = "Completed checkout of tag %(version)s and removal of .git directory" % self.product
+                s = ("Completed checkout of tag %(version)s and removal " +
+                     "of .git directory" % self.product)
                 remove = True
             chdir(self.directory['work'])
             command = ['git','checkout',version]

@@ -18,12 +18,14 @@ except ImportError: from configparser import SafeConfigParser, RawConfigParser
 #from .most_recent_tag import most_recent_tag
 from .modules import Modules
 from sdss_install.application import Argument
-from sdss_install.application import Logging
 from sdss_install.install4 import Install4
 from sdss_install.install5 import Install5
 
 class Install:
-    '''Main class which calls Install4 and Install5 for SVN and GitHub installations, respectively'''
+    '''
+        Main class which calls Install4 and Install5
+        for SVN and GitHub installations, respectively
+    '''
 
     def __init__(self, options=None):
         self.set_options(options=options)
@@ -33,7 +35,7 @@ class Install:
     def set_options(self, options=None):
         '''Set self.options wrapper'''
         self.options = options if options else None
-        if not self.options: self.logger.error('ERROR: Unable to set_options')
+        if not self.options: self.logger.error('Unable to set_options')
 
     def set_logger(self, options=None):
         '''Set the logger used by all classes in the package.'''
@@ -44,7 +46,9 @@ class Install:
                 if debug: self.logger.setLevel(logging.DEBUG)
                 else: self.logger.setLevel(logging.INFO)
                 handler = logging.StreamHandler()
-                formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+                formatter = logging.Formatter("%(name)s - " +
+                                              "%(levelname)s - " +
+                                              "%(message)s")
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
             else: print('ERROR: Unable to set_logger')
@@ -145,12 +149,16 @@ class Install:
             self.import_data()
 
     def set_directory(self):
-        '''Initialize dict self.directory and set value for key 'original' to current working directory.'''
+        '''
+            Initialize dict self.directory and set value for key 'original' to
+            current working directory.
+        '''
         if self.ready:
             self.directory = dict()
             try: self.directory['original'] = getcwd()
             except OSError as ose:
-                self.logger.error("Check current directory: {0}".format(ose.strerror))
+                self.logger.error("Check current directory: {0}"
+                    .format(ose.strerror))
                 self.ready = False
             self.export_data()
 
@@ -163,35 +171,59 @@ class Install:
                     if not exists(self.options.root):
                         try:
                             makedirs(self.options.root)
-                            self.logger.info("Creating {0}".format(self.options.root))
+                            self.logger.info("Creating {0}"
+                            .format(self.options.root))
                         except OSError as ose:
-                            self.logger.error("mkdir: cannot create directory '{0}': {1}".format(self.options.root,ose.strerror))
+                            self.logger.error("mkdir: " +
+                                "cannot create directory '{0}': {1}"
+                                .format(self.options.root,ose.strerror))
                             self.ready = False
                     else:
-                        self.logger.error("Please set the --root keyword or SDSS_INSTALL_PRODUCT_ROOT environmental variable to a valid directory.")
+                        self.logger.error("Please set the --root keyword or " +
+                            "SDSS_INSTALL_PRODUCT_ROOT environmental variable " +
+                            "to a valid directory.")
                         self.ready = False
                 else:
-                    self.logger.error("Please use the --root keyword or set a SDSS_INSTALL_PRODUCT_ROOT environmental variable.")
+                    self.logger.error("Please use the --root keyword " +
+                        "or set a SDSS_INSTALL_PRODUCT_ROOT " +
+                        "environmental variable.")
                     self.ready = False
         if self.ready:
-            if self.options.root.endswith('/'): self.options.root = dirname(self.options.root)
-            if self.options.root is not None: environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
-            if self.options.longpath is not None: environ['SDSS4TOOLS_LONGPATH'] = 'True'
+            if self.options.root.endswith('/'):
+                self.options.root = dirname(self.options.root)
+            if self.options.root is not None:
+                environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
+            if self.options.longpath is not None:
+                environ['SDSS4TOOLS_LONGPATH'] = 'True'
             repo_type = 'github' if self.options.github else 'svn'
-            self.directory['root'] = join(self.options.root,repo_type,self.product['root']) if self.product['root'] else join(self.options.root,repo_type)
-            self.directory['install'] = join(self.directory['root'],self.product['name'],self.product['version'])
+            self.directory['root'] = (
+                join(self.options.root,
+                    repo_type,
+                    self.product['root'])
+                    if self.product['root']
+                    else join(self.options.root,repo_type))
+            self.directory['install'] = join(self.directory['root'],
+                                             self.product['name'],
+                                             self.product['version'])
             self.export_data()
 
     def set_directory_work(self):
-        '''Set dict self.directory value for key 'work', used to install product and/or module file. Remove existing work directory.'''
+        '''
+            Set dict self.directory value for key 'work',
+            used to install product and/or module file.
+            Remove existing work directory.
+        '''
         if self.ready:
             self.import_data()
             if self.options.module_only:
                 self.directory['work']=self.directory['install']
             else:
-                self.directory['work'] = join(self.directory['original'],"%(name)s-%(version)s" % self.product)
+                self.directory['work'] = join(self.directory['original'],
+                                             "%(name)s-%(version)s" %
+                                             self.product)
                 if isdir(self.directory['work']):
-                    self.logger.info("Detected old working directory, %(work)s. Deleting..." % self.directory)
+                    self.logger.info("Detected old working directory, " +
+                        "%(work)s. Deleting..." % self.directory)
                     rmtree(self.directory['work'])
             self.export_data()
 
@@ -201,17 +233,27 @@ class Install:
             self.import_data()
             if isdir(self.directory['install']) and not self.options.test:
                 if self.options.force:
-                    if self.directory['work'].startswith(self.directory['install']):
-                        self.logger.error("Current working directory, %(work)s, is inside the install directory, %(install)s, which will be deleted via the -F (or --force) option, so please cd to another working directory and try again!" % self.directory)
+                    if self.directory['work'].startswith(
+                                                self.directory['install']):
+                        self.logger.error("Current working directory, " +
+                            "%(work)s, is inside the install directory, " +
+                            "%(install)s, which will be deleted via the " +
+                            "-F (or --force) option, so please cd to another " +
+                            "working directory and try again!" % self.directory)
                         self.ready = False
                     else:
-                        self.logger.info("Preparing to install in %(install)s (overwriting due to force option)" % self.directory)
+                        self.logger.info("Preparing to install in " +
+                            "%(install)s (overwriting due to force option)"
+                            % self.directory)
                         rmtree(self.directory['install'])
                 else:
-                    self.logger.error("Install directory, %(install)s, already exists!" % self.directory)
-                    self.logger.info("Use the -F (or --force) option to overwrite.")
+                    self.logger.error("Install directory, %(install)s, " +
+                        "already exists!" % self.directory)
+                    self.logger.info("Use the -F (or --force) option " +
+                        "to overwrite.")
                     self.ready = False
-            else: self.logger.info("Preparing to install in %(install)s" % self.directory)
+            else: self.logger.info("Preparing to install in %(install)s"
+                % self.directory)
             self.export_data()
 
     def set_github_remote_url():
@@ -222,7 +264,8 @@ class Install:
 
     def set_svncommand(self):
         '''Wrapper for method Install4.set_svncommand()'''
-        if self.ready and not self.options.github: self.install4.set_svncommand()
+        if self.ready and not self.options.github:
+            self.install4.set_svncommand()
 
     def set_exists(self):
         '''Call set_exists() of class Install4 or class Install5'''
@@ -239,14 +282,19 @@ class Install:
 
     def set_github_remote_url(self):
         '''Set the set_github_remote_url() of class Install5'''
-        if self.ready and self.options.github: self.install5.set_github_remote_url()
+        if self.ready and self.options.github:
+            self.install5.set_github_remote_url()
 
     def reset_options_from_config(self):
-        '''Set absent command-line options from etc/config.ini file, if it exists.'''
+        '''
+            Set absent command-line options from etc/config.ini file,
+            if it exists.
+        '''
         # NOTE: Initially, config files only have the option [sdss4install].
-        #       These options need to be duplicated for [sdss_install] in order to transition
-        #       from sdss4install to sdss_install.
-        # Some products may contain an optional etc/config.ini file to determine the config self.options to build
+        #       These options need to be duplicated for [sdss_install] in order
+        #       to transition from sdss4install to sdss_install.
+        # Some products may contain an optional etc/config.ini file to
+        # determine the config self.options to build
         if self.ready:
             config_filename = join('etc','config.ini')
             config_file = join(self.directory['work'],config_filename)
@@ -256,12 +304,18 @@ class Install:
                 except: config.optionxform = str
                 if len(config.read(config_file))==1:
                     if config.has_section('sdss4install'):
-                        self.process_install_section(config=config,section='sdss4install')
+                        self.process_install_section(config=config,
+                                                     section='sdss4install')
                     if config.has_section('sdss_install'):
-                        self.process_install_section(config=config,section='sdss_install')
+                        self.process_install_section(config=config,
+                                                     section='sdss_install')
                     if config.has_section('envs'):
-                        missing = [env for key,env in config.items('envs') if not getenv(env,None)]
-                        for env in missing: self.logger.error("Required environment variable {0} must be set prior to sdss_install".format(env))
+                        missing = [env for key,env in config.items('envs')
+                                    if not getenv(env,None)]
+                        for env in missing:
+                            self.logger.error("Required environment variable " +
+                                "{0} must be set prior to sdss_install"
+                                .format(env))
                         if missing: self.ready = False
 
     def process_install_section(self,config=None,section=None):
@@ -269,30 +323,51 @@ class Install:
             for option in config.options(section):
                 if option=='no_build' and not self.options.no_build:
                     try:
-                        self.options.no_build = config.getboolean(section,option)
-                        if self.options.no_build: self.logger.info("Using {0} to set --no-build option".format(config_filename))
+                        self.options.no_build = config.getboolean(section,
+                                                                  option)
+                        if self.options.no_build:
+                            self.logger.info("Using {0} to set " +
+                                "--no-build option"
+                                .format(config_filename))
                     except: pass
                 elif option=='skip_module' and not self.options.skip_module:
                     try:
-                        self.options.skip_module = config.getboolean(section,option)
-                        if self.options.skip_module: self.logger.info("Using {0} to set --skip_module option".format(config_filename))
+                        self.options.skip_module = config.getboolean(section,
+                                                                     option)
+                        if self.options.skip_module:
+                            self.logger.info("Using {0} to set " +
+                                "--skip_module option".format(config_filename))
                     except: pass
-                elif option=='no_python_package' and not self.options.no_python_package:
+                elif (option=='no_python_package' and not
+                      self.options.no_python_package):
                     try:
-                        self.options.no_python_package = config.getboolean(section,option)
-                        if self.options.no_python_package: self.logger.info("Using {0} to set --no_python_package option".format(config_filename))
+                        self.options.no_python_package = (
+                            config.getboolean(section,option))
+                        if self.options.no_python_package:
+                            self.logger.info("Using {0} to set " +
+                                "--no_python_package option"
+                                .format(config_filename))
                     except: pass
                 elif option=='make_target' and not self.options.make_target:
                     try:
                         self.options.make_target = config.get(section,option)
-                        if self.options.make_target: self.logger.info("Using {0} to set --make_target {1} option".format(config_filename,self.options.make_target))
+                        if self.options.make_target:
+                            self.logger.info("Using {0} to set " +
+                                "--make_target {1} option"
+                                .format(config_filename,
+                                        self.options.make_target))
                     except: pass
                 elif option=='evilmake' and not self.options.evilmake:
                     try:
-                        self.options.evilmake = config.getboolean(section,option)
-                        if self.options.evilmake: self.logger.info("Using {0} to set --evilmake option".format(config_filename))
+                        self.options.evilmake = config.getboolean(section,
+                                                                  option)
+                        if self.options.evilmake:
+                            self.logger.info("Using {0} to set " +
+                                "--evilmake option".format(config_filename))
                     except: pass
-        else: self.logger.error('Unable to process_install_section. config=%r, section=%r' % (config,section))
+        else:
+            self.logger.error('Unable to process_install_section. ' +
+                'config=%r, section=%r' % (config,section))
 
 
 
@@ -301,16 +376,23 @@ class Install:
         self.build_message = None
         if self.ready:
             self.build_type = list()
-            if self.options.no_build: self.build_message = "Proceeding without build..."
+            if self.options.no_build:
+                self.build_message = "Proceeding without build..."
             else:
-                if exists(join(self.directory['work'],'Makefile')) and self.options.evilmake:
+                if (exists(join(self.directory['work'],'Makefile'))
+                    and self.options.evilmake):
                     self.build_message = "Installing via evilmake"
                     self.build_type.append('evilmake')
-                elif exists(join(self.directory['work'],'setup.py')) and not self.options.force_build_type:
+                elif (exists(join(self.directory['work'],'setup.py'))
+                      and not self.options.force_build_type):
                     self.build_type.append('python')
-                    if exists(join(self.directory['work'],'Makefile')): self.build_type.append('c')
-                elif exists(join(self.directory['work'],'Makefile')): self.build_type.append('c')
-                if not self.build_type: self.build_message = "Proceeding without a setup.py or Makefile..."
+                    if exists(join(self.directory['work'],'Makefile')):
+                        self.build_type.append('c')
+                elif exists(join(self.directory['work'],'Makefile')):
+                    self.build_type.append('c')
+                if not self.build_type:
+                    self.build_message = ("Proceeding without a setup.py " +
+                        "or Makefile...")
 
     def logger_build_message(self):
         '''Log the build message.'''
@@ -321,7 +403,11 @@ class Install:
         # If this is a trunk or branch install or nothing to build,
         # this directory will be created by other means.
         if self.ready:
-            if not (self.product['is_master_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type or self.options.test):
+            if not (self.product['is_master_or_branch'] or
+                    self.options.no_python_package or
+                    self.options.evilmake or not
+                    self.build_type or
+                    self.options.test):
                 try:
                     makedirs(self.directory['install'])
                 except OSError as ose:
@@ -330,7 +416,11 @@ class Install:
 
     def set_modules(self):
         '''Set a class Modules instance.'''
-        self.modules = Modules(options=self.options, logger=self.logger, product=self.product, directory=self.directory, build_type=self.build_type)
+        self.modules = Modules(options=self.options,
+                               logger=self.logger,
+                               product=self.product,
+                               directory=self.directory,
+                               build_type=self.build_type)
 
     def set_environ(self):
         '''Set environment variables WORKING_DIR and INSTALL_DIR.'''
@@ -341,38 +431,63 @@ class Install:
     def build(self):
         '''Build the installed product.'''
         if self.ready:
-            if self.product['is_master_or_branch'] or self.options.no_python_package or self.options.evilmake or not self.build_type:
+            if (self.product['is_master_or_branch'] or
+                self.options.no_python_package or
+                self.options.evilmake or not
+                self.build_type):
                 if self.options.test:
-                    self.logger.info("Skipping install in %(install)s (--test)" % self.directory)
+                    self.logger.info("Skipping install in %(install)s " +
+                        "(--test)" % self.directory)
                 else:
-                    self.logger.info("Installing in %(install)s" % self.directory)
+                    self.logger.info("Installing in %(install)s" %
+                        self.directory)
                     copytree(self.directory['work'],self.directory['install'])
                     chdir(self.directory['install'])
                     if 'evilmake' in self.build_type:
-                        if not self.options.skip_module: self.modules.load(product=self.product['name'],version=self.product['version'])
+                        if not self.options.skip_module:
+                            self.modules.load(product=self.product['name'],
+                                              version=self.product['version'])
                         command = ['evilmake','clean']
-                        self.logger.info('Running "{0}" in {1}'.format(' '.join(command),self.directory['install']))
-                        proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                        self.logger.info('Running "{0}" in {1}'
+                            .format(' '.join(command),
+                                    self.directory['install']))
+                        proc = subprocess.Popen(command,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
                         (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
                         if proc.returncode != 0:
                             self.logger.error("Evilmake response:")
                             self.logger.error(err)
                         command = ['evilmake']
-                        if self.options.make_target: command += [self.options.make_target]
-                        self.logger.info('Running "{0}" in {1}'.format(' '.join(command),self.directory['install']))
-                        proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                        if self.options.make_target:
+                            command += [self.options.make_target]
+                        self.logger.info('Running "{0}" in {1}'
+                            .format(' '.join(command),
+                                    self.directory['install']))
+                        proc = subprocess.Popen(command,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
                         (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
                         if proc.returncode != 0:
                             self.logger.error("Evilmake response:")
                             self.logger.error(unicode(err, errors='ignore'))
                     elif 'c' in self.build_type:
-                        if not self.options.skip_module: self.modules.load(product=self.product['name'],version=self.product['version'])
-                        command = ['make','-C', 'src'] if exists(join(self.directory['work'],'src')) else ['make']
-                        if self.options.make_target: command += [self.options.make_target]
-                        self.logger.info('Running "{0}" in {1}'.format(' '.join(command),self.directory['install']))
-                        proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                        if not self.options.skip_module:
+                            self.modules.load(product=self.product['name'],
+                                              version=self.product['version'])
+                        command = (['make','-C', 'src']
+                                   if exists(join(self.directory['work'],'src'))
+                                   else ['make'])
+                        if self.options.make_target:
+                            command += [self.options.make_target]
+                        self.logger.info('Running "{0}" in {1}'
+                            .format(' '.join(command),
+                                    self.directory['install']))
+                        proc = subprocess.Popen(command,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
                         (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
                         if proc.returncode != 0:
@@ -380,15 +495,21 @@ class Install:
                             self.logger.error(err)
                             self.ready = False
                 if self.options.documentation:
-                    self.logger.warn('Documentation will not be built for trunk or branch installs!')
+                    self.logger.warn('Documentation will not be built ' +
+                                     'for trunk or branch installs!')
             else:
                 self.package = True
                 chdir(self.directory['work'])
                 if 'python' in self.build_type:
-                    command = [executable, 'setup.py', 'install', "--prefix=%(install)s" % self.directory]
+                    command = [executable,
+                               'setup.py',
+                               'install',
+                               "--prefix=%(install)s" % self.directory]
                     self.logger.debug(' '.join(command))
                     if not self.options.test:
-                        proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                        proc = subprocess.Popen(command,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
                         (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
                         if proc.returncode != 0:
@@ -409,7 +530,10 @@ class Install:
                         for name in files:
                             if name.endswith('.module'):
                                 continue
-                            cf.append((join(root,name),join(self.directory['install'],root,name)))
+                            cf.append((join(root,name),
+                                       join(self.directory['install'],
+                                       root,
+                                       name)))
                 if md or cf:
                     etc_dir = join(self.directory['install'],'etc')
                     self.logger.debug('Creating {0}'.format(etc_dir))
@@ -421,7 +545,8 @@ class Install:
                                 makedirs(name)
                     if cf:
                         for src,dst in cf:
-                            self.logger.debug('Copying {0} -> {1}'.format(src,dst))
+                            self.logger.debug('Copying {0} -> {1}'
+                                .format(src,dst))
                             if not self.options.test:
                                 copyfile(src,dst)
 
@@ -434,12 +559,18 @@ class Install:
                     # Assume Sphinx documentation.
                     #
                     self.logger.debug("Found Sphinx documentation.")
-                    if not self.options.skip_module: self.modules.load(product=self.product['name'],version=self.product['version'])
+                    if not self.options.skip_module:
+                        self.modules.load(product=self.product['name'],
+                                          version=self.product['version'])
                     sphinx_keywords = {
-                        'name':self.product['name'],
-                        'release':self.product['version'],
-                        'version':'.'.join(self.product['version'].split('.')[0:3]),
-                        'year':datetime.date.today().year}
+                        'name':
+                            self.product['name'],
+                        'release':
+                            self.product['version'],
+                        'version':
+                            '.'.join(self.product['version'].split('.')[0:3]),
+                        'year':
+                            datetime.date.today().year}
                     for sd in ('_templates','_build','_static'):
                         if not isdir(join('doc',sd)):
                             try:
@@ -448,47 +579,71 @@ class Install:
                                 self.logger.error(ose.strerror)
                                 self.ready = False
                     if not exists(join('doc','Makefile')):
-                        copyfile(join(getenv('sdss_install_DIR'),'etc','doc','sphinx','Makefile'),
+                        copyfile(join(getenv('sdss_install_DIR'),
+                                 'etc',
+                                 'doc',
+                                 'sphinx',
+                                 'Makefile'),
                             join('doc','Makefile'))
                     if not exists(join('doc','conf.py')):
-                        with open(join(getenv('sdss_install_DIR'),'etc','doc','sphinx','conf.py')) as conf:
+                        with open(join(getenv('sdss_install_DIR'),
+                                       'etc',
+                                       'doc',
+                                       'sphinx',
+                                       'conf.py')) as conf:
                             newconf = conf.read().format(**sphinx_keywords)
                         with open(join('doc','conf.py'),'w') as conf2:
                             conf2.write(newconf)
                     command = [executable, 'setup.py', 'build_sphinx']
                     self.logger.debug(' '.join(command))
                     if not self.options.test:
-                        proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                        proc = subprocess.Popen(command,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
                         (out, err) = proc.communicate() if proc else (None,None)
                         self.logger.debug(out)
                         if proc.returncode != 0:
-                            self.logger.error("Error during documentation build:")
+                            self.logger.error(
+                                "Error during documentation build:")
                             self.logger.error(err)
                             self.ready = False
                     if not self.options.test:
                         if isdir(join('build','sphinx','html')):
-                            copytree(join('build','sphinx','html'),join(self.directory['install'],'doc'))
+                            copytree(join('build','sphinx','html'),
+                                     join(self.directory['install'],'doc'))
                 else:
-                    self.logger.warn("Documentation build requested, but no documentation found.")
+                    self.logger.warn("Documentation build requested, " +
+                                     "but no documentation found.")
             else:
                 #
                 # This is not a Python product, assume Doxygen documentation.
                 #
                 if isdir('doc'):
                     doxygen_keywords = {
-                        'name':self.product['name'],
-                        'version':self.product['version'],
-                        'description':"Documentation for %(name)s built by sdss_install." % self.product}
+                        'name':
+                            self.product['name'],
+                        'version':
+                            self.product['version'],
+                        'description':
+                            ("Documentation for %(name)s built by sdss_install."
+                                % self.product)}
                     if not exists(join('doc','Makefile')):
-                        copyfile(join(getenv('sdss_install_DIR'),'etc','doc','doxygen','Makefile'),
+                        copyfile(join(getenv('sdss_install_DIR'),
+                                      'etc',
+                                      'doc',
+                                      'doxygen',
+                                      'Makefile'),
                             join('doc','Makefile'))
                     if not exists(join('doc','Docyfile')):
-                        with open(join(getenv('sdss_install_DIR'),'etc','doc','doxygen','Doxyfile')) as conf:
+                        with open(join(getenv('sdss_install_DIR'),
+                                  'etc',
+                                  'doc','doxygen','Doxyfile')) as conf:
                             newconf = conf.read().format(**doxygen_keywords)
                         with open(join('doc','Doxyfile'),'w') as conf2:
                             conf2.write(newconf)
                 else:
-                    self.logger.warn("Documentation build requested, but no documentation found.")
+                    self.logger.warn("Documentation build requested, " +
+                                     "but no documentation found.")
 
     #
     # At this point either we have already completed a Python installation
@@ -502,7 +657,9 @@ class Install:
             command = ['make', 'install']
             self.logger.debug(' '.join(command))
             if not self.options.test:
-                proc = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                proc = subprocess.Popen(command,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
                 (out, err) = proc.communicate() if proc else (None,None)
                 self.logger.debug(out)
                 if proc.returncode != 0:
@@ -518,7 +675,8 @@ class Install:
 
     def finalize(self):
         '''Log installation final result message.'''
-        if self.directory and self.directory['original']: chdir(self.directory['original'])
+        if self.directory and self.directory['original']:
+            chdir(self.directory['original'])
         finalize = "Done" if self.ready else "Fail"
 #        if self.options.github and self.options.module_only:
 #            rmtree(join(self.product['name'],self.product['version']))
@@ -529,7 +687,10 @@ class Install:
         elif self.options.skip_module: finalize += " (skipped modules)"
         elif self.modules and not self.modules.built:
             finalize += " (failed modules)"
-            if self.modules.built==False: finalize_ps = "Nonexistent template %r" % self.modules.file
-        elif self.modules and self.modules.built: finalize_ps = "Ready to load module %(name)s/%(version)s" % self.product
+            if self.modules.built==False:
+                finalize_ps = "Nonexistent template %r" % self.modules.file
+        elif self.modules and self.modules.built:
+            finalize_ps = ("Ready to load module %(name)s/%(version)s"
+                            % self.product)
         self.logger.info(finalize)
         if finalize_ps: self.logger.info(finalize_ps)

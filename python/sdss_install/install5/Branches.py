@@ -47,15 +47,18 @@ class Branches:
                 self.set_branch_data()
                 self.branches.extend(self.branch_list)
             else: pagination_flag = False
-        if not self.branches: self.logger.error('ERROR: Failed to set_branches')
+        if not self.branches: self.logger.error('Failed to set_branches')
 
     def set_store(self):
-        '''Set a class Store instance and its attributes: organization name and a class Client instance.'''
+        '''
+            Set a class Store instance and its attributes:
+            organization name and a class Client instance.
+        '''
         if self.options and not self.store:
             self.store = Store(logger=self.logger, options=self.options)
             self.store.set_organization_name()
             self.store.set_client()
-        else: self.logger.error('ERROR: Unable to set_store')
+        else: self.logger.error('Unable to set_store')
 
     def set_query_parameters(self):
         '''Set GraphQL query parameters.'''
@@ -70,10 +73,14 @@ class Branches:
                     'has_next_page'     :   None,
                                     }
         else:
-            self.logger.error('ERROR: Unable to set query_parameters. self.store = %r' % self.store)
+            self.logger.error('Unable to set query_parameters. ' +
+                                'self.store = %r' % self.store)
 
     def set_branch_data(self):
-        '''Set GraphQL query payload data then extract field edges and pagination information.'''
+        '''
+            Set GraphQL query payload data then extract field edges and
+            pagination information.
+        '''
         self.set_branch_payload()
         self.set_branch_edges_and_page_info()
         self.set_branch_list()
@@ -83,36 +90,50 @@ class Branches:
         self.branch_payload = None
         if self.store.client and self.query_parameters:
             self.store.set_data(query_parameters=self.query_parameters)
-            self.branch_payload = self.store.client.data if self.store.client.data else None
-        else: self.logger.error('ERROR: Unable to set_branch_data')
+            self.branch_payload = (self.store.client.data
+                                   if self.store.client.data
+                                   else None)
+        else: self.logger.error('Unable to set_branch_data')
 
     def set_branch_edges_and_page_info(self, data=None):
-        '''From the GraphQL query payload data, set a pagination information dictionary and a list of dictionaries containing branch fields.'''
+        '''
+            From the GraphQL query payload data, set a pagination information
+            dictionary and a list of dictionaries containing branch fields.
+        '''
         self.branch_edges = None
         self.page_info = None
         data = self.branch_payload if self.branch_payload else None
         if data:
             data = data['organization']['repository']['refs'] if data else None
-            self.branch_edges = data['edges']                   if data else None
+            self.branch_edges = data['edges']                 if data else None
             self.page_info = data['pageInfo']                 if data else None
-        else: self.logger.error('ERROR: Unable to set_branch_edges_and_page_info')
+        else: self.logger.error('Unable to set_branch_edges_and_page_info')
 
     def set_branch_list(self):
-        '''Set a list of branch names from the branch field list of dictionaries.'''
+        '''
+            Set a list of branch names
+            from the branch field list of dictionaries.
+        '''
         self.branch_list = list()
         if self.branch_edges:
             for branch in self.branch_edges:
                 branch_name = branch['node']['name']
                 self.branch_list.append(branch_name)
-        else: self.logger.error('ERROR: Unable to set_branch_list')
+        else: self.logger.error('Unable to set_branch_list')
 
     def set_pagination_parameters(self):
-        '''Set pagination parameters for next page from pagination infomation dictionary.'''
+        '''
+            Set pagination parameters for next page
+            from pagination infomation dictionary.
+        '''
         if self.query_parameters and self.page_info:
-            self.query_parameters['pagination_flag']    = True
-            self.query_parameters['end_cursor']         = self.page_info['endCursor']
-            self.query_parameters['has_next_page']      = self.page_info['hasNextPage']
+            self.query_parameters['pagination_flag'] = True
+            self.query_parameters['end_cursor'] = self.page_info['endCursor']
+            self.query_parameters['has_next_page'] = (
+                self.page_info['hasNextPage'])
         else:
-            s1 = 'ERROR: pagination parameters could not be set.\n'
-            s2 = 'query_parameters = %s\npage_info = %s' % (self.query_parameters, self.page_info)
-            self.logger.error(s1+s2)
+            self.logger.error(
+                'ERROR: pagination parameters could not be set.\n' +
+                'query_parameters = %s\npage_info = %s'
+                % (self.query_parameters, self.page_info))
+
