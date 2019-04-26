@@ -48,8 +48,8 @@ class Modules:
                                 exec(code, globals())
                                 self.ready = True
                         except SyntaxError as e:
-                            s = 'Aborting because: %r. ' % e
-                            if 'exec ' in e and version_info.major == 3:
+                            s = 'Aborting because: %r. ' % str(e)
+                            if 'exec ' in str(e) and version_info.major == 3:
                                 s += ('Your modules version has a python shell ' +
                                       'previous to python3.  Please upgrade your ' +
                                       'modules, or revert to python2.')
@@ -59,7 +59,7 @@ class Modules:
                                                 'python shell. %r' % e)
             if not initpy_found:
                 self.logger.error("Could not find the Python file in {0}/init!"
-                                    .formﬁat(self.options.moduleshome))
+                                    .format(self.options.moduleshome))
                 self.ready = False
 
     def set_file(self, ext='.module'):
