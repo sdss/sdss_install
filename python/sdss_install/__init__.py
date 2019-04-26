@@ -28,7 +28,8 @@ NAME = 'sdss_install'
 
 
 # Loads config
-config = yaml.load(open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)))
+config = yaml.load(open(os.path.dirname(__file__) +
+                   '/etc/{0}.yml'.format(NAME)), Loader=yaml.FullLoader)
 
 # If there is a custom configuration file, updates the defaults using it.
 custom_config_fn = os.path.expanduser('~/.{0}/{0}.yml'.format(NAME))

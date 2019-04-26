@@ -69,15 +69,18 @@ class Install5:
                     self.ready = tags
                     if self.ready:
                         tag_names = tags.get_tag_names()
+                        print('Hi Install5.set_ready')
+                        print('tag_names: %r'% tag_names)
+                        input('pause')
                         self.options.product_version = (
                             tags.most_recent_tag_name()
                             if tag_names
                             else 'master')
-                        s = ('No GitHub tags found for %s. '
-                             % self.options.product
+                        s = ('No GitHub tags found for {}. '
+                              .format(self.options.product)
                              if not tag_names
                              else '')
-                        s += ("Selected sdss_install/{0} " +
+                        s += ("Selected sdss_install/{} " +
                               "for bootstrap installation."
                               .format(self.options.product_version))
                         self.logger.info(s)
