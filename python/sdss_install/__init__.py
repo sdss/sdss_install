@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 
 import yaml
+import distutils.version
 
 # Inits the logging system. Only shell logging, and exception and warning catching.
 # File logging can be started by calling log.start_file_logger(name).
@@ -26,14 +27,13 @@ def merge(user, default):
 
 NAME = 'sdss_install'
 
-
 # Loads config
-#config = yaml.load(open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)))
-#config = yaml.load(open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)),
-#                   Loader=yaml.FullLoader)
-config = yaml.load(open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)),
-                   Loader=yaml.SafeLoader)
-
+yaml_version = distutils.version.StrictVersion(yaml.__version__)
+with open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)) as ff:
+    if yaml_version >= distutils.version.StrictVersion('5.1'):
+        config = yaml.load(ff, Loader=yaml.FullLoader)
+    else:
+        config = yaml.load(ff)
 
 # If there is a custom configuration file, updates the defaults using it.
 custom_config_fn = os.path.expanduser('~/.{0}/{0}.yml'.format(NAME))

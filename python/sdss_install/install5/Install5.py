@@ -79,9 +79,8 @@ class Install5:
                         s = ('No GitHub tags found for {}. '
                               .format(self.options.product)
                              if not tag_names
-                             else '')
-                        s += ("Selected sdss_install/{} " +
-                              "for bootstrap installation."
+                             else str())
+                        s += ("Selected sdss_install/{} for bootstrap installation."
                               .format(self.options.product_version))
                         self.logger.info(s)
                 else:
