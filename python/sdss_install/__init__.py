@@ -29,6 +29,8 @@ NAME = 'sdss_install'
 
 # Loads config
 #config = yaml.load(open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)))
+#config = yaml.load(open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)),
+#                   Loader=yaml.FullLoader)
 config = yaml.load(open(os.path.dirname(__file__) + '/etc/{0}.yml'.format(NAME)),
                    Loader=yaml.SafeLoader)
 

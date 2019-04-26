@@ -47,8 +47,7 @@ class Query():
         if self.file and exists(self.file):
             with open(self.file, 'r') as file:
                 self.string = file.read()
-        else: self.logger.error('The file named %r does not exist ' +
-                                'in the directory %r.'
-                                % (self.file,self.graphql_dir))
+        else:
+            self.logger.error('The file {} does not exist.'.format(self.file))
         if not self.string:
             self.logger.error('Unable to set the GraphQL query string.')
