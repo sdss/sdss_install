@@ -179,7 +179,7 @@ class Install5:
         ### Look at Joel's Cli.py class and use it here ###
         if command:
             self.logger.info('Running command: %s' % ' '.join(command))
-            proc = Popen(command, stdout=PIPE, stderr=PIPE) if Popen else None
+            proc = Popen(command, stdout=PIPE, stderr=PIPE) 
             (stdout, stderr) = proc.communicate() if proc else (None,None)
             # NOTE: stderr is non-empty even when git clone is successful.
             self.ready = proc.returncode == 0
