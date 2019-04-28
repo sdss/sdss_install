@@ -50,7 +50,7 @@ class Modules:
                                 self.ready = True
                         except SyntaxError as e:
                             s = 'Aborting because: %r. ' % str(e)
-                            if 'exec ' in str(e) and version_info.major == 3:
+                            if 'Missing parentheses' in str(e) and version_info.major == 3:
                                 s += ('Your modules version has a python shell ' +
                                       'previous to python3.  Please upgrade your ' +
                                       'modules, or revert to python2.')
