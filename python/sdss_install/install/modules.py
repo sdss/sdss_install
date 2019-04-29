@@ -175,7 +175,6 @@ class Modules:
     def set_directory(self):
         '''Make module file installation directory.'''
         self.check_options()
-        self.prepend_modulepath()
         self.directory['modules'] = join(self.options.moduledir,
                                          self.product['name'])
         if self.ready and not self.options.test:
@@ -207,24 +206,7 @@ class Modules:
                         except OSError as ose:
                             self.ready = False
                             self.logger.error(ose.strerror)
-
-    def prepend_modulepath(self):
-        '''Check if options.moduledir is in $MODULEPATH. If not prepend it.'''
-        modulepath = str()
-        try:
-            modulepath = environ['MODULEPATH']
-        except:
-            self.ready = False
-            self.logger.error('Unable to get modulepath: {}'.format(modulepath))
-        if self.options.moduledir and modulepath:
-            if not self.options.moduledir in modulepath:
-                try:
-                    module('use',self.options.moduledir)
-                    self.logger.info("'module use %s' " % self.options.moduledir)
-                except:
-                    self.logger.error("Unable to run 'module use %s' "
-                                        % self.options.moduledir)
-    
+   
     def build(self):
         '''
             Install the product modulefile
