@@ -6,15 +6,18 @@ from os.path import basename
 from argparse import ArgumentParser
 
 class Argument:
-    
-  def __init__(self, name=None, args=None):
+
+    def __init__(self, name=None, args=None):
         if name in globals().keys():
-            self.get_options = globals()[name].parse_args(args=args)
+            self.get_options = globals()[name]
+            self.options = self.get_options().parse_args(args=args)
         else:
             self.get_options = None
-        self.options = self.get_options() if self.get_options else None
+            self.options = None
+
         self.options._name = name if self.options else None
        
+    
 def sdss_install():
     '''Add command line arguments for bin file sdss_install'''
     xct = basename(argv[0])
