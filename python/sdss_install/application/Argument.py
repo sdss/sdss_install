@@ -78,4 +78,4 @@ def sdss_install():
         help='Name of product to install, starts with [repo, data, deprecated] or assumed to start with repo.')
     parser.add_argument('product_version',nargs='?',default='NO VERSION',
         help='Version of product to install (trunk or specified tag or branch).')
-    return parser.parse_args()
+    return parser
