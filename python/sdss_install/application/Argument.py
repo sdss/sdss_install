@@ -12,7 +12,7 @@ class Argument:
         self.options = self.get_options() if self.get_options else None
         self.options._name = name if self.options else None
 
-def sdss_install():
+def sdss_install(**kwargs):
     '''Add command line arguments for bin file sdss_install'''
     xct = basename(argv[0])
     parser = ArgumentParser(description=__doc__,prog=xct)
@@ -75,4 +75,4 @@ def sdss_install():
         help='Name of product to install, starts with [repo, data, deprecated] or assumed to start with repo.')
     parser.add_argument('product_version',nargs='?',default='NO VERSION',
         help='Version of product to install (trunk or specified tag or branch).')
-    return parser.parse_args()
+    return parser.parse_args(**kwargs)
