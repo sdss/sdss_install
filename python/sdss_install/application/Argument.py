@@ -6,12 +6,18 @@ from os.path import basename
 from argparse import ArgumentParser
 
 class Argument:
-    
-    def __init__(self, name=None):
-        self.get_options = globals()[name] if name in globals().keys() else None
-        self.options = self.get_options() if self.get_options else None
-        self.options._name = name if self.options else None
 
+    def __init__(self, name=None, args=None):
+        if name in globals().keys():
+            self.get_options = globals()[name]
+            self.options = self.get_options().parse_args(args=args)
+        else:
+            self.get_options = None
+            self.options = None
+
+        self.options._name = name if self.options else None
+       
+    
 def sdss_install():
     '''Add command line arguments for bin file sdss_install'''
     xct = basename(argv[0])
@@ -75,4 +81,4 @@ def sdss_install():
         help='Name of product to install, starts with [repo, data, deprecated] or assumed to start with repo.')
     parser.add_argument('product_version',nargs='?',default='NO VERSION',
         help='Version of product to install (trunk or specified tag or branch).')
-    return parser.parse_args()
+    return parser
