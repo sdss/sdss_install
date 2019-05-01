@@ -36,7 +36,7 @@ class Modules:
                 self.logger.error("You do not appear to have Modules set up.")
                 self.ready = False
             initpy_found = False
-            for modpy in ('python','python.py'):
+            for modpy in ('python','python.py','python3'):
                 initpy = join(self.options.moduleshome,'init',modpy)
                 if exists(initpy):
                     initpy_found = True
@@ -88,7 +88,7 @@ class Modules:
             from json import dumps
             for product_version in [l.strip().split()[2] for l in lines if l.startswith('module load')]:
                 self.dependencies.append(product_version.split('/',1)
-                                         if '/' in product_version 
+                                         if '/' in product_version
                                          else (product_version, None))
 
     def load(self,product=None,version=None):
@@ -156,7 +156,7 @@ class Modules:
                         path.insert(int(path[0] == ''),lib_dir)
             elif isdir(join(self.directory['work'],'python')):
                 self.keywords['needs_trunk_python'] = ''
-                
+
             if basename(self.options.product)=='sdss_install':
                 self.keywords['sdss_install_root'] = self.options.root
                 self.keywords['sdss_install_longpath'] = '# '
@@ -206,7 +206,7 @@ class Modules:
                         except OSError as ose:
                             self.ready = False
                             self.logger.error(ose.strerror)
-   
+
     def build(self):
         '''
             Install the product modulefile
