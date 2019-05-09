@@ -46,9 +46,16 @@ class Install:
                 if debug: self.logger.setLevel(logging.DEBUG)
                 else: self.logger.setLevel(logging.INFO)
                 handler = logging.StreamHandler()
-                formatter = logging.Formatter("%(name)s - " +
-                                              "%(levelname)s - " +
-                                              "%(message)s")
+                if debug:
+                    formatter = logging.Formatter("%(name)s - " +
+                                                  "%(levelname)s - " +
+                                                  "%(filename)s - " +
+                                                  "line %(lineno)d - " +
+                                                  "%(message)s")
+                else:
+                    formatter = logging.Formatter("%(name)s - " +
+                                                  "%(levelname)s - " +
+                                                  "%(message)s")
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
             else: print('ERROR: Unable to set_logger')
@@ -57,7 +64,7 @@ class Install:
 
     def initialize_data(self):
         '''Initialize class Install data.'''
-        self.ready = None
+        self.ready = False
         self.url = None
         self.product = None
         self.package = None

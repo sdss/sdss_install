@@ -20,7 +20,7 @@ class Modules:
         self.product = product
         self.directory = directory
         self.build_type = build_type
-        self.ready = None
+        self.ready = False
         self.dependencies = None
         self.built = None
 

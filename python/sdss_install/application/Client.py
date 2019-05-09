@@ -105,11 +105,10 @@ class Client():
                     except Exception as e:
                         self.ready = False
                         self.logger.error('Failed to get authorization token from ' +
-                                          'environmental variable env: {}. '.format(env) +
-                                          'Exception: {}.'.format(e)
+                                          'environmental variable env: {}. '.format(e) 
                                           )
                 else:
-                    self.ready = None
+                    self.ready = False
                     self.logger.error('Unable to authorize the GrqphQL client ' +
                                       'using the env {}.'.format(e) )
 

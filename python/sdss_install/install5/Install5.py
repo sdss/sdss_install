@@ -31,27 +31,36 @@ class Install5:
     def __init__(self, logger=None, options=None):
         self.set_logger(logger=logger)
         self.set_options(options=options)
-        self.ready = None
+        self.set_attributes()
+
+    def set_logger(self,logger=None):
+        '''Set the class logger'''
+        self.logger = logger if logger else None
+        self.ready = bool(self.logger)
+        if not self.ready:
+            print('ERROR: %r> Unable to set_logger.' % self.__class__)
+
+    def set_options(self,options=None):
+        '''Set command line argument options'''
+        self.options = None
+        if self.ready:
+            self.options = options if options else None
+            if not self.options:
+                self.ready = False
+                self.logger.error('Unable to set_options' +
+                                  'self.options: {}'.format(self.options))
+
+    def set_attributes(self):
+        '''Set class attributes.'''
+        self.ready = False
         self.repositories = None
         self.tags = None
         self.branches = None
         self.product = None
         self.directory = None
         self.github_remote_url = None
-
-    def set_logger(self, logger=None):
-        '''Set the class logger'''
-        self.logger = logger if logger else None
-        if not self.logger:
-            print('ERROR: %r> Unable to set logger.' % self.__class__)
-
-    def set_options(self, options=None):
-        '''Set command line argument options'''
-        self.options = options if options else None
-        if not self.options:
-            if self.logger: self.logger.error('Unable to set_options')
-            else:           print('ERROR: Unable to set_options')
-
+        self.repositories = list()
+    
     def set_ready(self):
         '''
             Set self.ready after sanity check self.options and
@@ -115,8 +124,8 @@ class Install5:
                             self.ready = False
                 else:
                     self.ready = False
-                    self.logger.error('Invalid product: %r'
-                                        % self.options.product)
+                    self.logger.error('Invalid product. {} '.format(self.options.product) +
+                                      'not in repository list: {}'.format(self.repositories))
 
     def set_product(self):
         '''Set self.product dict containing product and version names etc.'''
@@ -176,7 +185,6 @@ class Install5:
 
     def execute_command(self, command=None):
         '''Execute the passed terminal command.'''
-        ### Look at Joel's Cli.py class and use it here ###
         if command:
             self.logger.info('Running command: %s' % ' '.join(command))
             proc = Popen(command, stdout=PIPE, stderr=PIPE) 
@@ -195,12 +203,12 @@ class Install5:
         if self.ready and not self.product['is_master']:
             if self.product['is_branch']:
                 version = self.product['version']
-                s = "Completed checkout of branch %(version)s" % self.product
+                s = 'Completed checkout of branch {}'.format(version)
                 remove = False
             elif self.product['is_tag']:
                 version = 'tags/' + self.product['version']
-                s = ("Completed checkout of tag %(version)s and removal " +
-                     "of .git directory" % self.product)
+                s = ('Completed checkout of tag {} '.format(version) +
+                     'and removal of .git directory')
                 remove = True
             chdir(self.directory['work'])
             command = ['git','checkout',version]
