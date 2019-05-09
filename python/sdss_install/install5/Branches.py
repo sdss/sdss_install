@@ -17,7 +17,8 @@ class Branches:
     def set_logger(self, logger=None):
         '''Set the class logger'''
         self.logger = logger if logger else None
-        if not self.logger: print('ERROR: %r> Unable to set logger.' % self.__class__)
+        if not self.ready:
+            print('ERROR: %r> Unable to set_logger.' % self.__class__)
 
     def set_options(self, options=None):
         '''Set command line argument options'''

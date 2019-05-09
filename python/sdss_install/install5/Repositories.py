@@ -6,99 +6,135 @@ import datetime
 
 class Repositories:
 
-    def __init__(self, logger=None, options=None):
+    def __init__(self,logger=None, options=None):
         self.set_logger(logger=logger)
         self.set_options(options=options)
         self.query_file_name = 'repositories'
+        self.set_ready()
+        self.set_attributes()
         self.store = None
         self.repository_list = None
 
-
-    def set_logger(self, logger=None):
+    def set_logger(self,logger=None):
         '''Set the class logger'''
         self.logger = logger if logger else None
-        if not self.logger:
-            print('ERROR: %r> Unable to set logger.' % self.__class__)
+        self.ready = bool(self.logger)
+        if not self.ready:
+            print('ERROR: %r> Unable to set_logger.' % self.__class__)
 
-    def set_options(self, options=None):
+    def set_options(self,options=None):
         '''Set command line argument options'''
-        self.options = options if options else None
-        if not self.options: self.logger.error('Unable to set_options')
+        self.options = None
+        if self.ready:
+            self.options = options if options else None
+            if not self.options:
+                self.ready = False
+                self.logger.error('Unable to set_options' +
+                                  'self.options: {}'.format(self.options))
+
+    def set_ready(self):
+        '''Set error indicator.'''
+        self.ready = bool(self.logger           and
+                          self.options          and
+                          self.query_file_name
+                          )
+
+    def set_attributes(self):
+        '''Set class attributes.'''
+        if self.ready:
+            self.verbose = self.options.verbose if self.options else None
 
     def get_repository_names(self):
         '''Get a list of SDSS GitHub repository names.'''
-        self.set_repositories()
-        repository_names = self.repositories if self.repositories else None
+        repository_names = None
+        if self.ready:
+            self.set_repositories()
+            repository_names = self.repositories if self.repositories else None
         return repository_names
 
     def set_repositories(self):
         '''Concatenate repository names from all GraphQL pages.'''
-        self.repositories = list()
-        self.set_store()
-        self.set_query_parameters()
-        self.set_repository_data()
-        self.repositories.extend(self.repository_list)
-        pagination_flag = True
-        while pagination_flag:
-            if self.page_info['hasNextPage']:
-                self.logger.debug('********** Paginating **********')
-                self.set_pagination_parameters()
-                self.set_repository_data()
-                self.repositories.extend(self.repository_list)
-            else: pagination_flag = False
-        if not self.repositories:
-            self.logger.error('Failed to set_repositories')
+        if self.ready:
+            self.repositories = list()
+            self.set_store()
+            self.set_query_parameters()
+            self.set_repository_data()
+            self.repositories.extend(self.repository_list)
+            pagination_flag = True
+            while pagination_flag:
+                if self.page_info['hasNextPage']:
+                    self.logger.debug('********** Paginating **********')
+                    self.set_pagination_parameters()
+                    self.set_repository_data()
+                    self.repositories.extend(self.repository_list)
+                else: pagination_flag = False
+                if not self.ready: break
+            if not self.repositories:
+                self.logger.error('Failed to set_repositories')
 
     def set_store(self):
         '''
             Set a class Store instance and its attributes:
             organization name and a class Client instance.
         '''
-        if self.options and not self.store:
-            self.store = Store(logger=self.logger, options=self.options)
-            self.store.set_organization_name()
-            self.store.set_client()
-        else: self.logger.error('Unable to set_store')
+        if self.ready:
+            if not self.store:
+                self.store = Store(logger=self.logger, options=self.options)
+                if self.store.ready: self.store.set_organization_name()
+                if self.store.ready: self.store.set_client()
+                self.ready = self.store.ready
 
     def set_query_parameters(self):
         '''Set GraphQL query parameters.'''
-        if self.options and self.store and self.query_file_name:
-            self.query_parameters = {
-                    'organization_name' :   self.store.organization_name,
-                    'repository_name'   :   self.options.product,
-                    'version'           :   self.options.version,
-                    'query_file_name'   :   self.query_file_name,
-                    'pagination_flag'   :   None,
-                    'end_cursor'        :   None,
-                    'has_next_page'     :   None,
-                                    }
-        else:
-            self.logger.error('Unable to set query_parameters. ' +
-                                'self.store = %r' % self.store)
+        if self.ready:
+            if self.options and self.store and self.query_file_name:
+                self.query_parameters = {
+                        'organization_name' :   self.store.organization_name,
+                        'repository_name'   :   self.options.product,
+                        'version'           :   self.options.version,
+                        'query_file_name'   :   self.query_file_name,
+                        'pagination_flag'   :   None,
+                        'end_cursor'        :   None,
+                        'has_next_page'     :   None,
+                                        }
+            else:
+                self.logger.error('Unable to set_query_parameters. ' +
+                                    'self.options: {}'.format(self.options) +
+                                    'self.store: {}'.format(self.store) +
+                                    'self.query_file_name: {}'
+                                        .format(self.query_file_name)
+                                    )
 
     def set_repository_data(self):
         '''
             Set query payload data and extract field edges
             and pagination information.
         '''
-        self.set_repository_payload()
-        self.set_repository_edges_and_page_info()
-        self.set_repository_list()
-    
+        if self.ready:
+            self.set_repository_payload()
+            self.set_repository_edges_and_page_info()
+            self.set_repository_list()
+
     def set_repository_payload(self):
         '''
             Set GraphQL query payload data then extract field edges
             and pagination information.
         '''
         self.repository_payload = None
-        if self.store.client and self.query_parameters:
-            self.store.set_data(query_parameters=self.query_parameters)
-            self.repository_payload = (self.store.client.data
-                                       if self.store.client.data
-                                       else None)
-        else: self.logger.error('Unable to set_repository_data')
+        if self.ready:
+            if self.store and self.query_parameters:
+                self.store.set_data(query_parameters=self.query_parameters)
+                if self.store.ready:
+                    self.repository_payload = self.store.client.data
+                self.ready = self.store.ready
+            else:
+                self.ready = False
+                self.logger.error('Unable to set_repository_payload. ' +
+                                  'self.store: {}, '.format(self.store) +
+                                  'self.query_parameters: {}. '.format(self.query_parameters)
+                                  )
 
-    def set_repository_edges_and_page_info(self, data=None):
+    def set_repository_edges_and_page_info(self,data=None):
         '''
             From the GraphQL query payload data, set a pagination information
             dictionary and a list of dictionaries containing repository fields.

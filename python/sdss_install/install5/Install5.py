@@ -81,42 +81,42 @@ class Install5:
                               .format(self.options.product_version))
                         self.logger.info(s)
                 else:
+                    self.ready = False
                     self.logger.error("You must specify a product " +
                                       "and the version (after a space)!")
-                    self.ready = False
             elif self.options.product:
-                    if self.options.product.endswith('/'):
-                        self.options.product = dirname(self.options.product)
-                    if self.options.product_version.endswith('/'):
-                        self.options.product_version = (
-                            dirname(self.options.product_version))
-                    self.repositories = (Repositories(logger=self.logger,
-                                                     options=self.options)
-                                                     .get_repository_names())
-                    valid_product = self.options.product in self.repositories
-                    if valid_product:
-                        self.tags = Tags(logger=self.logger,
-                                         options=self.options).get_tag_names()
-                        self.branches = (Branches(logger=self.logger,
-                                                  options=self.options)
-                                                  .get_branch_names())
-                        self.ready = self.tags or self.branches
-                        if self.ready:
-                            version = self.options.product_version
-                            is_master = version == 'master'
-                            is_branch = (version in self.branches
-                                         if self.branches
-                                         else None)
-                            is_tag = version in self.tags if self.tags else None
-                            valid_version =  is_master or is_branch or is_tag
-                            if not valid_version:
-                                self.logger.error('Invalid version: %r'
-                                                    % version)
-                                self.ready = False
-                    else:
-                        self.logger.error('Invalid product: %r'
-                                            % self.options.product)
-                        self.ready = False
+                if self.options.product.endswith('/'):
+                    self.options.product = dirname(self.options.product)
+                if self.options.product_version.endswith('/'):
+                    self.options.product_version = (
+                        dirname(self.options.product_version))
+                self.repositories = (
+                    Repositories(logger=self.logger,
+                                 options=self.options).get_repository_names())
+                valid_product = self.options.product in self.repositories
+                if valid_product:
+                    self.tags = Tags(logger=self.logger,
+                                     options=self.options).get_tag_names()
+                    self.branches = (Branches(logger=self.logger,
+                                              options=self.options)
+                                              .get_branch_names())
+                    self.ready = self.tags or self.branches
+                    if self.ready:
+                        version = self.options.product_version
+                        is_master = version == 'master'
+                        is_branch = (version in self.branches
+                                     if self.branches
+                                     else None)
+                        is_tag = version in self.tags if self.tags else None
+                        valid_version =  is_master or is_branch or is_tag
+                        if not valid_version:
+                            self.logger.error('Invalid version: %r'
+                                                % version)
+                            self.ready = False
+                else:
+                    self.ready = False
+                    self.logger.error('Invalid product: %r'
+                                        % self.options.product)
 
     def set_product(self):
         '''Set self.product dict containing product and version names etc.'''

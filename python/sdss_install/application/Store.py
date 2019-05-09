@@ -1,70 +1,57 @@
 from sdss_install.application import Client
-import json
+from json import dumps
 
 class Store:
     
     def __init__(self, logger=None, options=None):
         self.logger = logger if logger else None
         self.options = options if options else None
+        self.set_ready()
+        self.set_attributes()
+
+    def set_ready(self):
+        '''Set error indicator.'''
+        self.ready = bool(self.logger   and
+                          self.options
+                          )
+
+    def set_attributes(self):
+        '''Set class attributes.'''
+        if self.ready:
+            self.verbose = self.options.verbose if self.options else None
 
     def set_organization_name(self):
         '''Set the GitHub organization.'''
         self.organization_name = 'sdss'
 
-    def set_client(self,
-                   api='graphql',
-                   endpoint='https://api.github.com/graphql',
-                   method='post'):
-        '''Set an authenticated GitHub Client.'''
+    def set_client(self, api='graphql',
+                         endpoint='https://api.github.com/graphql',
+                         method='post'):
+        '''Set an authenticated class Client instance.'''
         self.client = None
-        self.client = Client(logger=self.logger, api=api, endpoint=endpoint)
-        if self.client:
-            self.client.set_method(method=method)
-            self.client.set_authorization()
-        if not self.client:
-            self.logger.error('Unable to instantiate a Client instance.')
+        if self.ready:
+            self.client = Client(logger=self.logger,
+                                 options=self.options,
+                                 api=api,
+                                 endpoint=endpoint)
+            if self.client.ready: self.client.set_method(method=method)
+            if self.client.ready: self.client.set_authorization()
+            self.ready = self.client.ready
 
     def set_data(self, query_parameters=None):
         '''Set GraphQL query payload data.'''
-        self.query_parameters = query_parameters if query_parameters else None
-        if self.query_parameters:
-            self.set_query()
-        else:
-            s = 'Unable to set GraphQL payload data.\n'
-            s += 'query_parameters = %s.\n' % json.dumps(self.query_parameters,
-                                                         indent=1)
-            s += 'NOTE: To avoid system crash, setting self.client.data = None.'
-            self.client.data = None
-            self.logger.error(s)
+        if self.ready:
+            self.query_parameters = query_parameters if query_parameters else None
+            self.client.set_query(parameters=self.query_parameters)
+            self.ready = self.client.ready
+            if self.ready:
+                query_string = self.client.query.string
+                if self.verbose:
+                    self.logger.debug('query_string:\n' +
+                        dumps(query_string,indent=1))
+                    self.logger.debug('query_string:\n' +
+                        dumps(query_string % self.query_parameters,indent=1))
+                self.client.set_data(query_string = query_string %
+                    self.query_parameters)
+                self.ready = self.client.ready
 
-    def set_query(self):
-        '''Set Query instance and GraphQL query string.'''
-        self.client.set_query(parameters=self.query_parameters)
-        if self.client.query:
-            if self.client.query.string:
-                self.set_payload_data()
-            else:
-                s = 'Unable to set GraphQL query string.\n'
-                s += 'query string = %r.\n' % self.client.query.string
-                self.client.data = None
-                self.logger.error(s)
-        else:
-            s = 'Unable to instantiate a Query instance.\n'
-            s += 'query = %r\n' % self.client.query
-            self.client.data = None
-            self.logger.error(s)
-    
-    def set_payload_data(self):
-        '''Set GraphQL query payload data.'''
-        query_string = self.client.query.string
-        self.client.set_data(query_string % self.query_parameters)
-        if not self.client.data:
-            s = 'Unable to set GraphQL payload data.\n'
-            s += 'data = %r.' % self.client.data
-            self.logger.error(s)
-        else:
-            self.logger.debug('DEBUG:\nquery_parameters:\n' +
-                json.dumps(self.query_parameters, indent=2) )
-            self.logger.debug('DEBUG:\nquery_string:\n' + str(query_string) )
-            self.logger.debug('DEBUG:\nquery_string:\n' +
-                str(query_string % self.query_parameters) )

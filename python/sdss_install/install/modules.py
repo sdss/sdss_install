@@ -162,10 +162,10 @@ class Modules:
                 self.keywords['sdss_install_longpath'] = '# '
                 if self.options.bootstrap:
                     try:
-                        self.keywords['SDSS_GITHUB_KEY'] = (
-                            environ['SDSS_GITHUB_KEY'])
+                        self.keywords['SDSS_INSTALL_GITHUB_KEY'] = (
+                            environ['SDSS_INSTALL_GITHUB_KEY'])
                     except Exception as e:
-                        self.keywords['SDSS_GITHUB_KEY'] = None
+                        self.keywords['SDSS_INSTALL_GITHUB_KEY'] = None
                         self.logger.error('Unable to authorize ' +
                                 'the GrqphQL client using the key %s.' % e)
             elif basename(self.options.product)=='sdss4tools':
