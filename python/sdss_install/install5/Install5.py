@@ -73,10 +73,10 @@ class Install5:
                 if self.options.product_version.endswith('/'):
                     self.options.product_version = (
                         dirname(self.options.product_version))
-                self.logger.info('Validating product ...')
+                self.logger.info('Validating product')
                 valid_product = self.is_type(type='repository') # check for master branch
                 if valid_product:
-                    self.logger.info('Validating version ...')
+                    self.logger.info('Validating version')
                     version = self.options.product_version
                     is_master = (version == 'master')
                     is_branch = True if is_master else self.is_type(type='branch')
