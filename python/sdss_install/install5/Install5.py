@@ -97,8 +97,15 @@ class Install5:
         '''Return latest sdss_install tag, if present, otherwise 'master'.'''
         version = 'master'
         if self.ready:
-            original_dir = getcwd()
-            sdss_install_master_dir = join(original_dir,'github','sdss_install','master')
+            try: product_root = environ['SDSS_INSTALL_PRODUCT_ROOT']
+            except:
+                product_root = None
+                self.logger.error('Environmental variable not found: SDSS_INSTALL_PRODUCT_ROOT. '
+                                    'Please set before running sdss_install_bootstrap.')
+            sdss_install_dir = (join(product_root,'github','sdss_install')
+                                if product_root else None)
+            sdss_install_master_dir = (join(sdss_install_dir,'master')
+                                        if sdss_install_dir else None)
             if sdss_install_master_dir and isdir(sdss_install_master_dir):
                 self.logger.debug('Changing directory to: {}'.format(sdss_install_master_dir))
                 chdir(sdss_install_master_dir)
@@ -112,10 +119,11 @@ class Install5:
                     if split and len(split) == 3:
                         version = split[0]
                         # rename directory name master to version name
-                        self.logger.debug('Changing directory to: {}'
-                            .format(join(original_dir,'github','sdss_install')))
-                        chdir(join(original_dir,'github','sdss_install'))
-                        command = ['mv','master',version]
+                        self.logger.debug('Changing directory to: {}'.format(sdss_install_dir))
+                        chdir(sdss_install_dir)
+                        sdss_install_version_dir = (join(sdss_install_dir,version)
+                                                    if sdss_install_dir else None)
+                        command = ['mv',sdss_install_master_dir,sdss_install_version_dir]
                         self.logger.debug('Running command: %s' % ' '.join(command))
                         (stdout,stderr,proc_returncode) = self.execute_command(command=command)
                         if not proc_returncode == 0:
@@ -124,8 +132,8 @@ class Install5:
                                                 .format(' '.join(command)) +
                                               'stderr: {}.'.format(stderr.decode('utf-8')))
                     else: version = 'master'
-                    self.logger.debug('Changing directory to: {}'.format(original_dir))
-                    chdir(original_dir)
+                    self.logger.debug('Changing directory to: {}'.format(product_root))
+                    chdir(product_root)
                 else:
                     self.ready = False
                     self.logger.error('Error encountered while running command: {}. '
@@ -133,9 +141,10 @@ class Install5:
                                       'stderr: {}.'.format(stderr.decode('utf-8')))
             else:
                 self.ready = False
-                self.logger.error('Directory does not exist: {}. '
-                                    .format(sdss_install_master_dir) +
-                                  'Try cloning sdss_install first.')
+                self.logger.error(
+                    'Directory does not exist: {}. '.format(sdss_install_master_dir) +
+                    'Please first set SDSS_INSTALL_PRODUCT_ROOT and clone ' +
+                    'sdss_install to $SDSS_INSTALL_PRODUCT_ROOT/github/master')
         return version
 
 
