@@ -60,9 +60,10 @@ class Install5:
                     self.options.default = True
                     self.options.product = 'sdss_install'
                     self.options.product_version = self.get_bootstrap_version()
-                    self.logger.info(
-                        "Selected sdss_install/{} for bootstrap installation."
-                        .format(self.options.product_version))
+                    if self.ready:
+                        self.logger.info(
+                            "Selected sdss_install/{} for bootstrap installation."
+                            .format(self.options.product_version))
                 else:
                     self.ready = False
                     self.logger.error("You must specify a product " +
@@ -93,42 +94,48 @@ class Install5:
                 self.logger.error('Invalid product. {} '.format(self.options.product) )
 
     def get_bootstrap_version(self):
-        '''Set self.product['version'] as latest sdss_install tag, if present,
-        otherwise master.'''
+        '''Return latest sdss_install tag, if present, otherwise 'master'.'''
         version = 'master'
         if self.ready:
             original_dir = getcwd()
             sdss_install_master_dir = join(original_dir,'github','sdss_install','master')
-            if isdir(sdss_install_master_dir):
+            if sdss_install_master_dir and isdir(sdss_install_master_dir):
+                self.logger.debug('Changing directory to: {}'.format(sdss_install_master_dir))
                 chdir(sdss_install_master_dir)
+                # get most recent tag information
                 command = ['git','describe','--tags']
                 self.logger.debug('Running command: %s' % ' '.join(command))
                 (stdout,stderr,proc_returncode) = self.execute_command(command=command)
-                # NOTE: stderr is non-empty even when git checkout is successful.
                 if proc_returncode == 0:
+                    # set version to most recent tag
                     split = stdout.split('-') if stdout else None
                     if split and len(split) == 3:
                         version = split[0]
-#                        version = 'master'
-                        command = ['git','status']
-#                        command = ['git','checkout',version]
+                        # rename directory name master to version name
+                        self.logger.debug('Changing directory to: {}'
+                            .format(join(original_dir,'github','sdss_install')))
+                        chdir(join(original_dir,'github','sdss_install'))
+                        command = ['mv','master',version]
                         self.logger.debug('Running command: %s' % ' '.join(command))
                         (stdout,stderr,proc_returncode) = self.execute_command(command=command)
-                        print('stdout: %r' % stdout)
-                        print('stderr: %r' % stderr)
-                        print('proc_returncode: %r' % proc_returncode)
-                        input('pause')
+                        if not proc_returncode == 0:
+                            self.ready = False
+                            self.logger.error('Error encountered while running command: {}. '
+                                                .format(' '.join(command)) +
+                                              'stderr: {}.'.format(stderr.decode('utf-8')))
                     else: version = 'master'
+                    self.logger.debug('Changing directory to: {}'.format(original_dir))
                     chdir(original_dir)
                 else:
                     self.ready = False
-                    self.logger.error('Error encountered while running command: {}'
+                    self.logger.error('Error encountered while running command: {}. '
                                         .format(' '.join(command)) +
                                       'stderr: {}.'.format(stderr.decode('utf-8')))
             else:
                 self.ready = False
-                self.logger.error('bootstrap sdss_install directory does not exist: {}'
-                                    .format(sdss_install_master_dir))
+                self.logger.error('Directory does not exist: {}. '
+                                    .format(sdss_install_master_dir) +
+                                  'Try cloning sdss_install first.')
         return version
 
 
@@ -235,7 +242,7 @@ class Install5:
                                     % self.product)
             else:
                 self.ready = False
-                self.logger.error('Error encountered while running command: {}'
+                self.logger.error('Error encountered while running command: {}. '
                                     .format(' '.join(command)) +
                                   'stderr: {}.'.format(stderr.decode('utf-8')))
 
@@ -263,7 +270,7 @@ class Install5:
                     self.logger.info(s)
                 else:
                     self.ready = False
-                    self.logger.error('Error encountered while running command: {}'
+                    self.logger.error('Error encountered while running command: {}. '
                                         .format(' '.join(command)) +
                                       'stderr: {}.'.format(stderr.decode('utf-8')))
 
