@@ -26,7 +26,7 @@ class Install4:
     def __init__(self, logger=None, options=None):
         self.set_logger(logger=logger)
         self.set_options(options=options)
-        self.ready = None
+        self.ready = False
         self.url = None
         self.product = None
         self.package = None

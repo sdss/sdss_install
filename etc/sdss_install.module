@@ -74,6 +74,5 @@ setenv [string toupper $product]_LONGPATH {sdss_install_longpath}
 #
 # Add any non-standard Module code below this point.
 #
-setenv [string toupper $product]_GRAPHQL_DIR $PRODUCT_DIR/graphql
-setenv [string toupper $product]_KEY {SDSS_GITHUB_KEY}
+
 

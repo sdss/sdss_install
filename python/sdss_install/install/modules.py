@@ -20,7 +20,7 @@ class Modules:
         self.product = product
         self.directory = directory
         self.build_type = build_type
-        self.ready = None
+        self.ready = False
         self.dependencies = None
         self.built = None
 
@@ -160,14 +160,6 @@ class Modules:
             if basename(self.options.product)=='sdss_install':
                 self.keywords['sdss_install_root'] = self.options.root
                 self.keywords['sdss_install_longpath'] = '# '
-                if self.options.bootstrap:
-                    try:
-                        self.keywords['SDSS_GITHUB_KEY'] = (
-                            environ['SDSS_GITHUB_KEY'])
-                    except Exception as e:
-                        self.keywords['SDSS_GITHUB_KEY'] = None
-                        self.logger.error('Unable to authorize ' +
-                                'the GrqphQL client using the key %s.' % e)
             elif basename(self.options.product)=='sdss4tools':
                 self.keywords['sdss4tools_root'] = self.options.root
                 self.keywords['sdss4tools_longpath'] = self.options.longpath
