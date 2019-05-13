@@ -59,7 +59,7 @@ class Install5:
                 if self.options.bootstrap:
                     self.options.default = True
                     self.options.product = 'sdss_install'
-                    self.options.product_version = 'master'
+                    self.options.product_version = self.get_bootstrap_version()
                     self.logger.info(
                         "Selected sdss_install/{} for bootstrap installation."
                         .format(self.options.product_version))
@@ -91,6 +91,46 @@ class Install5:
             else:
                 self.ready = False
                 self.logger.error('Invalid product. {} '.format(self.options.product) )
+
+    def get_bootstrap_version(self):
+        '''Set self.product['version'] as latest sdss_install tag, if present,
+        otherwise master.'''
+        version = 'master'
+        if self.ready:
+            original_dir = getcwd()
+            sdss_install_master_dir = join(original_dir,'github','sdss_install','master')
+            if isdir(sdss_install_master_dir):
+                chdir(sdss_install_master_dir)
+                command = ['git','describe','--tags']
+                self.logger.debug('Running command: %s' % ' '.join(command))
+                (stdout,stderr,proc_returncode) = self.execute_command(command=command)
+                # NOTE: stderr is non-empty even when git checkout is successful.
+                if proc_returncode == 0:
+                    split = stdout.split('-') if stdout else None
+                    if split and len(split) == 3:
+                        version = split[0]
+#                        version = 'master'
+                        command = ['git','status']
+#                        command = ['git','checkout',version]
+                        self.logger.debug('Running command: %s' % ' '.join(command))
+                        (stdout,stderr,proc_returncode) = self.execute_command(command=command)
+                        print('stdout: %r' % stdout)
+                        print('stderr: %r' % stderr)
+                        print('proc_returncode: %r' % proc_returncode)
+                        input('pause')
+                    else: version = 'master'
+                    chdir(original_dir)
+                else:
+                    self.ready = False
+                    self.logger.error('Error encountered while running command: {}'
+                                        .format(' '.join(command)) +
+                                      'stderr: {}.'.format(stderr.decode('utf-8')))
+            else:
+                self.ready = False
+                self.logger.error('bootstrap sdss_install directory does not exist: {}'
+                                    .format(sdss_install_master_dir))
+        return version
+
 
     def set_product(self):
         '''Set self.product dict containing product and version names etc.'''
@@ -177,8 +217,8 @@ class Install5:
             Clone master branch of product version from GitHub then checkout
             other branch or tag if necessary.
         '''
-        if self.ready: self.clone()
-        if self.ready: self.checkout()
+        self.clone()
+        self.checkout()
         
     def clone(self):
         '''Clone the GitHub repository for the product.'''
