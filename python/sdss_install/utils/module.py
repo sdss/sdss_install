@@ -22,6 +22,7 @@ class Module:
 #        self.logger = logger
 #        self.options = options
         self.set_modules()
+        self.set_version()
 
     def set_modules(self):
         self.set_modules_home()
@@ -58,5 +59,15 @@ class Module:
         self.set_command("-V")
         proc = Popen(self.command)
 
-
+    def set_version(self):
+        if self.ready:
+            self.set_command("-V")
+            proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
+            if proc:
+                (stdout, stderr) = proc.communicate() if proc else (None,None)
+                self.returncode = proc.returncode if proc else None
+                self.version = stderr if self.returncode == 0 else None
+            else:
+                self.version = None
+        else: self.version = None
 
