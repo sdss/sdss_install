@@ -6,6 +6,7 @@ from sys import path, version_info
 from os import environ, makedirs, sep
 from os.path import basename, dirname, exists, isdir, join
 from subprocess import Popen, PIPE
+from sdss_install.utils import Module
 
 class Modules:
 
@@ -32,9 +33,10 @@ class Modules:
                       self.directory)
         if self.ready:
             if (self.options.moduleshome is None or
-                not isdir(self.options.moduleshome)):
-                self.logger.error("You do not appear to have Modules set up.")
+                not isdir(self.options.moduleshome)
+                ):
                 self.ready = False
+                self.logger.error("You do not appear to have Modules set up.")
             initpy_found = False
             for modpy in ('python','python.py','python3'):
                 initpy = join(self.options.moduleshome,'init',modpy)
@@ -49,19 +51,31 @@ class Modules:
                                 exec(code, globals())
                                 self.ready = True
                         except SyntaxError as e:
-                            s = 'Aborting because: %r. ' % str(e)
-                            if 'Missing parentheses' in str(e) and version_info.major == 3:
-                                s += ('Your modules version has a python shell ' +
-                                      'previous to python3.  Please upgrade your ' +
-                                      'modules, or revert to python2.')
+                            s = 'Aborting because: {}.\n'.format(e)
+                            s += 'sdss_install requires Modules Release Tcl 1.147 for Python2 '
+                            s += 'and Modules Release Tcl 1.602 for Python3.\n'
+                            module = Module(logger=self.logger,options=self.options)
+                            if module and module.ready:
+                                module_num_version = module.major
+                                module_num_version = (module_num_version + '.' + module.minor
+                                                      if module.minor else module_num_version)
+                                module_num_version = (module_num_version + '.' + module.patch
+                                                      if module.minor and module.patch
+                                                      else module_num_version)
+                                module_version = module.type + ' ' + module_num_version
+                                s += 'Your modules version is {}. '.format(module_version)
+                                if module_num_version < '1.147':
+                                    s += 'Please upgrade your modules. '
+                                elif version_info.major == 3 and module_num_version < '1.602':
+                                    s += 'Please upgrade your modules, or revert to Python2.'
                             self.logger.critical(s)
                         except Exception as e:
                             self.logger.error('Could not exec modules ' +
                                                 'python shell. %r' % e)
             if not initpy_found:
+                self.ready = False
                 self.logger.error("Could not find the Python file in {0}/init!"
                                     .format(self.options.moduleshome))
-                self.ready = False
 
     def set_file(self, ext='.module'):
         '''Set product module file path.'''

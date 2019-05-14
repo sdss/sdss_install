@@ -101,3 +101,6 @@ ENV/
 # mypy
 .mypy_cache/
 
+#Apple macOS custom attributes files
+.DS_Store
+python/sdss_install/.DS_Store
