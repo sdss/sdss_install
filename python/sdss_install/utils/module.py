@@ -8,7 +8,9 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from os import environ, popen
+import string
+from os import environ
+from subprocess import Popen, PIPE
 from os.path import join, exists
 
 class Module:
@@ -47,17 +49,15 @@ class Module:
 
     def set_command(self, command=None, arguments=None):
         if command and self.ready:
-            self.command = join(self.tclsh, self.modules_home['executable'])
-            self.command = '%s python %s' % (self.command,command)
+            self.command = [self.tclsh, self.modules_home['executable'], 'python', command]
             if arguments:
-                self.command += " " + "".join(arguments)
+                self.command.append(string.join(arguments))
         else: self.command = None
+        print("COMMAND %r" % self.command)
 
     def old_crappy_method(self):
         self.set_command("-V")
-        proc = popen(self.command)
-        commands = proc.read()
-        exec(commands)
+        proc = Popen(self.command)
 
 
 
