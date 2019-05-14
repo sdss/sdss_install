@@ -16,9 +16,9 @@ class Module:
     Replaces system module's python shell, which
     has poor pipe handling.'''
 
-    def __init__(self, logger=None, options=None):
-        self.logger = logger
-        self.options = options
+    def __init__(self): # , logger=None, options=None
+#        self.logger = logger
+#        self.options = options
         self.set_modules()
 
     def set_modules(self):
@@ -27,7 +27,9 @@ class Module:
         self.set_ready()
 
     def set_modules_home(self):
-        try: self.modules_home = modules_home = {'dir': environ['MODULESHOME']}
+        try:
+            modules_home = environ['MODULESHOME']
+            self.modules_home = {'dir': modules_home}
         except: self.modules_home = {}
         if self.modules_home:
             self.modules_home['executable'] = join(modules_home, "modulecmd.tcl")
@@ -39,15 +41,14 @@ class Module:
                 if self.tclsh and exists(self.tclsh): break
 
     def set_ready(self):
-        self.ready = True
-                     if self.modules_home and self.tclsh and exists(self.tclsh)
-                     and self.modules_home['dir'] and exists(self.modules_home['dir'])
-                     and self.modules_home['executable'] and exists(self.modules_home['executable'])
-                     else False
+        self.ready = (self.modules_home and self.tclsh and exists(self.tclsh)
+                        and self.modules_home['dir'] and exists(self.modules_home['dir'])
+                        and self.modules_home['executable'] and exists(self.modules_home['executable']))
 
     def set_command(self, command=None, arguments=None):
         if command and self.ready:
-            self.command = " ".join(self.tclsh, self.modules_home['executable']), "python", command)
+            self.command = join(self.tclsh, self.modules_home['executable'])
+            self.command = '%s python %s' % (self.command,command)
             if arguments:
                 self.command += " " + "".join(arguments)
         else: self.command = None
@@ -56,7 +57,7 @@ class Module:
         self.set_command("-V")
         proc = popen(self.command)
         commands = proc.read()
-        exec commands
+        exec(commands)
 
 
 
