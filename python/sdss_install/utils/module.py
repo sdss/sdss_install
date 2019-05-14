@@ -53,7 +53,6 @@ class Module:
             if arguments:
                 self.command.append(string.join(arguments))
         else: self.command = None
-        print("COMMAND %r" % self.command)
 
     def old_crappy_method(self):
         self.set_command("-V")
