@@ -100,7 +100,8 @@ class Module:
         if self.ready:
             self.set_command("--version")
             if self.command:
-                proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
+                proc = ( Popen(self.command, stdout=PIPE, stderr=PIPE, executable='/bin/bash', shell=True) if self.modules_lang['lua']
+                        else Popen(self.command, stdout=PIPE, stderr=PIPE) if self.modules_lang['tcl'] else None )
                 if proc:
                     (stdout, stderr) = proc.communicate() if proc else (None,None)
                     self.returncode = proc.returncode if proc else None
