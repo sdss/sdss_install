@@ -48,6 +48,7 @@ class Module:
                 self.modules_home = {'dir': modules_home}
             except: self.modules_home = dict()
             if self.modules_home:
+                self.modules_home['lmod'] = join(modules_home, "libexec", "lmod")
                 self.modules_home['lua'] = join(modules_home, "init", "lmodrc.lua")
                 self.modules_home['tcl'] = join(modules_home, "modulecmd.tcl")
             else:
@@ -56,7 +57,9 @@ class Module:
                                   'self.modules_home: {}.'.format(self.modules_home))
     def set_modules_lang(self):
         self.modules_lang = {}
-        self.modules_lang['lua'] = self.modules_home['lua'] and exists(self.modules_home['lua'])
+        self.modules_lang['lmod'] = self.modules_home['lmod'] and exists(self.modules_home['lmod'])
+        self.modules_lang['lua'] = ( self.modules_lang['lmod'] and
+                                     self.modules_home['lua'] and exists(self.modules_home['lua']) )
         self.modules_lang['tcl'] = self.modules_home['tcl'] and exists(self.modules_home['tcl'])
 
     def set_tclsh(self):
@@ -84,7 +87,9 @@ class Module:
         self.command = list()
         if self.ready:
             if command:
-                self.command = ['module', command] if self.modules_lang['lua'] else [self.tclsh, self.modules_home['tcl'], 'python', command] if self.modules_lang['tcl'] else None
+                self.command = ( [self.modules_home['lua'], 'bash', command] if self.modules_lang['lua']
+                                 else [self.tclsh, self.modules_home['tcl'], 'python', command] if self.modules_lang['tcl']
+                                 else None )
                 if self.command and arguments:
                     self.command.append(string.join(arguments))
             else:
