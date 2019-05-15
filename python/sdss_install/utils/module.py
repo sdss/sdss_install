@@ -87,9 +87,10 @@ class Module:
         self.command = list()
         if self.ready:
             if command:
-                self.command = ( [self.modules_home['lmod'], 'bash', command] if self.modules_lang['lua']
-                                 else [self.tclsh, self.modules_home['tcl'], 'python', command] if self.modules_lang['tcl']
-                                 else None )
+                self.command = ([self.modules_home['lmod'], 'bash', command]
+                                if self.modules_lang['lua'] else
+                                [self.tclsh, self.modules_home['tcl'], 'python', command]
+                                if self.modules_lang['tcl'] else None )
                 if self.command and arguments:
                     self.command.append(string.join(arguments))
             else:
@@ -113,6 +114,10 @@ class Module:
                     self.ready = False
                     self.logger.error('Unable to set_version. ' +
                                       'proc: {}.'.format(proc))
+            else:
+                self.ready = False
+                self.logger.error('Unable to set_version. ' +
+                                  'self.command: {}.'.format(self.command))
 
     def set_major_minor_patch(self):
         '''From the the Modules Release Tcl version string, set version major, minor, and patch.'''
@@ -120,19 +125,28 @@ class Module:
         self.minor = str()
         self.patch = str()
         if self.ready:
-            version_string = str(self.version) if self.version else str()
-            self.type = ('Tcl' if version_string and 'tcl' in version_string.lower()
-                         else str())
-            text = str()
-            p1 = compile('\d*\.\d*\.\d*|\d*\.\d*')
-            iterator = p1.finditer(version_string)
-            for match in iterator:
-                text = version_string[match.start() : match.end()] if match else str()
-                if text: break
-            split = text.split('.') if text else list()
-            self.major = split[0].strip() if split and len(split) >= 1 else str()
-            self.minor = split[1].strip() if split and len(split) >= 2 else str()
-            self.patch = split[2].strip() if split and len(split) >= 3 else str()
+            if self.version and self.modules_lang:
+                self.type = ('Tcl' if self.modules_lang['tcl'] else
+                             'Lua' if self.modules_lang['lua'] else
+                             'Lmod' if self.modules_lang['lmod'] else str()
+                             )
+                version_string = str(self.version) if self.version else str()
+                text = str()
+                p1 = compile('\d+\.\d+\.\d+|\d+\.\d+')
+                iterator = p1.finditer(version_string)
+                for match in iterator:
+                    text = version_string[match.start() : match.end()] if match else str()
+                    if text: break
+                split = text.split('.') if text else list()
+                self.major = split[0].strip() if split and len(split) >= 1 else str()
+                self.minor = split[1].strip() if split and len(split) >= 2 else str()
+                self.patch = split[2].strip() if split and len(split) >= 3 else str()
+            else:
+                self.ready = False
+                self.logger.error('Unable to set_version. ' +
+                                  'self.version: {}.'.format(self.version) +
+                                  'self.verson_lang: {}.'.format(self.verson_lang)
+                                  )
 
 
 
