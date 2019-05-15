@@ -85,6 +85,7 @@ class Module:
         if self.ready:
             if command:
                 self.command = ['module', command] if self.modules_lang['lua'] else [self.tclsh, self.modules_home['tcl'], 'python', command] if self.modules_lang['tcl'] else None
+                print("COMMAND=%r" % self.command)
                 if self.command and arguments:
                     self.command.append(string.join(arguments))
             else:
