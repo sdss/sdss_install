@@ -107,7 +107,6 @@ class Module:
                 proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
                 if proc:
                     (stdout, stderr) = proc.communicate() if proc else (None,None)
-                    print("stdout=%r, stderr=%r" % (stdout, stderr))
                     self.returncode = proc.returncode if proc else None
                     self.version = stderr.strip() if self.returncode == 0 and stderr else None
                 else:
