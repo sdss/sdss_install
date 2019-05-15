@@ -51,9 +51,11 @@ class Modules:
                                 exec(code, globals())
                                 self.ready = True
                         except SyntaxError as e:
+                            Tcl_min_python2 = '1.147'
+                            Tcl_min_python3 = '1.602'
                             s = 'Aborting because: {}.\n'.format(e)
-                            s += 'sdss_install requires Modules Release Tcl 1.147 for Python2 '
-                            s += 'and Modules Release Tcl 1.602 for Python3.\n'
+                            s += 'sdss_install requires Modules Release Tcl {} for Python2 '.format(Tcl_min_python2)
+                            s += 'and Modules Release Tcl {} for Python3.\n'.format(Tcl_min_python3)
                             module = Module(logger=self.logger)
                             if module and module.ready:
                                 module_num_version = module.major
@@ -64,9 +66,10 @@ class Modules:
                                                       else module_num_version)
                                 module_version = module.type + ' ' + module_num_version
                                 s += 'Your modules version is {}. '.format(module_version)
-                                if module_num_version < '1.147':
+                                if module_num_version < Tcl_min_python2:
                                     s += 'Please upgrade your modules. '
-                                elif version_info.major == 3 and module_num_version < '1.602':
+                                elif (version_info.major == 3 and
+                                      module_num_version < Tcl_min_python3):
                                     s += 'Please upgrade your modules, or revert to Python2.'
                             self.logger.critical(s)
                         except Exception as e:
