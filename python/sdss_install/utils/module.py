@@ -20,9 +20,8 @@ class Module:
     Replaces system module's python shell, which
     has poor pipe handling.'''
 
-    def __init__(self,logger=None, options=None):
+    def __init__(self,logger=None):
         self.set_logger(logger=logger)
-        self.set_options(options=options)
         self.set_modules()
         self.set_version()
         self.set_major_minor_patch()
@@ -33,16 +32,6 @@ class Module:
         self.ready = bool(self.logger)
         if not self.ready:
             print('ERROR: %r> Unable to set_logger.' % self.__class__)
-
-    def set_options(self,options=None):
-        '''Set command line argument options'''
-        self.options = None
-        if self.ready:
-            self.options = options if options else None
-            if not self.options:
-                self.ready = False
-                self.logger.error('Unable to set_options' +
-                                  'self.options: {}'.format(self.options))
 
     def set_modules(self):
         self.set_modules_home()
@@ -79,7 +68,7 @@ class Module:
 
     def set_ready(self):
         '''Set self.ready after setting modules information.'''
-        self.ready = (self.logger and self.options and
+        self.ready = (self.logger and 
                       self.modules_home and
                       self.tclsh and exists(self.tclsh) and
                       self.modules_home['dir'] and exists(self.modules_home['dir']) and

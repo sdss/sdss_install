@@ -54,7 +54,7 @@ class Modules:
                             s = 'Aborting because: {}.\n'.format(e)
                             s += 'sdss_install requires Modules Release Tcl 1.147 for Python2 '
                             s += 'and Modules Release Tcl 1.602 for Python3.\n'
-                            module = Module(logger=self.logger,options=self.options)
+                            module = Module(logger=self.logger)
                             if module and module.ready:
                                 module_num_version = module.major
                                 module_num_version = (module_num_version + '.' + module.minor
