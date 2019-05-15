@@ -85,7 +85,6 @@ class Module:
         if self.ready:
             if command:
                 self.command = ['module', command] if self.modules_lang['lua'] else [self.tclsh, self.modules_home['tcl'], 'python', command] if self.modules_lang['tcl'] else None
-                print("COMMAND=%r" % self.command)
                 if self.command and arguments:
                     self.command.append(string.join(arguments))
             else:
@@ -104,6 +103,7 @@ class Module:
                         else Popen(self.command, stdout=PIPE, stderr=PIPE) if self.modules_lang['tcl'] else None )
                 if proc:
                     (stdout, stderr) = proc.communicate() if proc else (None,None)
+                    print("stdout=%r, stderr=%r" % (stdout, stderr))
                     self.returncode = proc.returncode if proc else None
                     self.version = stderr.strip() if self.returncode == 0 and stderr else None
                 else:
