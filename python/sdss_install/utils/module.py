@@ -87,7 +87,7 @@ class Module:
         self.command = list()
         if self.ready:
             if command:
-                self.command = ( [self.modules_home['lua'], 'bash', command] if self.modules_lang['lua']
+                self.command = ( [self.modules_home['lmod   '], 'bash', command] if self.modules_lang['lua']
                                  else [self.tclsh, self.modules_home['tcl'], 'python', command] if self.modules_lang['tcl']
                                  else None )
                 if self.command and arguments:
@@ -104,8 +104,7 @@ class Module:
         if self.ready:
             self.set_command("--version")
             if self.command:
-                proc = ( Popen(self.command, stdout=PIPE, stderr=PIPE, executable='/bin/bash', shell=True) if self.modules_lang['lua']
-                        else Popen(self.command, stdout=PIPE, stderr=PIPE) if self.modules_lang['tcl'] else None )
+                proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
                 if proc:
                     (stdout, stderr) = proc.communicate() if proc else (None,None)
                     print("stdout=%r, stderr=%r" % (stdout, stderr))
