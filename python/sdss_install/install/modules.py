@@ -25,6 +25,9 @@ class Modules:
         self.dependencies = None
         self.built = None
 
+    def set_module(self):
+        self.module = Module(logger = self.logger)
+
     def set_ready(self):
         '''Set up Modules.'''
         self.ready = (self.logger and
@@ -37,7 +40,9 @@ class Modules:
                 ):
                 self.ready = False
                 self.logger.error("You do not appear to have Modules set up.")
-            initpy_found = False
+            self.ready = module.ready
+            
+            """initpy_found = False
             for modpy in ('python','python.py','python3'):
                 initpy = join(self.options.moduleshome,'init',modpy)
                 if exists(initpy):
@@ -78,7 +83,7 @@ class Modules:
             if not initpy_found:
                 self.ready = False
                 self.logger.error("Could not find the Python file in {0}/init!"
-                                    .format(self.options.moduleshome))
+                                    .format(self.options.moduleshome))"""
 
     def set_file(self, ext='.module'):
         '''Set product module file path.'''
