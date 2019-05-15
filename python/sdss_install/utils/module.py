@@ -87,7 +87,7 @@ class Module:
         self.command = list()
         if self.ready:
             if command:
-                self.command = ( [self.modules_home['lmod   '], 'bash', command] if self.modules_lang['lua']
+                self.command = ( [self.modules_home['lmod'], 'bash', command] if self.modules_lang['lua']
                                  else [self.tclsh, self.modules_home['tcl'], 'python', command] if self.modules_lang['tcl']
                                  else None )
                 if self.command and arguments:
