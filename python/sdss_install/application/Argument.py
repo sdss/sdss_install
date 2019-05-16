@@ -50,7 +50,7 @@ def sdss_install():
         help='Overwrite any existing installation of this product/version.')
     parser.add_argument('-k', '--keep', action='store_true', dest='keep',
         help='Keep the exported build directory.')
-    parser.add_argument('-m', '--module-home', action='store', dest='moduleshome',
+    parser.add_argument('-m', '--modules-home', action='store', dest='modules_home',
         metavar='DIR',help='Set or override the value of $MODULESHOME',
         default=getenv('MODULESHOME'))
     parser.add_argument('-a', '--alt-module', action='store', dest='alt_module',

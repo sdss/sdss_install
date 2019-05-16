@@ -27,7 +27,7 @@ class Modules:
         self.module = None
 
     def set_module(self):
-        self.module = Module(logger = self.logger)
+        self.module = Module(logger=self.logger,options=self.options)
 
     def set_ready(self):
         '''Set up Modules.'''
