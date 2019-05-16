@@ -6,6 +6,7 @@ from sys import path, version_info
 from os import environ, makedirs, sep
 from os.path import basename, dirname, exists, isdir, join
 from subprocess import Popen, PIPE
+from sdss_install.utils import Module
 
 class Modules:
 
@@ -23,55 +24,32 @@ class Modules:
         self.ready = False
         self.dependencies = None
         self.built = None
+        self.module = None
+
+    def set_module(self):
+        self.module = Module(logger=self.logger,options=self.options)
 
     def set_ready(self):
         '''Set up Modules.'''
         self.ready = (self.logger and
                       self.options and
                       self.product and
-                      self.directory)
-        if self.ready:
-            if (self.options.moduleshome is None or
-                not isdir(self.options.moduleshome)):
-                self.logger.error("You do not appear to have Modules set up.")
-                self.ready = False
-            initpy_found = False
-            for modpy in ('python','python.py','python3'):
-                initpy = join(self.options.moduleshome,'init',modpy)
-                if exists(initpy):
-                    initpy_found = True
-                    try: execfile(initpy,globals())
-                    except: self.ready = False
-                    if not self.ready:
-                        try:
-                            with open(initpy) as execfile:
-                                code = compile(execfile.read(), initpy, 'exec')
-                                exec(code, globals())
-                                self.ready = True
-                        except SyntaxError as e:
-                            s = 'Aborting because: %r. ' % str(e)
-                            if 'Missing parentheses' in str(e) and version_info.major == 3:
-                                s += ('Your modules version has a python shell ' +
-                                      'previous to python3.  Please upgrade your ' +
-                                      'modules, or revert to python2.')
-                            self.logger.critical(s)
-                        except Exception as e:
-                            self.logger.error('Could not exec modules ' +
-                                                'python shell. %r' % e)
-            if not initpy_found:
-                self.logger.error("Could not find the Python file in {0}/init!"
-                                    .format(self.options.moduleshome))
-                self.ready = False
-
+                      self.directory and
+                      self.module)
+        if self.ready and not self.module.ready:
+            self.ready = False
+            self.logger.error("You do not appear to have Modules set up.")
+            
     def set_file(self, ext='.module'):
         '''Set product module file path.'''
-        alt = "_%s" % self.options.alt_module if self.options.alt_module else ""
-        filename = (self.product['name']+alt+ext
-                    if 'name' in self.product and ext
-                    else None)
-        self.file = (join(self.directory['work'],'etc',filename)
-                     if filename and 'work' in self.directory
-                     else None)
+        if self.ready:
+            alt = "_%s" % self.options.alt_module if self.options.alt_module else ""
+            filename = (self.product['name']+alt+ext
+                        if 'name' in self.product and ext
+                        else None)
+            self.file = (join(self.directory['work'],'etc',filename)
+                         if filename and 'work' in self.directory
+                         else None)
 
     def load_dependencies(self):
         '''Load dependencies.'''
@@ -83,27 +61,30 @@ class Modules:
     def set_dependencies(self):
         '''Set the dependencies by looking for modules loaded in the modules file'''
         self.dependencies = list()
-        if exists(self.file):
-            with open(self.file) as file: lines = file.readlines()
-            from json import dumps
-            for product_version in [l.strip().split()[2] for l in lines if l.startswith('module load')]:
-                self.dependencies.append(product_version.split('/',1)
-                                         if '/' in product_version
-                                         else (product_version, None))
+        if self.ready:
+            if exists(self.file):
+                with open(self.file) as file: lines = file.readlines()
+                from json import dumps
+                for product_version in [l.strip().split()[2] for l in lines if l.startswith('module load')]:
+                    self.dependencies.append(product_version.split('/',1)
+                                             if '/' in product_version
+                                             else (product_version, None))
 
     def load(self,product=None,version=None):
         '''Hook to module load function.'''
-        if product:
-            product_version = join(product,version) if version else product
-            try:
-                module('load',product_version)
-                self.logger.info("module load %s (dependency)" % product_version)
-            except:
-                self.logger.warning("unable to module load %s (dependency)"
-                                    % product_version)
-        else:
-            self.logger.error("module load command requires a " +
-                                "product [version optional]")
+        if self.ready:
+            if product:
+                product_version = join(product,version) if version else product
+                try:
+                    self.module.set_command('load',arguments=product_version)
+                    self.module.execute_command()
+                    self.logger.info("module load %s (dependency)" % product_version)
+                except:
+                    self.logger.warning("unable to module load %s (dependency)"
+                                        % product_version)
+            else:
+                self.logger.error("module load command requires a " +
+                                    "product [version optional]")
 
     def set_keywords(self, build_type=None):
         '''Set keywords to configure module.'''
@@ -167,37 +148,39 @@ class Modules:
     def set_directory(self):
         '''Make module file installation directory.'''
         self.check_options()
-        self.directory['modules'] = join(self.options.moduledir,
-                                         self.product['name'])
-        if self.ready and not self.options.test:
-            if not isdir(self.directory['modules']):
-                self.logger.info("Creating Modules directory %(modules)s"
-                                    % self.directory)
-                try:
-                    makedirs(self.directory['modules'])
-                except OSError as ose:
-                    self.logger.error(ose.strerror)
-                    self.ready = False
+        if self.ready:
+            self.directory['modules'] = join(self.options.moduledir,
+                                             self.product['name'])
+            if self.ready and not self.options.test:
+                if not isdir(self.directory['modules']):
+                    self.logger.info("Creating Modules directory %(modules)s"
+                                        % self.directory)
+                    try:
+                        makedirs(self.directory['modules'])
+                    except OSError as ose:
+                        self.logger.error(ose.strerror)
+                        self.ready = False
 
     def check_options(self):
         '''
             Check for / create a modulefile directory
             (if there is an etc/product.module file or for the tree product)
         '''
-        if exists(self.file) or basename(self.options.product)=='tree':
-            if not self.options.moduledir:
-                repo_type = 'github' if self.options.github else 'svn'
-                self.options.moduledir = join(self.options.root,
-                                              repo_type,
-                                              'modulefiles')
-                if not self.options.test:
-                    if not isdir(self.options.moduledir):
-                        self.logger.info("Creating Modules directory {0}"
-                                        .format(self.options.moduledir))
-                        try: makedirs(self.options.moduledir)
-                        except OSError as ose:
-                            self.ready = False
-                            self.logger.error(ose.strerror)
+        if self.ready:
+            if exists(self.file) or basename(self.options.product)=='tree':
+                if not self.options.moduledir:
+                    repo_type = 'github' if self.options.github else 'svn'
+                    self.options.moduledir = join(self.options.root,
+                                                  repo_type,
+                                                  'modulefiles')
+                    if not self.options.test:
+                        if not isdir(self.options.moduledir):
+                            self.logger.info("Creating Modules directory {0}"
+                                            .format(self.options.moduledir))
+                            try: makedirs(self.options.moduledir)
+                            except OSError as ose:
+                                self.ready = False
+                                self.logger.error(ose.strerror)
 
     def build(self):
         '''

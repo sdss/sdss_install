@@ -37,6 +37,7 @@ else:
 
     if install.ready:
         install.set_modules()
+        install.modules.set_module()
         install.modules.set_ready()
         install.modules.set_file()
         install.modules.load_dependencies()
