@@ -24,7 +24,7 @@ class Module:
         self.set_logger(logger=logger)
         self.set_modules()
         self.set_version()
-        self.set_major_minor_patch()
+        self.set_version_major_minor_patch()
 
     def set_logger(self,logger=None):
         '''Set the class logger'''
@@ -55,8 +55,9 @@ class Module:
                 self.ready = False
                 self.logger.error('Unable to set_modules_home. ' +
                                   'self.modules_home: {}.'.format(self.modules_home))
+    
     def set_modules_lang(self):
-        self.modules_lang = {}
+        self.modules_lang = dict()
         self.modules_lang['lmod'] = self.modules_home['lmod'] and exists(self.modules_home['lmod'])
         self.modules_lang['lua'] = ( self.modules_lang['lmod'] and
                                      self.modules_home['lua'] and exists(self.modules_home['lua']) )
@@ -98,28 +99,31 @@ class Module:
                 self.logger.error('Unable to set_command. ' +
                                   'command: {}.'.format(command))
 
+    def execute_command(self):
+        if self.command:
+            proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
+            if proc:
+                (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
+                self.returncode = proc.returncode if proc else None
+            else:
+                self.ready = False
+                self.logger.error('Unable to execute_command. ' +
+                                  'proc: {}.'.format(proc))
+        else:
+            self.ready = False
+            self.logger.error('Unable to execute_command. ' +
+                              'self.command: {}.'.format(self.command))
 
     def set_version(self):
         '''Set the Modules Release Tcl version string returned by modules --version.'''
         self.version = str()
         if self.ready:
             self.set_command("--version")
-            if self.command:
-                proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
-                if proc:
-                    (stdout, stderr) = proc.communicate() if proc else (None,None)
-                    self.returncode = proc.returncode if proc else None
-                    self.version = stderr.strip() if self.returncode == 0 and stderr else None
-                else:
-                    self.ready = False
-                    self.logger.error('Unable to set_version. ' +
-                                      'proc: {}.'.format(proc))
-            else:
-                self.ready = False
-                self.logger.error('Unable to set_version. ' +
-                                  'self.command: {}.'.format(self.command))
+            self.execute_command()
+            self.version = (self.stderr.strip()
+                            if self.returncode == 0 and self.stderr else None)
 
-    def set_major_minor_patch(self):
+    def set_version_major_minor_patch(self):
         '''From the the Modules Release Tcl version string, set version major, minor, and patch.'''
         self.major = str()
         self.minor = str()
@@ -147,6 +151,7 @@ class Module:
                                   'self.version: {}.'.format(self.version) +
                                   'self.verson_lang: {}.'.format(self.verson_lang)
                                   )
+
 
 
 
