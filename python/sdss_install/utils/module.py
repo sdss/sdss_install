@@ -64,7 +64,7 @@ class Module:
                 self.modules_home = {'dir': modules_home}
                 self.modules_home['lmod'] = join(modules_home, "libexec", "lmod")
                 self.modules_home['lua'] = join(modules_home, "init", "lmodrc.lua")
-                self.modules_home['tcl'] = join(modules_home, "modulecmd.tcl")
+                self.modules_home['tcl'] = join(modules_home, "libexec", "modulecmd.tcl")
             else:
                 self.ready = False
                 self.logger.error('Unable to set_modules_home. ' +
@@ -97,7 +97,7 @@ class Module:
                       self.modules_home and
                       self.modules_home['dir'] and exists(self.modules_home['dir']) and
                       (self.modules_lang['lua'] or
-                      (self.tclsh and exists(self.tclsh) and self.modules_lang['tcl'])))
+                      (hasattr(self, "tclsh") and self.tclsh and self.modules_lang['tcl'])))
 
     def set_command(self, command=None, arguments=None):
         self.command = list()

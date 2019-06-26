@@ -39,7 +39,7 @@ class Modules:
         if self.ready and not self.module.ready:
             self.ready = False
             self.logger.error("You do not appear to have Modules set up.")
-            
+
     def set_file(self, ext='.module'):
         '''Set product module file path.'''
         if self.ready:
