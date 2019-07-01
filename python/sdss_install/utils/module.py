@@ -47,7 +47,7 @@ class Module:
     def set_modules(self):
         self.set_modules_home()
         self.set_modules_lang()
-        if self.modules_lang['tcl']: self.set_tclsh()
+        self.set_tclsh()
         self.set_ready()
 
     def set_modules_home(self):
@@ -65,6 +65,8 @@ class Module:
                 self.modules_home['lmod'] = join(modules_home, "libexec", "lmod")
                 self.modules_home['lua'] = join(modules_home, "init", "lmodrc.lua")
                 self.modules_home['tcl'] = join(modules_home, "modulecmd.tcl")
+                if not exists(self.modules_home['tcl']):
+                    self.modules_home['tcl'] = join(modules_home, "libexec", "modulecmd.tcl")
             else:
                 self.ready = False
                 self.logger.error('Unable to set_modules_home. ' +
@@ -79,8 +81,8 @@ class Module:
 
     def set_tclsh(self):
         '''Set tclsh exec directory.'''
-        self.tclsh = str()
-        if self.ready:
+        self.tclsh = None
+        if self.ready and self.modules_lang['tcl']:
             try: self.tclsh = environ['TCLSH']
             except:
                 for self.tclsh in ['/usr/bin/tclsh','/bin/tclsh', None]:
