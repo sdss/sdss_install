@@ -287,6 +287,12 @@ class Install:
             else:                   self.install4.fetch()
             self.import_data()
 
+    def checkout(self):
+        '''Call Install5.checkout'''
+        if self.ready:
+            self.install5.checkout()
+            self.import_data()
+
     def set_github_remote_url(self):
         '''Set the set_github_remote_url() of class Install5'''
         if self.ready and self.options.github:

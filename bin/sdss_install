@@ -52,5 +52,8 @@ else:
         install.build_package()
         if not options.keep: install.clean()
 
+    if options.bootstrap:
+        install.checkout()
+
     install.finalize()
 
