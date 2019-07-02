@@ -61,7 +61,7 @@ class Install5:
                     self.options.default = True
                     self.options.product = 'sdss_install'
                     self.options.product_version = self.get_bootstrap_version()
-                    if self.ready:
+                    if self.get_valid_version() and self.ready:
                         self.logger.info(
                             "Selected sdss_install/{} for bootstrap installation."
                             .format(self.options.product_version))
@@ -75,24 +75,42 @@ class Install5:
                 if self.options.product_version.endswith('/'):
                     self.options.product_version = (
                         dirname(self.options.product_version))
-                self.logger.info('Validating product')
-                valid_product = self.is_type(type='repository') # check for master branch
-                if valid_product:
-                    self.logger.info('Validating version')
-                    version = self.options.product_version
-                    is_master = (version == 'master')
-                    is_branch = True if is_master else self.is_type(type='branch')
-                    is_tag    = False if is_branch else self.is_type(type='tag')
-                    valid_version =  is_master or is_branch or is_tag
-                    if not valid_version:
-                        self.ready = False
-                        self.logger.error('Invalid version: {}'.format(version))
-                else:
-                    self.ready = False
-                    self.logger.error('Invalid product. {} '.format(self.options.product) )
+                self.validate_product_and_version()
             else:
                 self.ready = False
                 self.logger.error('Invalid product. {} '.format(self.options.product) )
+
+    def validate_product_and_version(self):
+        '''Validate the product and product version.'''
+        if self.ready:
+            self.logger.info('Validating product')
+            if self.get_valid_product():
+                self.logger.info('Validating version')
+                if not self.get_valid_version():
+                    self.ready = False
+                    self.logger.error('Invalid version: {}'.format(version))
+            else:
+                self.ready = False
+                self.logger.error('Invalid product. {} '
+                                    .format(self.options.product) )
+
+    def get_valid_product(self):
+        '''Validate the product'''
+        if self.ready:
+            # check for master branch
+            valid_product = self.is_type(type='repository')
+            return valid_product
+
+    def get_valid_version(self):
+        '''Validate the product version'''
+        valid_version = None
+        if self.ready:
+            version = self.options.product_version
+            is_master = (version == 'master')
+            is_branch = True if is_master else self.is_type(type='branch')
+            is_tag    = False if is_branch else self.is_type(type='tag')
+            valid_version =  bool(is_master or is_branch or is_tag)
+        return valid_version
 
     def get_bootstrap_version(self):
         '''Return latest sdss_install tag, if present, otherwise 'master'.'''
