@@ -9,6 +9,7 @@ from os import getcwd, environ, makedirs, chdir, remove#, getenv, walk
 from os.path import isdir, join, exists, basename, dirname
 from subprocess import Popen, PIPE
 from inspect import stack, getmodule
+from re import search, compile, match
 
 class Install5:
     '''Class for sdss_install'ation of GitHub repositories.'''
@@ -60,7 +61,7 @@ class Install5:
                     self.options.default = True
                     self.options.product = 'sdss_install'
                     self.options.product_version = self.get_bootstrap_version()
-                    if self.ready:
+                    if self.get_valid_version() and self.ready:
                         self.logger.info(
                             "Selected sdss_install/{} for bootstrap installation."
                             .format(self.options.product_version))
@@ -74,24 +75,43 @@ class Install5:
                 if self.options.product_version.endswith('/'):
                     self.options.product_version = (
                         dirname(self.options.product_version))
-                self.logger.info('Validating product')
-                valid_product = self.is_type(type='repository') # check for master branch
-                if valid_product:
-                    self.logger.info('Validating version')
-                    version = self.options.product_version
-                    is_master = (version == 'master')
-                    is_branch = True if is_master else self.is_type(type='branch')
-                    is_tag    = False if is_branch else self.is_type(type='tag')
-                    valid_version =  is_master or is_branch or is_tag
-                    if not valid_version:
-                        self.ready = False
-                        self.logger.error('Invalid version: {}'.format(version))
-                else:
-                    self.ready = False
-                    self.logger.error('Invalid product. {} '.format(self.options.product) )
+                self.validate_product_and_version()
             else:
                 self.ready = False
                 self.logger.error('Invalid product. {} '.format(self.options.product) )
+
+    def validate_product_and_version(self):
+        '''Validate the product and product version.'''
+        if self.ready:
+            if self.get_valid_product():
+                self.get_valid_version()
+
+    def get_valid_product(self):
+        '''Validate the product'''
+        valid_product = None
+        if self.ready:
+            self.logger.info('Validating product')
+            # check for master branch
+            valid_product = self.is_type(type='repository')
+            if not valid_product:
+                self.ready = False
+                self.logger.error('Invalid product. {} '.format(self.options.product) )
+        return valid_product
+
+    def get_valid_version(self):
+        '''Validate the product version'''
+        valid_version = None
+        if self.ready:
+            self.logger.info('Validating version')
+            version = self.options.product_version
+            is_master = (version == 'master')
+            is_branch = True if is_master else self.is_type(type='branch')
+            is_tag    = False if is_branch else self.is_type(type='tag')
+            valid_version =  bool(is_master or is_branch or is_tag)
+            if not valid_version:
+                self.ready = False
+                self.logger.error('Invalid version: {}'.format(version))
+        return valid_version
 
     def get_bootstrap_version(self):
         '''Return latest sdss_install tag, if present, otherwise 'master'.'''
@@ -115,9 +135,11 @@ class Install5:
                 (stdout,stderr,proc_returncode) = self.execute_command(command=command)
                 if proc_returncode == 0:
                     # set version to most recent tag
-                    split = stdout.split('-') if stdout else None
-                    if split and len(split) == 3:
-                        version = split[0]
+                    regex = '^(\d+\.)(\d+\.)(\d+)'
+                    matches = self.get_matches(regex=regex,string=stdout) if stdout else list()
+                    match = matches[0] if matches else str()
+                    if match:
+                        version = match.strip()
                         # rename directory name master to version name
                         self.logger.debug('Changing directory to: {}'.format(sdss_install_dir))
                         chdir(sdss_install_dir)
@@ -146,6 +168,24 @@ class Install5:
                     'Please first set SDSS_INSTALL_PRODUCT_ROOT and clone ' +
                     'sdss_install to $SDSS_INSTALL_PRODUCT_ROOT/github/master')
         return version
+
+    def get_matches(self,regex=None,string=None):
+        matches = None
+        if self.ready:
+            if regex and string:
+                pattern = compile(regex)
+                iterator = pattern.finditer(string)
+                matches = list()
+                for match in iterator:
+                    text = string[match.start() : match.end()] if match else None
+                    if text: matches.append(text)
+            else:
+                self.ready = False
+                self.logger.error('Unable to check_match. ' +
+                                  'regex: {}'.format(regex) +
+                                  'string: {}'.format(string)
+                                  )
+        return matches
 
 
     def set_product(self):
