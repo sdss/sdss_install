@@ -83,9 +83,7 @@ class Install5:
     def validate_product_and_version(self):
         '''Validate the product and product version.'''
         if self.ready:
-            self.logger.info('Validating product')
             if self.get_valid_product():
-                self.logger.info('Validating version')
                 if not self.get_valid_version():
                     self.ready = False
                     self.logger.error('Invalid version: {}'.format(version))
@@ -97,6 +95,7 @@ class Install5:
     def get_valid_product(self):
         '''Validate the product'''
         if self.ready:
+            self.logger.info('Validating product')
             # check for master branch
             valid_product = self.is_type(type='repository')
             return valid_product
@@ -105,6 +104,7 @@ class Install5:
         '''Validate the product version'''
         valid_version = None
         if self.ready:
+            self.logger.info('Validating version')
             version = self.options.product_version
             is_master = (version == 'master')
             is_branch = True if is_master else self.is_type(type='branch')
