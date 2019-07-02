@@ -9,6 +9,7 @@ from os import getcwd, environ, makedirs, chdir, remove#, getenv, walk
 from os.path import isdir, join, exists, basename, dirname
 from subprocess import Popen, PIPE
 from inspect import stack, getmodule
+from re import search, compile, match
 
 class Install5:
     '''Class for sdss_install'ation of GitHub repositories.'''
@@ -115,9 +116,11 @@ class Install5:
                 (stdout,stderr,proc_returncode) = self.execute_command(command=command)
                 if proc_returncode == 0:
                     # set version to most recent tag
-                    split = stdout.split('-') if stdout else None
-                    if split and len(split) == 3:
-                        version = split[0]
+                    regex = '^(\d+\.)(\d+\.)(\d+)'
+                    matches = self.get_matches(regex=regex,string=stdout) if stdout else list()
+                    match = matches[0] if matches else str()
+                    if match:
+                        version = match.strip()
                         # rename directory name master to version name
                         self.logger.debug('Changing directory to: {}'.format(sdss_install_dir))
                         chdir(sdss_install_dir)
@@ -146,6 +149,24 @@ class Install5:
                     'Please first set SDSS_INSTALL_PRODUCT_ROOT and clone ' +
                     'sdss_install to $SDSS_INSTALL_PRODUCT_ROOT/github/master')
         return version
+
+    def get_matches(self,regex=None,string=None):
+        matches = None
+        if self.ready:
+            if regex and string:
+                pattern = compile(regex)
+                iterator = pattern.finditer(string)
+                matches = list()
+                for match in iterator:
+                    text = string[match.start() : match.end()] if match else None
+                    if text: matches.append(text)
+            else:
+                self.ready = False
+                self.logger.error('Unable to check_match. ' +
+                                  'regex: {}'.format(regex) +
+                                  'string: {}'.format(string)
+                                  )
+        return matches
 
 
     def set_product(self):
