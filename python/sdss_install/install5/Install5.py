@@ -309,20 +309,27 @@ class Install5:
                     s = ('Completed checkout of tag {} '.format(version) +
                          'and removal of .git directory')
                     remove = True
-                chdir(self.directory['work'])
-                command = ['git','checkout',version]
-                self.logger.debug('Running command: %s' % ' '.join(command))
-                (stdout,stderr,proc_returncode) = self.execute_command(command=command)
-                # NOTE: stderr is non-empty even when git checkout is successful.
-                if proc_returncode == 0:
-                    chdir(self.directory['original'])
-                    if remove: self.export()
-                    self.logger.info(s)
+                else:
+                    version = None
+                if version:
+                    chdir(self.directory['work'])
+                    command = ['git','checkout',version]
+                    self.logger.debug('Running command: %s' % ' '.join(command))
+                    (stdout,stderr,proc_returncode) = self.execute_command(command=command)
+                    # NOTE: stderr is non-empty even when git checkout is successful.
+                    if proc_returncode == 0:
+                        chdir(self.directory['original'])
+                        if remove: self.export()
+                        self.logger.info(s)
+                    else:
+                        self.ready = False
+                        self.logger.error('Error encountered while running command: {}. '
+                                            .format(' '.join(command)) +
+                                          'stderr: {}.'.format(stderr.decode('utf-8')))
                 else:
                     self.ready = False
-                    self.logger.error('Error encountered while running command: {}. '
-                                        .format(' '.join(command)) +
-                                      'stderr: {}.'.format(stderr.decode('utf-8')))
+                    self.logger.error('Unable to checkout. '
+                                      'version: {}.'.format(version))
 
     def export(self):
         if self.ready: rmtree(join(self.directory['work'],'.git'))
