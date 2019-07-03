@@ -173,7 +173,7 @@ class Install5:
         matches = None
         if self.ready:
             if regex and string:
-                string = str(string.decode("utf-8"))
+                string = string.decode("utf-8") if isinstance(string,bytes) else string
                 pattern = compile(regex)
                 iterator = pattern.finditer(string)
                 matches = list()
