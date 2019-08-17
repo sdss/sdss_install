@@ -19,6 +19,8 @@ from argparse import ArgumentParser
 try: from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError: from configparser import SafeConfigParser, RawConfigParser
 from .most_recent_tag import most_recent_tag
+from subprocess import Popen, PIPE
+
 
 class Install4:
     '''Class for sdss_install'ation of SVN repositories.'''
@@ -118,12 +120,9 @@ class Install4:
             self.logger.info("Contacting {url} ".format(url=self.url))
             command = self.svncommand + ['ls',self.product['url']]
             self.logger.debug(' '.join(command))
-            proc = subprocess.Popen(command,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            out, err = proc.communicate()
+            (out,err,proc_returncode) = self.execute_command(command=command)
             self.logger.debug(out)
-            self.exists = proc.returncode == 0
+            self.exists = proc_returncode == 0
             if self.exists:
                 self.logger.info("Found URL at %(url)s " % self.product)
             else:
@@ -141,10 +140,7 @@ class Install4:
             self.logger.info("Running %(checkout_or_export)s of %(url)s"
                              % self.product)
             self.logger.debug(' '.join(command))
-            proc = subprocess.Popen(command,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            out, err = proc.communicate()
+            (out,err,proc_returncode) = self.execute_command(command=command)
             self.logger.debug(out)
             self.ready = not len(err)
             if self.ready:
@@ -152,3 +148,23 @@ class Install4:
                                  "of %(url)s" % self.product)
             else: self.logger.error("svn error during %(checkout_or_export)s " +
                                     "of %(url)s: " % self.product + err)
+
+    def execute_command(self, command=None):
+        '''Execute the passed terminal command.'''
+        (out,err,proc_returncode) = (None,None,None)
+        if command:
+            proc = Popen(command, stdout=PIPE, stderr=PIPE)
+            if proc:
+                (out, err) = proc.communicate() if proc else (None,None)
+                out = out.decode("utf-8") if isinstance(out,bytes) else out
+                err = err.decode("utf-8") if isinstance(err,bytes) else err
+                proc_returncode = proc.returncode if proc else None
+            else:
+                self.ready = False
+                self.logger.error('Unable to execute_command. ' +
+                                  'proc: {}'.format(proc))
+        else:
+            self.ready = False
+            self.logger.error('Unable to execute_command. ' +
+                              'command: {}'.format(command))
+        return (out,err,proc_returncode)

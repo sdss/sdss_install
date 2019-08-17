@@ -93,9 +93,10 @@ class Install5:
             self.logger.info('Validating product')
             # check for master branch
             valid_product = self.is_type(type='repository')
-            if not valid_product:
-                self.ready = False
-                self.logger.error('Invalid product. {} '.format(self.options.product) )
+            if self.ready:
+                if not valid_product:
+                    self.ready = False
+                    self.logger.error('Invalid product. {} '.format(self.options.product) )
         return valid_product
 
     def get_valid_version(self):
@@ -108,9 +109,10 @@ class Install5:
             is_branch = True if is_master else self.is_type(type='branch')
             is_tag    = False if is_branch else self.is_type(type='tag')
             valid_version =  bool(is_master or is_branch or is_tag)
-            if not valid_version:
-                self.ready = False
-                self.logger.error('Invalid version: {}'.format(version))
+            if self.ready:
+                if not valid_version:
+                    self.ready = False
+                    self.logger.error('Invalid version: {}'.format(version))
         return valid_version
 
     def get_bootstrap_version(self):
@@ -132,11 +134,11 @@ class Install5:
                 # get most recent tag information
                 command = ['git','describe','--tags']
                 self.logger.debug('Running command: %s' % ' '.join(command))
-                (stdout,stderr,proc_returncode) = self.execute_command(command=command)
+                (out,err,proc_returncode) = self.execute_command(command=command)
                 if proc_returncode == 0:
                     # set version to most recent tag
                     regex = '^(\d+\.)(\d+\.)(\d+)'
-                    matches = self.get_matches(regex=regex,string=stdout) if stdout else list()
+                    matches = self.get_matches(regex=regex,string=out) if out else list()
                     match = matches[0] if matches else str()
                     if match:
                         version = match.strip()
@@ -147,12 +149,12 @@ class Install5:
                                                     if sdss_install_dir else None)
                         command = ['mv',sdss_install_master_dir,sdss_install_version_dir]
                         self.logger.debug('Running command: %s' % ' '.join(command))
-                        (stdout,stderr,proc_returncode) = self.execute_command(command=command)
+                        (out,err,proc_returncode) = self.execute_command(command=command)
                         if not proc_returncode == 0:
                             self.ready = False
                             self.logger.error('Error encountered while running command: {}. '
                                                 .format(' '.join(command)) +
-                                              'stderr: {}.'.format(stderr.decode('utf-8')))
+                                              'err: {}.'.format(err.decode('utf-8')))
                     else: version = 'master'
                     self.logger.debug('Changing directory to: {}'.format(product_root))
                     chdir(product_root)
@@ -160,7 +162,7 @@ class Install5:
                     self.ready = False
                     self.logger.error('Error encountered while running command: {}. '
                                         .format(' '.join(command)) +
-                                      'stderr: {}.'.format(stderr.decode('utf-8')))
+                                      'err: {}.'.format(err.decode('utf-8')))
             else:
                 self.ready = False
                 self.logger.error(
@@ -231,7 +233,20 @@ class Install5:
                                url,
                                product_version]
                     self.logger.debug('Running command: %s' % ' '.join(command))
-                    (stdout,stderr,proc_returncode) = self.execute_command(command=command)
+                    (out,err,proc_returncode) = self.execute_command(command=command)
+                    if proc_returncode != 0:
+                        regex = '(?i)Permission denied \(publickey\)'
+                        matches = self.get_matches(regex=regex,string=err) if err else list()
+                        match = matches[0] if matches else str()
+                        s = ('While running the command\n{0}\nthe following error occurred:\n{1}\n'
+                            .format(' '.join(command),err))
+                        if match:
+                            s += ('Please see the following URL for more informaiton: \n' +
+                                  'https://help.github.com' +
+                                  '/en/articles/error-permission-denied-publickey'
+                                   )
+                        self.ready = False
+                        self.logger.error(s)
                 else:
                     self.ready = False
                     self.logger.error('Invalid type. ' +
@@ -242,25 +257,7 @@ class Install5:
                 self.ready = False
                 self.logger.error('Unable to check is_type. ' +
                                   'type: {}'.format(type))
-        return bool(stdout)
-
-    def execute_command(self, command=None):
-        '''Execute the passed terminal command.'''
-        (stdout,stderr,proc_returncode) = (None,None,None)
-        if command:
-            proc = Popen(command, stdout=PIPE, stderr=PIPE)
-            if proc:
-                (stdout, stderr) = proc.communicate() if proc else (None,None)
-                proc_returncode = proc.returncode if proc else None
-            else:
-                self.ready = False
-                self.logger.error('Unable to execute_command. ' +
-                                  'proc: {}'.format(proc))
-        else:
-            self.ready = False
-            self.logger.error('Unable to execute_command. ' +
-                              'command: {}'.format(command))
-        return (stdout,stderr,proc_returncode)
+        return bool(out)
 
     def set_github_remote_url(self):
         '''Set the SDSS GitHub HTTPS remote URL'''
@@ -285,8 +282,8 @@ class Install5:
                        self.github_remote_url,
                        basename(self.directory['work'])]
             self.logger.debug('Running command: %s' % ' '.join(command))
-            (stdout,stderr,proc_returncode) = self.execute_command(command=command)
-            # NOTE: stderr is non-empty even when git clone is successful.
+            (out,err,proc_returncode) = self.execute_command(command=command)
+            # NOTE: err is non-empty even when git clone is successful.
             if proc_returncode == 0:
                 self.logger.info("Completed GitHub clone of repository %(name)s"
                                     % self.product)
@@ -294,7 +291,7 @@ class Install5:
                 self.ready = False
                 self.logger.error('Error encountered while running command: {}. '
                                     .format(' '.join(command)) +
-                                  'stderr: {}.'.format(stderr.decode('utf-8')))
+                                  'err: {}.'.format(err.decode('utf-8')))
 
     def checkout(self):
         '''Checkout branch or tag, and delete .git directory if tag.'''
@@ -315,8 +312,8 @@ class Install5:
                     chdir(self.directory['work'])
                     command = ['git','checkout',version]
                     self.logger.debug('Running command: %s' % ' '.join(command))
-                    (stdout,stderr,proc_returncode) = self.execute_command(command=command)
-                    # NOTE: stderr is non-empty even when git checkout is successful.
+                    (out,err,proc_returncode) = self.execute_command(command=command)
+                    # NOTE: err is non-empty even when git checkout is successful.
                     if proc_returncode == 0:
                         chdir(self.directory['original'])
                         if remove: self.export()
@@ -325,7 +322,7 @@ class Install5:
                         self.ready = False
                         self.logger.error('Error encountered while running command: {}. '
                                             .format(' '.join(command)) +
-                                          'stderr: {}.'.format(stderr.decode('utf-8')))
+                                          'err: {}.'.format(err.decode('utf-8')))
                 else:
                     self.ready = False
                     self.logger.error('Unable to checkout. '
@@ -334,4 +331,23 @@ class Install5:
     def export(self):
         if self.ready: rmtree(join(self.directory['work'],'.git'))
 
+    def execute_command(self, command=None):
+        '''Execute the passed terminal command.'''
+        (out,err,proc_returncode) = (None,None,None)
+        if command:
+            proc = Popen(command, stdout=PIPE, stderr=PIPE)
+            if proc:
+                (out, err) = proc.communicate() if proc else (None,None)
+                out = out.decode("utf-8") if isinstance(out,bytes) else out
+                err = err.decode("utf-8") if isinstance(err,bytes) else err
+                proc_returncode = proc.returncode if proc else None
+            else:
+                self.ready = False
+                self.logger.error('Unable to execute_command. ' +
+                                  'proc: {}'.format(proc))
+        else:
+            self.ready = False
+            self.logger.error('Unable to execute_command. ' +
+                              'command: {}'.format(command))
+        return (out,err,proc_returncode)
 
