@@ -41,6 +41,8 @@ def most_recent_tag(tags,username=None):
     command += ['ls',tags]
     proc = Popen(command,stdout=PIPE,stderr=PIPE)
     out, err = proc.communicate()
+    out = out.decode("utf-8") if isinstance(out,bytes) else out
+    err = err.decode("utf-8") if isinstance(err,bytes) else err
     try:
         tags = [v.rstrip('/').replace('_','.') for v in out.split('\n') if len(v) > 0]
     except TypeError:

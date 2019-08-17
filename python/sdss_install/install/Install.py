@@ -12,6 +12,7 @@ from sys import argv, executable, path
 from shutil import copyfile, copytree, rmtree
 from os import chdir, environ, getcwd, getenv, makedirs, walk
 from os.path import basename, dirname, exists, isdir, join
+from subprocess import Popen, PIPE
 from argparse import ArgumentParser
 try: from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError: from configparser import SafeConfigParser, RawConfigParser
@@ -32,16 +33,11 @@ class Install:
         self.set_logger(options=options)
         self.initialize_data()
 
-    def set_options(self, options=None):
-        '''Set self.options wrapper'''
-        self.options = options if options else None
-        if not self.options: self.logger.error('Unable to set_options')
-
     def set_logger(self, options=None):
         '''Set the logger used by all classes in the package.'''
         if options and logging:
             debug = self.options.test or self.options.verbose
-            self.logger = logging.getLogger('sdssinstall')
+            self.logger = logging.getLogger('sdss_install')
             if self.logger:
                 if debug: self.logger.setLevel(logging.DEBUG)
                 else: self.logger.setLevel(logging.INFO)
@@ -61,6 +57,11 @@ class Install:
             else: print('ERROR: Unable to set_logger')
         else: print('ERROR: Unable to set_logger. options=%r, logging=%r'
                     % (options,logging))
+
+    def set_options(self, options=None):
+        '''Set self.options wrapper'''
+        self.options = options if options else None
+        if not self.options: print('ERROR - Unable to set_options')
 
     def initialize_data(self):
         '''Initialize class Install data.'''
@@ -464,12 +465,9 @@ class Install:
                         self.logger.info('Running "{0}" in {1}'
                             .format(' '.join(command),
                                     self.directory['install']))
-                        proc = subprocess.Popen(command,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
-                        (out, err) = proc.communicate() if proc else (None,None)
+                        (out,err,proc_returncode) = self.execute_command(command=command)
                         self.logger.debug(out)
-                        if proc.returncode != 0:
+                        if proc_returncode != 0:
                             self.logger.error("Evilmake response:")
                             self.logger.error(err)
                         command = ['evilmake']
@@ -478,12 +476,9 @@ class Install:
                         self.logger.info('Running "{0}" in {1}'
                             .format(' '.join(command),
                                     self.directory['install']))
-                        proc = subprocess.Popen(command,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
-                        (out, err) = proc.communicate() if proc else (None,None)
+                        (out,err,proc_returncode) = self.execute_command(command=command)
                         self.logger.debug(out)
-                        if proc.returncode != 0:
+                        if proc_returncode != 0:
                             self.logger.error("Evilmake response:")
                             self.logger.error(unicode(err, errors='ignore'))
                     elif 'c' in self.build_type:
@@ -498,12 +493,9 @@ class Install:
                         self.logger.info('Running "{0}" in {1}'
                             .format(' '.join(command),
                                     self.directory['install']))
-                        proc = subprocess.Popen(command,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
-                        (out, err) = proc.communicate() if proc else (None,None)
+                        (out,err,proc_returncode) = self.execute_command(command=command)
                         self.logger.debug(out)
-                        if proc.returncode != 0:
+                        if proc_returncode != 0:
                             self.logger.error("Error during compile:")
                             self.logger.error(err)
                             self.ready = False
@@ -520,12 +512,9 @@ class Install:
                                "--prefix=%(install)s" % self.directory]
                     self.logger.debug(' '.join(command))
                     if not self.options.test:
-                        proc = subprocess.Popen(command,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
-                        (out, err) = proc.communicate() if proc else (None,None)
+                        (out,err,proc_returncode) = self.execute_command(command=command)
                         self.logger.debug(out)
-                        if proc.returncode != 0:
+                        if proc_returncode != 0:
                             self.logger.error("Error during installation:")
                             self.logger.error(err)
                             self.ready = False
@@ -610,12 +599,9 @@ class Install:
                     command = [executable, 'setup.py', 'build_sphinx']
                     self.logger.debug(' '.join(command))
                     if not self.options.test:
-                        proc = subprocess.Popen(command,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
-                        (out, err) = proc.communicate() if proc else (None,None)
+                        (out,err,proc_returncode) = self.execute_command(command=command)
                         self.logger.debug(out)
-                        if proc.returncode != 0:
+                        if proc_returncode != 0:
                             self.logger.error(
                                 "Error during documentation build:")
                             self.logger.error(err)
@@ -670,12 +656,9 @@ class Install:
             command = ['make', 'install']
             self.logger.debug(' '.join(command))
             if not self.options.test:
-                proc = subprocess.Popen(command,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
-                (out, err) = proc.communicate() if proc else (None,None)
+                (out,err,proc_returncode) = self.execute_command(command=command)
                 self.logger.debug(out)
-                if proc.returncode != 0:
+                if proc_returncode != 0:
                     self.logger.error("Error during compile:")
                     self.logger.error(err)
                     self.ready = False
@@ -688,6 +671,7 @@ class Install:
 
     def finalize(self):
         '''Log installation final result message.'''
+        # Don't put <if self.ready> here:
         if self.directory and self.directory['original']:
             chdir(self.directory['original'])
         finalize = "Done" if self.ready else "Fail"
@@ -707,3 +691,23 @@ class Install:
                             % self.product)
         self.logger.info(finalize)
         if finalize_ps: self.logger.info(finalize_ps)
+
+    def execute_command(self, command=None):
+        '''Execute the passed terminal command.'''
+        (out,err,proc_returncode) = (None,None,None)
+        if command:
+            proc = Popen(command, stdout=PIPE, stderr=PIPE)
+            if proc:
+                (out, err) = proc.communicate() if proc else (None,None)
+                out = out.decode("utf-8") if isinstance(out,bytes) else out
+                err = err.decode("utf-8") if isinstance(err,bytes) else err
+                proc_returncode = proc.returncode if proc else None
+            else:
+                self.ready = False
+                self.logger.error('Unable to execute_command. ' +
+                                  'proc: {}'.format(proc))
+        else:
+            self.ready = False
+            self.logger.error('Unable to execute_command. ' +
+                              'command: {}'.format(command))
+        return (out,err,proc_returncode)

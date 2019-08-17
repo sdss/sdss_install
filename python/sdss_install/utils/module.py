@@ -110,7 +110,7 @@ class Module:
                                 [self.tclsh, self.modules_home['tcl'], 'python', command]
                                 if self.modules_lang['tcl'] else None )
                 if self.command and arguments:
-                    self.command.append(string.join(arguments))
+                    self.command.append(join(arguments))
             else:
                 self.ready = False
                 self.logger.error('Unable to set_command. ' +
