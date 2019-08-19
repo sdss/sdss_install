@@ -120,7 +120,10 @@ class Module:
         if self.command:
             proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
             if proc:
-                (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
+                (out, err) = proc.communicate() if proc else (None,None)
+                self.stdout = out.decode("utf-8") if isinstance(out,bytes) else out
+                self.stderr = err.decode("utf-8") if isinstance(err,bytes) else err
+
                 self.returncode = proc.returncode if proc else None
             else:
                 self.ready = False
