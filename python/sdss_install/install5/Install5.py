@@ -154,7 +154,7 @@ class Install5:
                             self.ready = False
                             self.logger.error('Error encountered while running command: {}. '
                                                 .format(' '.join(command)) +
-                                              'err: {}.'.format(err.decode('utf-8')))
+                                              'err: {}.'.format(err))
                     else: version = 'master'
                     self.logger.debug('Changing directory to: {}'.format(product_root))
                     chdir(product_root)
@@ -162,7 +162,7 @@ class Install5:
                     self.ready = False
                     self.logger.error('Error encountered while running command: {}. '
                                         .format(' '.join(command)) +
-                                      'err: {}.'.format(err.decode('utf-8')))
+                                      'err: {}.'.format(err))
             else:
                 self.ready = False
                 self.logger.error(
@@ -291,7 +291,7 @@ class Install5:
                 self.ready = False
                 self.logger.error('Error encountered while running command: {}. '
                                     .format(' '.join(command)) +
-                                  'err: {}.'.format(err.decode('utf-8')))
+                                  'err: {}.'.format(err))
 
     def checkout(self):
         '''Checkout branch or tag, and delete .git directory if tag.'''
@@ -322,7 +322,7 @@ class Install5:
                         self.ready = False
                         self.logger.error('Error encountered while running command: {}. '
                                             .format(' '.join(command)) +
-                                          'err: {}.'.format(err.decode('utf-8')))
+                                          'err: {}.'.format(err))
                 else:
                     self.ready = False
                     self.logger.error('Unable to checkout. '
