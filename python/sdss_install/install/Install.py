@@ -36,7 +36,7 @@ class Install:
     def set_logger(self, options=None):
         '''Set the logger used by all classes in the package.'''
         if options and logging:
-            debug = self.options.test or self.options.verbose
+            debug = self.options.test or self.options.verbose or self.options.level == 'debug'
             self.logger = logging.getLogger('sdss_install')
             if self.logger:
                 if debug: self.logger.setLevel(logging.DEBUG)
@@ -476,11 +476,12 @@ class Install:
                         self.logger.info('Running "{0}" in {1}'
                             .format(' '.join(command),
                                     self.directory['install']))
-                        (out,err,proc_returncode) = self.execute_command(command=command)
+                        (out,err,proc_returncode) = self.execute_command(command=command,
+                                                                         argument='ignore')
                         self.logger.debug(out)
                         if proc_returncode != 0:
                             self.logger.error("Evilmake response:")
-                            self.logger.error(unicode(err, errors='ignore'))
+                            self.logger.error(err)
                     elif 'c' in self.build_type:
                         if not self.options.skip_module:
                             self.modules.load(product=self.product['name'],
@@ -692,16 +693,20 @@ class Install:
         self.logger.info(finalize)
         if finalize_ps: self.logger.info(finalize_ps)
 
-    def execute_command(self, command=None):
+    def execute_command(self, command=None, argument=None):
         '''Execute the passed terminal command.'''
         (out,err,proc_returncode) = (None,None,None)
         if command:
             proc = Popen(command, stdout=PIPE, stderr=PIPE)
             if proc:
                 (out, err) = proc.communicate() if proc else (None,None)
-                out = out.decode("utf-8") if isinstance(out,bytes) else out
-                err = err.decode("utf-8") if isinstance(err,bytes) else err
                 proc_returncode = proc.returncode if proc else None
+                if argument:
+                    out = out.decode("utf-8",argument) if isinstance(out,bytes) else out
+                    err = err.decode("utf-8",argument) if isinstance(err,bytes) else err
+                else:
+                    out = out.decode("utf-8") if isinstance(out,bytes) else out
+                    err = err.decode("utf-8") if isinstance(err,bytes) else err
             else:
                 self.ready = False
                 self.logger.error('Unable to execute_command. ' +
