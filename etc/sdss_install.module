@@ -70,7 +70,7 @@ setenv [string toupper $product]_LONGPATH {sdss_install_longpath}
 {needs_python}prepend-path PYTHONPATH $PRODUCT_DIR/lib/{pyversion}/site-packages
 {needs_trunk_python}prepend-path PYTHONPATH $PRODUCT_DIR/python
 {needs_ld_lib}prepend-path LD_LIBRARY_PATH $PRODUCT_DIR/lib
-{needs_idl}prepend-path IDL_PATH +$PRODUCT_DIR/pro
+{needs_idl}prepend-path IDL_PATH + $PRODUCT_DIR/pro
 #
 # Add any non-standard Module code below this point.
 #

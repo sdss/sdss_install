@@ -23,7 +23,7 @@ else:
     if not options.module_only:
         install.clean_directory_install()
         if options.github:
-            install.set_github_remote_url()
+            install.set_sdss_github_remote_url()
         else:
             install.set_svncommand()
             install.set_exists()
@@ -44,6 +44,10 @@ else:
         install.modules.set_keywords()
         install.modules.set_directory()
         install.modules.build()
+    
+    # must be after install.fetch()
+    if options.external_dependencies:
+        install.install_external_dependencies()
 
     install.set_environ()
     if not options.module_only:
@@ -51,6 +55,7 @@ else:
         install.build_documentation()
         install.build_package()
         if not options.keep: install.clean()
+            
 
     if options.bootstrap:
         install.checkout()

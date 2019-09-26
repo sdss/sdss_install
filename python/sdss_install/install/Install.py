@@ -74,9 +74,6 @@ class Install:
         self.exists = None
         self.modules = None
         self.build_type = None
-        self.repositories = None
-        self.tags = None
-        self.branches = None
         self.github_remote_url = None
 
     def set_install4(self):
@@ -94,9 +91,6 @@ class Install:
         if self.options.github:
             if self.install5:
                 self.ready          = self.install5.ready
-                self.repositories   = self.install5.repositories
-                self.tags           = self.install5.tags
-                self.branches       = self.install5.branches
                 self.product        = self.install5.product
                 self.directory      = self.install5.directory
         else:
@@ -116,9 +110,6 @@ class Install:
         if self.options.github:
             if self.install5:
                 self.install5.ready         = self.ready
-                self.install5.repositories  = self.repositories
-                self.install5.tags          = self.tags
-                self.install5.branches      = self.branches
                 self.install5.product       = self.product
                 self.install5.directory     = self.directory
             else: self.logger.error('Unable to export_data to class Install5')
@@ -235,25 +226,29 @@ class Install:
                     rmtree(self.directory['work'])
             self.export_data()
 
-    def clean_directory_install(self):
+    def clean_directory_install(self,install_dir=None):
         '''Remove existing install directory if exists and if option --force.'''
         if self.ready:
             self.import_data()
-            if isdir(self.directory['install']) and not self.options.test:
+            install_dir = install_dir if install_dir else self.directory['install']
+            if isdir(install_dir) and not self.options.test:
                 if self.options.force:
-                    if self.directory['work'].startswith(
-                                                self.directory['install']):
-                        self.logger.error("Current working directory, " +
-                            "%(work)s, is inside the install directory, " +
-                            "%(install)s, which will be deleted via the " +
-                            "-F (or --force) option, so please cd to another " +
-                            "working directory and try again!" % self.directory)
+                    try: cwd = getcwd()
+                    except OSError as ose:
+                        self.logger.error("Check current directory: {0}".format(ose.strerror))
                         self.ready = False
-                    else:
-                        self.logger.info("Preparing to install in " +
-                            "%(install)s (overwriting due to force option)"
-                            % self.directory)
-                        rmtree(self.directory['install'])
+                    if self.ready:
+                        if cwd.startswith(install_dir):
+                            self.logger.error("Current working directory, {}, ".format(cwd) +
+                                "is inside the install directory, {}, ".format(install_dir) +
+                                "which will be deleted via the " +
+                                "-F (or --force) option, so please cd to another " +
+                                "working directory and try again!" % self.directory)
+                            self.ready = False
+                        else:
+                            self.logger.info("Preparing to install in " +
+                                "{} (overwriting due to force option)".format(install_dir))
+                            rmtree(install_dir)
                 else:
                     self.logger.error("Install directory, %(install)s, " +
                         "already exists!" % self.directory)
@@ -264,10 +259,10 @@ class Install:
                 % self.directory)
             self.export_data()
 
-    def set_github_remote_url():
-        '''Wrapper for method Install5.set_github_remote_url()'''
+    def set_sdss_github_remote_url():
+        '''Wrapper for method Install5.set_sdss_github_remote_url()'''
         if self.ready and self.options.github and self.install5:
-            self.install5.set_github_remote_url()
+            self.install5.set_sdss_github_remote_url()
             self.import_data()
 
     def set_svncommand(self):
@@ -288,16 +283,84 @@ class Install:
             else:                   self.install4.fetch()
             self.import_data()
 
+    def install_external_dependencies(self):
+        '''Install external dependencies.'''
+        if self.ready:
+            self.external_product = dict()
+            if self.options.external_dependencies:
+                for key in self.options.external_dependencies:
+                    if self.ready:
+                        value = self.options.external_dependencies[key]
+                        github_url = dirname(value[0]) if value else None
+                        product = basename(value[0])
+                        version = value[1] if value else None
+                        github_remote_url = join(github_url,product)
+                        self.install5.validate_product_and_version(github_url=github_url,
+                                                                   product=product,
+                                                                   version=version)
+                        self.ready = self.ready and self.install5.ready
+                    if self.ready:
+                        self.set_external_product_install_dir(product=product,version=version)
+                        self.clean_directory_install(
+                            install_dir=dirname(self.external_product['install_dir']))
+                        self.install5.external_product = self.external_product
+                        self.install5.clone(github_remote_url=github_remote_url,version=version)
+                        self.ready = self.ready and self.install5.ready
+                    if self.ready:
+                        self.external_product['is_master'] = (version == 'master')
+                        self.external_product['is_branch'] = (
+                            True if self.external_product['is_master'] else
+                            self.install5.is_type(type='branch',
+                                                  github_url=github_url,
+                                                  product=product,
+                                                  version=version))
+                        self.external_product['is_tag'] = (
+                            False if self.external_product['is_branch'] else
+                             self.install5.is_type(type='tag',
+                                                   github_url=github_url,
+                                                   product=product,
+                                                   version=version))
+                        self.install5.checkout()
+            else:
+                self.logger.warning('Failed to install external dependencies. ' +
+                                    'self.options.external_dependencies: {}'
+                                        .format(self.options.external_dependencies))
+
+    def set_external_product_install_dir(self,product=None,version=None):
+        '''Set the directory for external idl dependencies.'''
+        if self.ready:
+            if product and version:
+                install_dir = join(self.directory['root'],'idl',product,version)
+                self.external_product = {'product': product,
+                                         'version': version,
+                                         'install_dir': install_dir,
+                                         }
+                if not exists(install_dir):
+                    try:
+                        makedirs(install_dir)
+                        self.logger.info("Creating {0}".format(install_dir))
+                    except OSError as ose:
+                        self.logger.error("mkdir: " +
+                            "cannot create directory '{0}': {1}"
+                                .format(install_dir,ose.strerror))
+                        self.ready = False
+            else:
+                self.ready = False
+                self.logger.error('Unable to set_external_product_install_dir. ' +
+                                  'product: {}, '.format(product) +
+                                  'version: {}, '.format(version)
+                                  )
+
     def checkout(self):
         '''Call Install5.checkout'''
         if self.ready:
             self.install5.checkout()
             self.import_data()
 
-    def set_github_remote_url(self):
-        '''Set the set_github_remote_url() of class Install5'''
+    def set_sdss_github_remote_url(self):
+        '''Set the set_sdss_github_remote_url() of class Install5'''
         if self.ready and self.options.github:
-            self.install5.set_github_remote_url()
+            self.install5.set_sdss_github_remote_url()
 
     def reset_options_from_config(self):
         '''
@@ -379,9 +442,29 @@ class Install:
                             self.logger.info("Using {0} to set " +
                                 "--evilmake option".format(config_filename))
                     except: pass
+                elif option=='external_dependencies':
+                    self.options.external_dependencies = dict()
+                    try:
+                        string = config.get(section,option)
+                        split_n = string.split('\n') if string else None
+                        split_n = [item.strip() for item in split_n if item] if split_n else None
+                        if split_n:
+                            for item in split_n:
+                                split_eq = item.split('=') if item else None
+                                key = split_eq[0].strip() if split_eq else None
+                                repoURL_version = split_eq[1].strip() if split_eq else None
+                                value = repoURL_version.split() if repoURL_version else None
+                                value = [item.strip() for item in value]
+                                if key and value:
+                                    self.options.external_dependencies[key] = value
+                        else:
+                            self.logger.error('Unable to process_install_section. ' +
+                                'self.options.external_dependencies: {}'
+                                    .format(self.options.external_dependencies))
+                    except: pass
         else:
             self.logger.error('Unable to process_install_section. ' +
-                'config=%r, section=%r' % (config,section))
+                'config={0}, section={1}'.format(config,section))
 
 
 
