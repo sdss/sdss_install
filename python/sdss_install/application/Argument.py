@@ -82,6 +82,6 @@ def sdss_install():
     parser.add_argument('product_version',nargs='?',default='NO VERSION',
         help='Version of product to install (trunk or specified tag or branch).')
     parser.add_argument('-x', '--external_dependencies', action='store', dest='external_dependencies',
-        metavar='DIR', help='Set a dictionary of external dependency clone commands',
-        default=getenv('SDSS_INSTALL_PRODUCT_ROOT'))
+        metavar='DIR', help='Set a string of external dependency clone commands',
+        default=str())
     return parser
