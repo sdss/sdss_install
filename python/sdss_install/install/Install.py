@@ -288,10 +288,12 @@ class Install:
     def install_external_dependencies(self):
         '''Install external dependencies.'''
         if self.ready:
-            self.external_product = dict()
-            if self.options.external_dependencies:
+            if (self.options.external_dependencies and
+                isinstance(self.options.external_dependencies,dict)
+                ):
                 for key in self.options.external_dependencies:
                     if self.ready:
+                        self.external_product = dict()
                         external_dependency = self.options.external_dependencies[key]
                         install_products = (external_dependency['install_products']
                                             if external_dependency
@@ -301,103 +303,88 @@ class Install:
                                  if external_dependency
                                  and 'paths' in external_dependency
                                  else None)
-                        if install_products: self.install_external_products(install_products=install_products)
-                        else:            self.logger.debug('No install_products found')
+                        if install_products:
+                            self.install_external_products(install_products=install_products)
+                        else:
+                            self.logger.debug('No install_products found.')
                         # Needs to be called after self.install_external_products()
-                        if paths:        self.set_external_paths(paths=paths)
-                        else:            self.logger.debug('No PATHs found')
+                        if paths:
+                            self.set_external_paths(paths=paths)
+                        else:
+                            self.logger.debug('No PATHs found')
             else:
-                self.logger.warning('Failed to install external dependencies. ' +
+                self.ready = False
+                self.logger.error('Failed to install external dependencies. ' +
                                     'self.options.external_dependencies: {}'
-                                        .format(self.options.external_dependencies))
+                                        .format(self.options.external_dependencies) +
+                                    'isinstance(self.options.external_dependencies,dict): {}'
+                                        .format(isinstance(self.options.external_dependencies,dict))
+                                        )
 
     def install_external_products(self,install_products=None):
         '''Install external products'''
         if self.ready:
-#            supported_products = {'github_product','svn_product'}
-            supported_products = {'github_product'}
-            keys = set(install_products.keys())
-            diff = keys.difference(supported_products)
-            if diff:
-                self.logger.info('Encountered unsupported install product(s): {}. Skipping...'.format(diff))
-            github_product = (install_products['github_product']
-                          if install_products and 'github_product' in install_products else None)
-            svn_product    = (install_products['svn_product']
-                          if install_products and 'svn_product' in install_products else None)
-            if github_product: self.install_external_github_product(github_product=github_product)
-            if svn_product:    self.install_external_svn_product(svn_product=svn_product)
-
-    def install_external_svn_product(self,svn_product=None): pass
-
-    def set_external_paths(self,paths=None):
-        '''Set external paths, like PATH, IDL_PATH, and PYTHONPATH'''
-        if self.ready:
-            install_dir = (self.external_product['install_dir']
-                           if self.external_product else None)
-            shell_path  = (join(install_dir,paths['shell_path'])
-                           if install_dir and paths and 'shell_path'in paths
-                           else None)
-            idl_path    = (join(install_dir,paths['idl_path'])
-                           if install_dir and paths and 'idl_path' in paths
-                           else None)
-            python_path = (join(install_dir,paths['python_path'])
-                           if install_dir and paths and 'python_path' in paths
-                           else None)
-            if shell_path:  self.set_external_path(path=shell_path, path_type='PATH')
-            if idl_path:    self.set_external_path(path=idl_path,   path_type='IDL_PATH')
-            if python_path: self.set_external_path(path=python_path,path_type='PYTHONPATH')
-    
-    def set_external_path(self,path=None,path_type=None):
-        '''Prepend the given path to the given path_type.'''
-        if self.ready:
-            if path and path_type:
-                supported_path_types = ['PATH','IDL_PATH','PYTHONPATH']
-                if path_type in supported_path_types:
-                    old_path = None
-                    try:
-                        self.logger.info('Loading current {}'.format(path_type))
-                        old_path = environ[path_type]
-                    except:
-                        self.logger.warning('Unable to set {}. Skipping.'.format(path_type))
-                    if old_path and path not in old_path:
-                        if path.endswith('/'): path = path.rstrip('/')
-                        new_path = path + ':' + old_path
-                        try:
-                            environ[path_type] = new_path
-                            self.logger.info('Updated {}'.format(path_type))
-                            if self.options.level == 'debug':
-                                self.logger.debug("environ['{0}']: {1}"
-                                    .format(path_type,environ[path_type]))
-                        except:
-                            self.logger.warning('Unable to update {}. Skipping.'.format(path_type))
-                else:
-                    self.logger.warning('Unable to set_external_path. ' +
-                                        'Unsupported path_type: {}. '.format(path_type) +
-                                        'Supported path types: {}. '.format(supported_path_types)
-                                        )
+            if install_products and isinstance(install_products,dict):
+                for key in install_products.keys():
+                    install_product = (install_products[key]
+                                       if install_products and key in install_products
+                                       else None)
+                    if isinstance(install_products,dict):
+                        url = (install_product['url']
+                               if install_product and 'url' in install_product else None)
+                        if url:
+                            if 'github.com' in url:
+                                self.install_external_github_product(github_product=install_product)
+                            elif 'svn.' in url:
+                                self.install_external_svn_product(svn_product=install_product)
+                            else:
+                                self.ready = False
+                                self.logger.error('Encountered unsupported ' +
+                                                    'install_product url: {}. Skipping.'
+                                                        .format(url))
+                        else:
+                            self.ready = False
+                            self.logger.error('Unable to install_external_products. ' +
+                                                'install_product: {}, '.format(install_product) +
+                                                'url: {}, '.format(url)
+                                                )
+                    else:
+                        self.ready = False
+                        self.logger.error('Unable to install_external_products. ' +
+                                            'instance(isinstall_products,dict): {}, '
+                                                .format(isinstance(install_products,dict))
+                                            )
             else:
-                self.logger.warning('Unable to set_external_path. ' +
-                                    'path: {0}, path_type: {1}'.format(path,path_type))
+                self.ready = False
+                self.logger.error('Unable to install_external_products. ' +
+                                    'install_products: {}, '.format(install_products) +
+                                    'isinstance(install_products,dict): {}, '
+                                        .format(isinstance(install_products,dict))
+                                    )
+                                    
+    def install_external_svn_product(self,svn_product=None): pass
 
     def install_external_github_product(self,github_product=None):
         '''Install external dependency from GitHub.'''
         if self.ready:
-            if github_product:
+            if github_product and isinstance(github_product,dict):
                 url = (github_product['url']
                        if github_product and 'url' in github_product else None)
-                github_url = dirname(url)
-                product = basename(url)
+                github_url = dirname(url) if url else None
+                product = basename(url) if url else None
                 version = (github_product['version']
                            if github_product and 'version' in github_product else None)
                 github_remote_url = join(github_url,product)
-                if 'github.com' not in github_url:
-                    self.ready = False
-                    self.logger.error('{} is not a github URL'.format(github_url))
-                if self.ready:
-                    self.install5.validate_product_and_version(github_url=github_url,
-                                                               product=product,
-                                                               version=version)
-                    self.ready = self.ready and self.install5.ready
+#                print('url: %r' % url)
+#                print('github_url: %r' % github_url)
+#                print('product: %r' % product)
+#                print('version: %r' % version)
+#                print('github_remote_url: %r' % github_remote_url)
+#                input('pause')
+                self.install5.validate_product_and_version(github_url=github_url,
+                                                           product=product,
+                                                           version=version)
+                self.ready = self.ready and self.install5.ready
                 if self.ready:
                     self.set_external_product_install_dir(product=product,version=version)
                     self.clean_directory_install(
@@ -420,16 +407,22 @@ class Install:
                                                product=product,
                                                version=version))
                     self.install5.checkout()
+            else:
+                self.ready = False
+                self.logger.error('Unable to install_external_github_product. ' +
+                                    'github_product: {}, '.format(github_product) +
+                                    'isinstance(github_product,dict): {}, '
+                                        .format(isinstance(github_product,dict)) 
+                                    )
 
     def set_external_product_install_dir(self,product=None,version=None):
         '''Set the directory for external dependencies.'''
         if self.ready:
             if product and version:
                 install_dir = join(self.directory['root'],'external',product,version)
-                self.external_product = {'product': product,
-                                         'version': version,
-                                         'install_dir': install_dir,
-                                         }
+                self.external_product['product']     = product,
+                self.external_product['version']     = version,
+                self.external_product['install_dir'] = install_dir
                 if not exists(install_dir):
                     try:
                         makedirs(install_dir)
@@ -446,6 +439,83 @@ class Install:
                                   'version: {}, '.format(version)
                                   )
         
+    def set_external_paths(self,paths=None):
+        '''Set external paths, like PATH, IDL_PATH, and PYTHONPATH'''
+        if self.ready:
+            if paths and isinstance(paths,dict):
+                idl_paths    = paths['idl']    if paths and 'idl'    in paths else None
+                shell_paths  = paths['shell']  if paths and 'shell'  in paths else None
+                python_paths = paths['python'] if paths and 'python' in paths else None
+            
+                install_dir = (self.external_product['install_dir']
+                               if self.external_product else None)
+                if idl_paths:
+                    for idl_path in idl_paths:
+                        if self.ready:
+                            path = (join(install_dir,idl_path)
+                                    if install_dir and isinstance(idl_path,str)
+                                    else None)
+                            self.set_external_path(path=path,path_type='IDL_PATH')
+                elif shell_paths:
+                    for shell_path in shell_paths:
+                        if self.ready:
+                            path = (join(install_dir,shell_path)
+                                    if install_dir and isinstance(shell_path,str)
+                                    else None)
+                            self.set_external_path(path=path,path_type='PATH')
+                elif python_paths:
+                    for python_path in python_paths:
+                        if self.ready:
+                            path = (join(install_dir,python_path)
+                                    if install_dir and isinstance(python_path,str)
+                                    else None)
+                            self.set_external_path(path=path,path_type='PYTHONPATH')
+                else:
+                    self.ready = False
+                    self.logger.error('Unable to set_external_paths. ' +
+                                      'Encountered unsupported key in paths: {}, '.format(paths) +
+                                      "Supported keys: ['idl','shell','python']"
+                                      )
+            else:
+                self.ready = False
+                self.logger.error('Unable to set_external_paths. ' +
+                                  'paths: {}, '.format(paths) +
+                                  'isinstance(paths,dict): {}, '
+                                    .format(isinstance(paths,dict))
+                                  )
+        
+    def set_external_path(self,path=None,path_type=None):
+        '''Prepend the given path to the given path_type.'''
+        if self.ready:
+            if path and path_type:
+                supported_path_types = ['PATH','IDL_PATH','PYTHONPATH']
+                if path_type in supported_path_types:
+                    old_path = None
+                    try:
+                        self.logger.info('Loading current {}'.format(path_type))
+                        old_path = environ[path_type]
+                    except:
+                          self.logger.info('WARNING: Unable to set {}. Skipping.'.format(path_type))
+                    if old_path and path not in old_path:
+                        if path.endswith('/'): path = path.rstrip('/')
+                        new_path = path + ':' + old_path
+                        try:
+                            environ[path_type] = new_path
+                            self.logger.info('Updated {}'.format(path_type))
+                            if self.options.level == 'debug':
+                                self.logger.debug("environ['{0}']: {1}"
+                                    .format(path_type,environ[path_type]))
+                        except:
+                              self.logger.info('WARNING: Unable to update {}. Skipping.'.format(path_type))
+                else:
+                      self.logger.info('WARNING: Unable to set_external_path. ' +
+                                        'Unsupported path_type: {}. '.format(path_type) +
+                                        'Supported path types: {}. '.format(supported_path_types)
+                                        )
+            else:
+                  self.logger.info('WARNING: Unable to set_external_path. ' +
+                                    'path: {0}, path_type: {1}'.format(path,path_type))
+
     def checkout(self):
         '''Call Install5.checkout'''
         if self.ready:
@@ -669,7 +739,7 @@ class Install:
                             self.logger.error(err)
                             self.ready = False
                 if self.options.documentation:
-                    self.logger.warning('Documentation will not be built ' +
+                      self.logger.info('WARNING: Documentation will not be built ' +
                                      'for trunk or branch installs!')
             else:
                 self.package = True
