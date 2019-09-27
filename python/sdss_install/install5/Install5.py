@@ -318,7 +318,7 @@ class Install5:
             if self.external_product:
                 dir = self.external_product['install_dir']
                 if self.external_product['is_master']:
-                    self.logger.debug('Skipping checkout of branch {}'
+                    self.logger.debug('Skipping checkout for {} branch'
                         .format(self.external_product['version']))
                 else:
                     if self.external_product['is_branch']:
@@ -335,7 +335,7 @@ class Install5:
             else:
                 dir = self.directory['work']
                 if self.product['is_master']:
-                    self.logger.debug('Skipping checkout of branch {}'
+                    self.logger.debug('Skipping checkout for {} branch'
                         .format(self.product['version']))
                 else:
                     if self.product['is_branch']:

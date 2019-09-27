@@ -14,6 +14,7 @@ from os import chdir, environ, getcwd, getenv, makedirs, walk
 from os.path import basename, dirname, exists, isdir, join
 from subprocess import Popen, PIPE
 from argparse import ArgumentParser
+from json import loads, dumps
 try: from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError: from configparser import SafeConfigParser, RawConfigParser
 #from .most_recent_tag import most_recent_tag
@@ -75,6 +76,7 @@ class Install:
         self.modules = None
         self.build_type = None
         self.github_remote_url = None
+        self.external_product = None
 
     def set_install4(self):
         '''Set a class Install4 instance.'''
@@ -290,47 +292,140 @@ class Install:
             if self.options.external_dependencies:
                 for key in self.options.external_dependencies:
                     if self.ready:
-                        value = self.options.external_dependencies[key]
-                        github_url = dirname(value[0]) if value else None
-                        product = basename(value[0])
-                        version = value[1] if value else None
-                        github_remote_url = join(github_url,product)
-                        self.install5.validate_product_and_version(github_url=github_url,
-                                                                   product=product,
-                                                                   version=version)
-                        self.ready = self.ready and self.install5.ready
-                    if self.ready:
-                        self.set_external_product_install_dir(product=product,version=version)
-                        self.clean_directory_install(
-                            install_dir=dirname(self.external_product['install_dir']))
-                        self.install5.external_product = self.external_product
-                        self.install5.clone(github_remote_url=github_remote_url,version=version)
-                        self.ready = self.ready and self.install5.ready
-                    if self.ready:
-                        self.external_product['is_master'] = (version == 'master')
-                        self.external_product['is_branch'] = (
-                            True if self.external_product['is_master'] else
-                            self.install5.is_type(type='branch',
-                                                  github_url=github_url,
-                                                  product=product,
-                                                  version=version))
-                        self.external_product['is_tag'] = (
-                            False if self.external_product['is_branch'] else
-                             self.install5.is_type(type='tag',
-                                                   github_url=github_url,
-                                                   product=product,
-                                                   version=version))
-                        self.install5.checkout()
+                        external_dependency = self.options.external_dependencies[key]
+                        install_products = (external_dependency['install_products']
+                                            if external_dependency
+                                            and 'install_products' in external_dependency
+                                            else None)
+                        paths = (external_dependency['paths']
+                                 if external_dependency
+                                 and 'paths' in external_dependency
+                                 else None)
+                        if install_products: self.install_external_products(install_products=install_products)
+                        else:            self.logger.debug('No install_products found')
+                        # Needs to be called after self.install_external_products()
+                        if paths:        self.set_external_paths(paths=paths)
+                        else:            self.logger.debug('No PATHs found')
             else:
                 self.logger.warning('Failed to install external dependencies. ' +
                                     'self.options.external_dependencies: {}'
                                         .format(self.options.external_dependencies))
 
+    def install_external_products(self,install_products=None):
+        '''Install external products'''
+        if self.ready:
+#            supported_products = {'github_product','svn_product'}
+            supported_products = {'github_product'}
+            keys = set(install_products.keys())
+            diff = keys.difference(supported_products)
+            if diff:
+                self.logger.info('Encountered unsupported install product(s): {}. Skipping...'.format(diff))
+            github_product = (install_products['github_product']
+                          if install_products and 'github_product' in install_products else None)
+            svn_product    = (install_products['svn_product']
+                          if install_products and 'svn_product' in install_products else None)
+            if github_product: self.install_external_github_product(github_product=github_product)
+            if svn_product:    self.install_external_svn_product(svn_product=svn_product)
+
+    def install_external_svn_product(self,svn_product=None): pass
+
+    def set_external_paths(self,paths=None):
+        '''Set external paths, like PATH, IDL_PATH, and PYTHONPATH'''
+        if self.ready:
+            install_dir = (self.external_product['install_dir']
+                           if self.external_product else None)
+            shell_path  = (join(install_dir,paths['shell_path'])
+                           if install_dir and paths and 'shell_path'in paths
+                           else None)
+            idl_path    = (join(install_dir,paths['idl_path'])
+                           if install_dir and paths and 'idl_path' in paths
+                           else None)
+            python_path = (join(install_dir,paths['python_path'])
+                           if install_dir and paths and 'python_path' in paths
+                           else None)
+            if shell_path:  self.set_external_path(path=shell_path, path_type='PATH')
+            if idl_path:    self.set_external_path(path=idl_path,   path_type='IDL_PATH')
+            if python_path: self.set_external_path(path=python_path,path_type='PYTHONPATH')
+    
+    def set_external_path(self,path=None,path_type=None):
+        '''Prepend the given path to the given path_type.'''
+        if self.ready:
+            if path and path_type:
+                supported_path_types = ['PATH','IDL_PATH','PYTHONPATH']
+                if path_type in supported_path_types:
+                    old_path = None
+                    try:
+                        self.logger.info('Loading current {}'.format(path_type))
+                        old_path = environ[path_type]
+                    except:
+                        self.logger.warning('Unable to set {}. Skipping.'.format(path_type))
+                    if old_path and path not in old_path:
+                        if path.endswith('/'): path = path.rstrip('/')
+                        new_path = path + ':' + old_path
+                        try:
+                            environ[path_type] = new_path
+                            self.logger.info('Updated {}'.format(path_type))
+                            if self.options.level == 'debug':
+                                self.logger.debug("environ['{0}']: {1}"
+                                    .format(path_type,environ[path_type]))
+                        except:
+                            self.logger.warning('Unable to update {}. Skipping.'.format(path_type))
+                else:
+                    self.logger.warning('Unable to set_external_path. ' +
+                                        'Unsupported path_type: {}. '.format(path_type) +
+                                        'Supported path types: {}. '.format(supported_path_types)
+                                        )
+            else:
+                self.logger.warning('Unable to set_external_path. ' +
+                                    'path: {0}, path_type: {1}'.format(path,path_type))
+
+    def install_external_github_product(self,github_product=None):
+        '''Install external dependency from GitHub.'''
+        if self.ready:
+            if github_product:
+                url = (github_product['url']
+                       if github_product and 'url' in github_product else None)
+                github_url = dirname(url)
+                product = basename(url)
+                version = (github_product['version']
+                           if github_product and 'version' in github_product else None)
+                github_remote_url = join(github_url,product)
+                if 'github.com' not in github_url:
+                    self.ready = False
+                    self.logger.error('{} is not a github URL'.format(github_url))
+                if self.ready:
+                    self.install5.validate_product_and_version(github_url=github_url,
+                                                               product=product,
+                                                               version=version)
+                    self.ready = self.ready and self.install5.ready
+                if self.ready:
+                    self.set_external_product_install_dir(product=product,version=version)
+                    self.clean_directory_install(
+                        install_dir=dirname(self.external_product['install_dir']))
+                    self.install5.external_product = self.external_product
+                    self.install5.clone(github_remote_url=github_remote_url,version=version)
+                    self.ready = self.ready and self.install5.ready
+                if self.ready:
+                    self.external_product['is_master'] = (version == 'master')
+                    self.external_product['is_branch'] = (
+                        True if self.external_product['is_master'] else
+                        self.install5.is_type(type='branch',
+                                              github_url=github_url,
+                                              product=product,
+                                              version=version))
+                    self.external_product['is_tag'] = (
+                        False if self.external_product['is_branch'] else
+                         self.install5.is_type(type='tag',
+                                               github_url=github_url,
+                                               product=product,
+                                               version=version))
+                    self.install5.checkout()
+
     def set_external_product_install_dir(self,product=None,version=None):
-        '''Set the directory for external idl dependencies.'''
+        '''Set the directory for external dependencies.'''
         if self.ready:
             if product and version:
-                install_dir = join(self.directory['root'],'idl',product,version)
+                install_dir = join(self.directory['root'],'external',product,version)
                 self.external_product = {'product': product,
                                          'version': version,
                                          'install_dir': install_dir,
@@ -350,7 +445,7 @@ class Install:
                                   'product: {}, '.format(product) +
                                   'version: {}, '.format(version)
                                   )
-
+        
     def checkout(self):
         '''Call Install5.checkout'''
         if self.ready:
@@ -394,79 +489,69 @@ class Install:
                                 "{0} must be set prior to sdss_install"
                                 .format(env))
                         if missing: self.ready = False
+                    if config.has_section('external_dependencies'):
+                        self.process_install_section(config=config,
+                                                     section='external_dependencies')
+
 
     def process_install_section(self,config=None,section=None):
         if config and section:
-            for option in config.options(section):
-                if option=='no_build' and not self.options.no_build:
+            if section == 'external_dependencies':
+                self.options.external_dependencies = dict()
+                for option in config.options(section):
                     try:
-                        self.options.no_build = config.getboolean(section,
-                                                                  option)
-                        if self.options.no_build:
-                            self.logger.info("Using {0} to set " +
-                                "--no-build option"
-                                .format(config_filename))
+                        json_string = config.get(section,option)
+                        self.options.external_dependencies[option] = loads(json_string)
                     except: pass
-                elif option=='skip_module' and not self.options.skip_module:
-                    try:
-                        self.options.skip_module = config.getboolean(section,
-                                                                     option)
-                        if self.options.skip_module:
-                            self.logger.info("Using {0} to set " +
-                                "--skip_module option".format(config_filename))
-                    except: pass
-                elif (option=='no_python_package' and not
-                      self.options.no_python_package):
-                    try:
-                        self.options.no_python_package = (
-                            config.getboolean(section,option))
-                        if self.options.no_python_package:
-                            self.logger.info("Using {0} to set " +
-                                "--no_python_package option"
-                                .format(config_filename))
-                    except: pass
-                elif option=='make_target' and not self.options.make_target:
-                    try:
-                        self.options.make_target = config.get(section,option)
-                        if self.options.make_target:
-                            self.logger.info("Using {0} to set " +
-                                "--make_target {1} option"
-                                .format(config_filename,
-                                        self.options.make_target))
-                    except: pass
-                elif option=='evilmake' and not self.options.evilmake:
-                    try:
-                        self.options.evilmake = config.getboolean(section,
-                                                                  option)
-                        if self.options.evilmake:
-                            self.logger.info("Using {0} to set " +
-                                "--evilmake option".format(config_filename))
-                    except: pass
-                elif option=='external_dependencies':
-                    self.options.external_dependencies = dict()
-                    try:
-                        string = config.get(section,option)
-                        split_n = string.split('\n') if string else None
-                        split_n = [item.strip() for item in split_n if item] if split_n else None
-                        if split_n:
-                            for item in split_n:
-                                split_eq = item.split('=') if item else None
-                                key = split_eq[0].strip() if split_eq else None
-                                repoURL_version = split_eq[1].strip() if split_eq else None
-                                value = repoURL_version.split() if repoURL_version else None
-                                value = [item.strip() for item in value]
-                                if key and value:
-                                    self.options.external_dependencies[key] = value
-                        else:
-                            self.logger.error('Unable to process_install_section. ' +
-                                'self.options.external_dependencies: {}'
-                                    .format(self.options.external_dependencies))
-                    except: pass
-        else:
-            self.logger.error('Unable to process_install_section. ' +
-                'config={0}, section={1}'.format(config,section))
-
-
+            else:
+                for option in config.options(section):
+                    if option=='no_build' and not self.options.no_build:
+                        try:
+                            self.options.no_build = config.getboolean(section,
+                                                                      option)
+                            if self.options.no_build:
+                                self.logger.info("Using {0} to set " +
+                                    "--no-build option"
+                                    .format(config_filename))
+                        except: pass
+                    elif option=='skip_module' and not self.options.skip_module:
+                        try:
+                            self.options.skip_module = config.getboolean(section,
+                                                                         option)
+                            if self.options.skip_module:
+                                self.logger.info("Using {0} to set " +
+                                    "--skip_module option".format(config_filename))
+                        except: pass
+                    elif (option=='no_python_package' and not
+                          self.options.no_python_package):
+                        try:
+                            self.options.no_python_package = (
+                                config.getboolean(section,option))
+                            if self.options.no_python_package:
+                                self.logger.info("Using {0} to set " +
+                                    "--no_python_package option"
+                                    .format(config_filename))
+                        except: pass
+                    elif option=='make_target' and not self.options.make_target:
+                        try:
+                            self.options.make_target = config.get(section,option)
+                            if self.options.make_target:
+                                self.logger.info("Using {0} to set " +
+                                    "--make_target {1} option"
+                                    .format(config_filename,
+                                            self.options.make_target))
+                        except: pass
+                    elif option=='evilmake' and not self.options.evilmake:
+                        try:
+                            self.options.evilmake = config.getboolean(section,
+                                                                      option)
+                            if self.options.evilmake:
+                                self.logger.info("Using {0} to set " +
+                                    "--evilmake option".format(config_filename))
+                        except: pass
+                    else:
+                        self.logger.error('Unable to process_install_section. ' +
+                            'config={0}, section={1}'.format(config,section))
 
     def set_build_type(self):
         '''Analyze the code to determine the build type'''
@@ -584,7 +669,7 @@ class Install:
                             self.logger.error(err)
                             self.ready = False
                 if self.options.documentation:
-                    self.logger.warn('Documentation will not be built ' +
+                    self.logger.warning('Documentation will not be built ' +
                                      'for trunk or branch installs!')
             else:
                 self.package = True
@@ -695,7 +780,7 @@ class Install:
                             copytree(join('build','sphinx','html'),
                                      join(self.directory['install'],'doc'))
                 else:
-                    self.logger.warn("Documentation build requested, " +
+                    self.logger.warning("Documentation build requested, " +
                                      "but no documentation found.")
             else:
                 #
@@ -725,7 +810,7 @@ class Install:
                         with open(join('doc','Doxyfile'),'w') as conf2:
                             conf2.write(newconf)
                 else:
-                    self.logger.warn("Documentation build requested, " +
+                    self.logger.warning("Documentation build requested, " +
                                      "but no documentation found.")
 
     #
