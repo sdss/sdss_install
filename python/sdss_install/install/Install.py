@@ -295,19 +295,19 @@ class Install:
                     if self.ready:
                         self.external_product = dict()
                         external_dependency = self.options.external_dependencies[key]
-                        install_products = (external_dependency['install_products']
+                        install_product = (external_dependency['install_product']
                                             if external_dependency
-                                            and 'install_products' in external_dependency
+                                            and 'install_product' in external_dependency
                                             else None)
                         paths = (external_dependency['paths']
                                  if external_dependency
                                  and 'paths' in external_dependency
                                  else None)
-                        if install_products:
-                            self.install_external_products(install_products=install_products)
+                        if install_product:
+                            self.install_external_product(install_product=install_product)
                         else:
-                            self.logger.debug('No install_products found.')
-                        # Needs to be called after self.install_external_products()
+                            self.logger.debug('No install_product found.')
+                        # Needs to be called after self.install_external_product()
                         if paths:
                             self.set_external_paths(paths=paths)
                         else:
@@ -321,51 +321,44 @@ class Install:
                                         .format(isinstance(self.options.external_dependencies,dict))
                                         )
 
-    def install_external_products(self,install_products=None):
+    def install_external_product(self,install_product=None):
         '''Install external products'''
         if self.ready:
-            if install_products and isinstance(install_products,dict):
-                for key in install_products.keys():
-                    install_product = (install_products[key]
-                                       if install_products and key in install_products
-                                       else None)
-                    if isinstance(install_products,dict):
-                        url = (install_product['url']
-                               if install_product and 'url' in install_product else None)
-                        if url:
-                            if 'github.com' in url:
-                                self.install_external_github_product(github_product=install_product)
-                            elif 'svn.' in url:
-                                self.install_external_svn_product(svn_product=install_product)
-                            else:
-                                self.ready = False
-                                self.logger.error('Encountered unsupported ' +
-                                                    'install_product url: {}. Skipping.'
-                                                        .format(url))
-                        else:
-                            self.ready = False
-                            self.logger.error('Unable to install_external_products. ' +
-                                                'install_product: {}, '.format(install_product) +
-                                                'url: {}, '.format(url)
-                                                )
+            if install_product and isinstance(install_product,dict):
+                url = (install_product['url']
+                       if install_product and 'url' in install_product else None)
+                if url:
+                    if 'github.com' in url:
+                        self.install_external_github_product(github_product=install_product)
+                    elif 'svn.' in url:
+                        self.install_external_svn_product(svn_product=install_product)
                     else:
                         self.ready = False
-                        self.logger.error('Unable to install_external_products. ' +
-                                            'instance(isinstall_products,dict): {}, '
-                                                .format(isinstance(install_products,dict))
-                                            )
+                        self.logger.error('Encountered unsupported ' +
+                                          'install_product url: {}.'.format(url))
+                else:
+                    self.ready = False
+                    self.logger.error('Unable to install_external_product. ' +
+                                        'install_product: {}, '.format(install_product) +
+                                        'url: {}, '.format(url)
+                                        )
             else:
                 self.ready = False
-                self.logger.error('Unable to install_external_products. ' +
-                                    'install_products: {}, '.format(install_products) +
-                                    'isinstance(install_products,dict): {}, '
-                                        .format(isinstance(install_products,dict))
+                self.logger.error('Unable to install_external_product. ' +
+                                    'install_product: {}, '.format(install_product) +
+                                    'isinstance(install_product,dict): {}, '
+                                        .format(isinstance(install_product,dict))
                                     )
                                     
-    def install_external_svn_product(self,svn_product=None): pass
+    def install_external_svn_product(self,svn_product=None):
+        '''Install external dependency from SVN'''
+        self.ready = False
+        self.logger.error('Installing external dependencies from svn is currently ' +
+                          'unsupported. Please make a GitHub sdss_install issue (ticket) ' +
+                          'to request that this feature be added.')
 
     def install_external_github_product(self,github_product=None):
-        '''Install external dependency from GitHub.'''
+        '''Install external dependency from GitHub'''
         if self.ready:
             if github_product and isinstance(github_product,dict):
                 url = (github_product['url']
@@ -375,12 +368,6 @@ class Install:
                 version = (github_product['version']
                            if github_product and 'version' in github_product else None)
                 github_remote_url = join(github_url,product)
-#                print('url: %r' % url)
-#                print('github_url: %r' % github_url)
-#                print('product: %r' % product)
-#                print('version: %r' % version)
-#                print('github_remote_url: %r' % github_remote_url)
-#                input('pause')
                 self.install5.validate_product_and_version(github_url=github_url,
                                                            product=product,
                                                            version=version)
@@ -420,8 +407,8 @@ class Install:
         if self.ready:
             if product and version:
                 install_dir = join(self.directory['root'],'external',product,version)
-                self.external_product['product']     = product,
-                self.external_product['version']     = version,
+                self.external_product['product']     = product
+                self.external_product['version']     = version
                 self.external_product['install_dir'] = install_dir
                 if not exists(install_dir):
                     try:
