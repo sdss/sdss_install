@@ -373,13 +373,9 @@ class Install:
                                                            version=version)
                 self.ready = self.ready and self.install5.ready
                 if self.ready:
-                    self.set_external_product_install_dir(product=product,version=version)
-                    self.clean_directory_install(
-                        install_dir=dirname(self.external_product['install_dir']))
-                    self.install5.external_product = self.external_product
-                    self.install5.clone(github_remote_url=github_remote_url,version=version)
-                    self.ready = self.ready and self.install5.ready
-                if self.ready:
+                    self.external_product['github_remote_url'] = github_remote_url
+                    self.external_product['product'] = product
+                    self.external_product['version'] = version
                     self.external_product['is_master'] = (version == 'master')
                     self.external_product['is_branch'] = (
                         True if self.external_product['is_master'] else
@@ -393,6 +389,14 @@ class Install:
                                                github_url=github_url,
                                                product=product,
                                                version=version))
+                    self.ready = self.ready and self.install5.ready
+                if self.ready:
+                    self.set_external_product_install_dir()
+                    self.clean_directory_install(
+                        install_dir=dirname(self.external_product['install_dir']))
+                    self.install5.external_product = self.external_product
+                    self.install5.clone()
+                    self.ready = self.ready and self.install5.ready
                     self.install5.checkout()
             else:
                 self.ready = False
@@ -402,13 +406,18 @@ class Install:
                                         .format(isinstance(github_product,dict)) 
                                     )
 
-    def set_external_product_install_dir(self,product=None,version=None):
+    def set_external_product_install_dir(self):
         '''Set the directory for external dependencies.'''
         if self.ready:
-            if product and version:
-                install_dir = join(self.directory['root'],'external',product,version)
-                self.external_product['product']     = product
-                self.external_product['version']     = version
+            if (self.external_product and
+                'product' in self.external_product and
+                'version' in self.external_product
+                ):
+                install_dir = join(self.directory['root'],
+                                   'external',
+                                   self.external_product['product'],
+                                   self.external_product['version']
+                                   )
                 self.external_product['install_dir'] = install_dir
                 if not exists(install_dir):
                     try:
@@ -422,8 +431,8 @@ class Install:
             else:
                 self.ready = False
                 self.logger.error('Unable to set_external_product_install_dir. ' +
-                                  'product: {}, '.format(product) +
-                                  'version: {}, '.format(version)
+                                  'self.external_product: {}, '
+                                    .format(self.external_product)
                                   )
         
     def set_external_paths(self,paths=None):

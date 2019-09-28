@@ -289,12 +289,15 @@ class Install5:
         self.clone()
         self.checkout()
         
-    def clone(self,github_remote_url=None,version=None):
+    def clone(self):
         '''Clone the GitHub repository for the product.'''
         if self.ready:
-            github_remote_url = github_remote_url if github_remote_url else self.github_remote_url
+            github_remote_url = (self.external_product['github_remote_url']
+                                 if self.external_product
+                                 and 'github_remote_url' in self.external_product
+                                 else self.github_remote_url)
             clone_dir = (self.external_product['install_dir']
-                      if self.external_product else
+                         if self.external_product else
                          self.directory['work'])
             command = ['git','clone',github_remote_url,clone_dir]
             self.logger.debug('Running command: %s' % ' '.join(command))
@@ -314,9 +317,9 @@ class Install5:
         '''Checkout branch or tag, and delete .git directory if tag.'''
         if self.ready:
             version = None
-            dir = None
+            install_dir = None
             if self.external_product:
-                dir = self.external_product['install_dir']
+                install_dir = self.external_product['install_dir']
                 if self.external_product['is_master']:
                     self.logger.debug('Skipping checkout for {} branch'
                         .format(self.external_product['version']))
@@ -333,7 +336,7 @@ class Install5:
                     else:
                         version = None
             else:
-                dir = self.directory['work']
+                install_dir = self.directory['work']
                 if self.product['is_master']:
                     self.logger.debug('Skipping checkout for {} branch'
                         .format(self.product['version']))
@@ -349,8 +352,8 @@ class Install5:
                         remove = True
                     else:
                         version = None
-            if version and dir:
-                chdir(dir)
+            if version and install_dir:
+                chdir(install_dir)
                 command = ['git','checkout',version]
                 self.logger.debug('Running command: %s' % ' '.join(command))
                 (out,err,proc_returncode) = self.execute_command(command=command)
@@ -364,7 +367,7 @@ class Install5:
                     self.logger.error('Error encountered while running command: {}. '
                                         .format(' '.join(command)) +
                                       'err: {}.'.format(err))
-            else: pass # version and dir can be None when is_master
+            else: pass # version and install_dir can be None when is_master
             
     def export(self):
         if self.ready: rmtree(join(self.directory['work'],'.git'))
