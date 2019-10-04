@@ -14,7 +14,7 @@ from os import chdir, environ, getcwd, getenv, makedirs, walk
 from os.path import basename, dirname, exists, isdir, join
 from subprocess import Popen, PIPE
 from argparse import ArgumentParser
-from json import loads, dumps
+from json import loads, dumps, load
 try: from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError: from configparser import SafeConfigParser, RawConfigParser
 #from .most_recent_tag import most_recent_tag
@@ -484,25 +484,32 @@ class Install:
         '''Prepend the given path to the given path_type.'''
         if self.ready:
             if path and path_type:
+                if path.endswith('/'): path = path.rstrip('/')
                 supported_path_types = ['PATH','IDL_PATH','PYTHONPATH']
                 if path_type in supported_path_types:
                     old_path = None
                     try:
                         self.logger.info('Loading current {}'.format(path_type))
                         old_path = environ[path_type]
+                        if old_path and path not in old_path:
+                            new_path = path + ':' + old_path
+                            try:
+                                environ[path_type] = new_path
+                                self.logger.info('Updated {}'.format(path_type))
+                                if self.options.level == 'debug':
+                                    self.logger.debug("environ['{0}']: {1}"
+                                        .format(path_type,environ[path_type]))
+                            except:
+                                  self.logger.info('WARNING: Unable to update {}. Skipping.'.format(path_type))
                     except:
-                          self.logger.info('WARNING: Unable to set {}. Skipping.'.format(path_type))
-                    if old_path and path not in old_path:
-                        if path.endswith('/'): path = path.rstrip('/')
-                        new_path = path + ':' + old_path
                         try:
-                            environ[path_type] = new_path
-                            self.logger.info('Updated {}'.format(path_type))
-                            if self.options.level == 'debug':
-                                self.logger.debug("environ['{0}']: {1}"
-                                    .format(path_type,environ[path_type]))
+                            environ[path_type] = path
+                            self.logger.info('WARNING: Unable to set {}. '.format(path_type) +
+                                             'Setting to {}.'.format(path))
                         except:
-                              self.logger.info('WARNING: Unable to update {}. Skipping.'.format(path_type))
+                            self.logger.info('WARNING: Unable to set or reset {}. Skipping.'
+                                            .format(path_type)
+
                 else:
                       self.logger.info('WARNING: Unable to set_external_path. ' +
                                         'Unsupported path_type: {}. '.format(path_type) +
@@ -559,16 +566,17 @@ class Install:
                         self.process_install_section(config=config,
                                                      section='external_dependencies')
 
-
     def process_install_section(self,config=None,section=None):
         if config and section:
             if section == 'external_dependencies':
-                self.options.external_dependencies = dict()
-                for option in config.options(section):
-                    try:
-                        json_string = config.get(section,option)
-                        self.options.external_dependencies[option] = loads(json_string)
-                    except: pass
+                if 'json_filepath' in config.options(section):
+                    json_filepath = join(self.directory['work'],
+                                         config.get(section,'json_filepath'))
+                    if exists(json_filepath):
+                        try:
+                            with open(json_filepath) as json_file:
+                                self.options.external_dependencies = load(json_file)
+                        except: pass
             else:
                 for option in config.options(section):
                     if option=='no_build' and not self.options.no_build:
