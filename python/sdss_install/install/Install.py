@@ -508,7 +508,7 @@ class Install:
                                              'Setting to {}.'.format(path))
                         except:
                             self.logger.info('WARNING: Unable to set or reset {}. Skipping.'
-                                            .format(path_type)
+                                            .format(path_type))
 
                 else:
                       self.logger.info('WARNING: Unable to set_external_path. ' +
