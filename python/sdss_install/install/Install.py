@@ -505,7 +505,7 @@ class Install:
                         try:
                             environ[path_type] = path
                             self.logger.info('WARNING: Unable to set {}. '.format(path_type) +
-                                             'Setting to {}.'.format(path))
+                                             'Setting it to {}.'.format(path))
                         except:
                             self.logger.info('WARNING: Unable to set or reset {}. Skipping.'
                                             .format(path_type))
@@ -576,7 +576,8 @@ class Install:
                         try:
                             with open(json_filepath) as json_file:
                                 self.options.external_dependencies = load(json_file)
-                        except: pass
+                        except:
+                            self.logger.info('WARNING: Unable to open the file {}'.format(json_filepath))
             else:
                 for option in config.options(section):
                     if option=='no_build' and not self.options.no_build:
