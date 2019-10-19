@@ -39,13 +39,10 @@ class Install5:
     def set_attributes(self):
         '''Set class attributes.'''
         self.ready = False
-        self.repositories = None
-        self.tags = None
-        self.branches = None
         self.product = None
         self.directory = None
         self.github_remote_url = None
-        self.repositories = list()
+        self.external_product = None
     
     def set_ready(self):
         '''
@@ -80,39 +77,54 @@ class Install5:
                 self.ready = False
                 self.logger.error('Invalid product. {} '.format(self.options.product) )
 
-    def validate_product_and_version(self):
+    def validate_product_and_version(self,github_url=None,product=None,version=None):
         '''Validate the product and product version.'''
         if self.ready:
-            if self.get_valid_product():
-                self.get_valid_version()
+            if self.get_valid_product(github_url=github_url,product=product,version=version):
+                self.get_valid_version(github_url=github_url,product=product,version=version)
 
-    def get_valid_product(self):
+    def get_valid_product(self,github_url=None,product=None,version=None):
         '''Validate the product'''
         valid_product = None
         if self.ready:
             self.logger.info('Validating product')
+            product = product if product else self.options.product
             # check for master branch
-            valid_product = self.is_type(type='repository')
+            valid_product = self.is_type(type='repository',
+                                         github_url=github_url,
+                                         product=product,
+                                         version=version)
             if self.ready:
-                if not valid_product:
+                if valid_product:
+                    self.logger.debug('Valid product: {} '.format(product) )
+                else:
                     self.ready = False
-                    self.logger.error('Invalid product. {} '.format(self.options.product) )
+                    self.logger.error('Invalid product: {} '.format(product) )
         return valid_product
 
-    def get_valid_version(self):
+    def get_valid_version(self,github_url=None,product=None,version=None):
         '''Validate the product version'''
         valid_version = None
         if self.ready:
+            version = version if version else self.options.product_version
             self.logger.info('Validating version')
-            version = self.options.product_version
             is_master = (version == 'master')
-            is_branch = True if is_master else self.is_type(type='branch')
-            is_tag    = False if is_branch else self.is_type(type='tag')
+            is_branch = True if is_master else self.is_type(type='branch',
+                                                            github_url=github_url,
+                                                            product=product,
+                                                            version=version)
+            is_tag    = False if is_branch else self.is_type(type='tag',
+                                                             github_url=github_url,
+                                                             product=product,
+                                                             version=version)
             valid_version =  bool(is_master or is_branch or is_tag)
             if self.ready:
-                if not valid_version:
+                if valid_version:
+                    self.logger.debug('Valid version: {}'.format(version))
+                else:
                     self.ready = False
                     self.logger.error('Invalid version: {}'.format(version))
+
         return valid_version
 
     def get_bootstrap_version(self):
@@ -154,7 +166,7 @@ class Install5:
                             self.ready = False
                             self.logger.error('Error encountered while running command: {}. '
                                                 .format(' '.join(command)) +
-                                              'err: {}.'.format(err.decode('utf-8')))
+                                              'err: {}.'.format(err))
                     else: version = 'master'
                     self.logger.debug('Changing directory to: {}'.format(product_root))
                     chdir(product_root)
@@ -162,7 +174,7 @@ class Install5:
                     self.ready = False
                     self.logger.error('Error encountered while running command: {}. '
                                         .format(' '.join(command)) +
-                                      'err: {}.'.format(err.decode('utf-8')))
+                                      'err: {}.'.format(err))
             else:
                 self.ready = False
                 self.logger.error(
@@ -214,19 +226,22 @@ class Install5:
                                                   if self.product['is_master_or_branch']
                                                   else 'export')
 
-    def is_type(self,type=None):
+    def is_type(self,type=None,github_url=None,product=None,version=None):
         '''Check if the product_version is a valid Github branch.'''
         if self.ready:
             if type:
+                product = product if product else self.options.product
+                version = version if version else self.options.product_version
+                github_url = github_url if github_url else 'git@github.com:sdss'
+                url = join(github_url,product + '.git')
                 options = {'repository' : '--heads', # for validating product
                            'branch'     : '--heads', # for validating product_version
                            'tag'        : '--tags',  # for validating product_version
                            }
                 if type in options:
-                    product_version = (self.options.product_version
+                    product_version = (version
                                        if type != 'repository'
                                        else 'master') # every product has master branch
-                    url = join('git@github.com:sdss',self.options.product + '.git')
                     command = ['git',
                                'ls-remote',
                                options[type],
@@ -259,11 +274,11 @@ class Install5:
                                   'type: {}'.format(type))
         return bool(out)
 
-    def set_github_remote_url(self):
+    def set_sdss_github_remote_url(self):
         '''Set the SDSS GitHub HTTPS remote URL'''
         if self.ready:
             product = self.options.product if self.options else None
-            self.github_remote_url = ('https://github.com/sdss/%s.git' % product
+            self.github_remote_url = ('git@github.com:sdss/%s.git' % product
                                       if product else None)
 
     def fetch(self):
@@ -277,57 +292,83 @@ class Install5:
     def clone(self):
         '''Clone the GitHub repository for the product.'''
         if self.ready:
-            command = ['git',
-                       'clone',
-                       self.github_remote_url,
-                       basename(self.directory['work'])]
+            github_remote_url = (self.external_product['github_remote_url']
+                                 if self.external_product
+                                 and 'github_remote_url' in self.external_product
+                                 else self.github_remote_url)
+            clone_dir = (self.external_product['install_dir']
+                         if self.external_product else
+                         self.directory['work'])
+            command = ['git','clone',github_remote_url,clone_dir]
             self.logger.debug('Running command: %s' % ' '.join(command))
             (out,err,proc_returncode) = self.execute_command(command=command)
             # NOTE: err is non-empty even when git clone is successful.
             if proc_returncode == 0:
-                self.logger.info("Completed GitHub clone of repository %(name)s"
-                                    % self.product)
+                self.logger.info("Completed GitHub clone of repository {}"
+                                    .format(basename(github_remote_url)
+                                    .replace('.git',str())))
             else:
                 self.ready = False
                 self.logger.error('Error encountered while running command: {}. '
                                     .format(' '.join(command)) +
-                                  'err: {}.'.format(err.decode('utf-8')))
+                                  'err: {}.'.format(err))
 
     def checkout(self):
         '''Checkout branch or tag, and delete .git directory if tag.'''
         if self.ready:
-            if not self.product['is_master']:
-                if self.product['is_branch']:
-                    version = self.product['version']
-                    s = 'Completed checkout of branch {}'.format(version)
-                    remove = False
-                elif self.product['is_tag']:
-                    version = 'tags/' + self.product['version']
-                    s = ('Completed checkout of tag {} '.format(version) +
-                         'and removal of .git directory')
-                    remove = True
+            version = None
+            install_dir = None
+            if self.external_product:
+                install_dir = self.external_product['install_dir']
+                if self.external_product['is_master']:
+                    self.logger.debug('Skipping checkout for {} branch'
+                        .format(self.external_product['version']))
                 else:
-                    version = None
-                if version:
-                    chdir(self.directory['work'])
-                    command = ['git','checkout',version]
-                    self.logger.debug('Running command: %s' % ' '.join(command))
-                    (out,err,proc_returncode) = self.execute_command(command=command)
-                    # NOTE: err is non-empty even when git checkout is successful.
-                    if proc_returncode == 0:
-                        chdir(self.directory['original'])
-                        if remove: self.export()
-                        self.logger.info(s)
+                    if self.external_product['is_branch']:
+                        version = self.external_product['version']
+                        s = 'Completed checkout of branch {}'.format(version)
+                        remove = False
+                    elif self.external_product['is_tag']:
+                        version = 'tags/' + self.external_product['version']
+                        s = ('Completed checkout of tag {} '.format(version) +
+                             'and removal of .git directory')
+                        remove = True
                     else:
-                        self.ready = False
-                        self.logger.error('Error encountered while running command: {}. '
-                                            .format(' '.join(command)) +
-                                          'err: {}.'.format(err.decode('utf-8')))
+                        version = None
+            else:
+                install_dir = self.directory['work']
+                if self.product['is_master']:
+                    self.logger.debug('Skipping checkout for {} branch'
+                        .format(self.product['version']))
+                else:
+                    if self.product['is_branch']:
+                        version = self.product['version']
+                        s = 'Completed checkout of branch {}'.format(version)
+                        remove = False
+                    elif self.product['is_tag']:
+                        version = 'tags/' + self.product['version']
+                        s = ('Completed checkout of tag {} '.format(version) +
+                             'and removal of .git directory')
+                        remove = True
+                    else:
+                        version = None
+            if version and install_dir:
+                chdir(install_dir)
+                command = ['git','checkout',version]
+                self.logger.debug('Running command: %s' % ' '.join(command))
+                (out,err,proc_returncode) = self.execute_command(command=command)
+                # NOTE: err is non-empty even when git checkout is successful.
+                if proc_returncode == 0:
+                    chdir(self.directory['original'])
+                    if remove: self.export()
+                    self.logger.info(s)
                 else:
                     self.ready = False
-                    self.logger.error('Unable to checkout. '
-                                      'version: {}.'.format(version))
-
+                    self.logger.error('Error encountered while running command: {}. '
+                                        .format(' '.join(command)) +
+                                      'err: {}.'.format(err))
+            else: pass # version and install_dir can be None when is_master
+            
     def export(self):
         if self.ready: rmtree(join(self.directory['work'],'.git'))
 
