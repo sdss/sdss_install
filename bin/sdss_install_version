@@ -90,4 +90,4 @@ if ready:
                           'with the following error message. {}.'.format(err))
 
 # Change directory back to original_dir
-if ready: chdir(original_dir)
+if original_dir: chdir(original_dir)
