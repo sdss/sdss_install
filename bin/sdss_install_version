@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# $Id: sdss_install_version 70491 2019-11-12 19:16:07Z nbmurphy $
+#
+
+from subprocess import Popen, PIPE
+from os import chdir, getcwd, environ
+from os.path import basename
+
+
+def execute_command(command=None, argument=None):
+    '''Execute the passed terminal command.'''
+    (out,err,proc_returncode) = (None,None,None)
+    if command:
+        proc = Popen(command, stdout=PIPE, stderr=PIPE)
+        if proc:
+            (out, err) = proc.communicate() if proc else (None,None)
+            proc_returncode = proc.returncode if proc else None
+            if argument:
+                out = out.decode("utf-8",argument) if isinstance(out,bytes) else out
+                err = err.decode("utf-8",argument) if isinstance(err,bytes) else err
+            else:
+                out = out.decode("utf-8") if isinstance(out,bytes) else out
+                err = err.decode("utf-8") if isinstance(err,bytes) else err
+        else:
+            ready = False
+            print('ERROR: subprocess.Popen constructor failed.')
+    else:
+        ready = False
+        print('ERROR: Missing argument `command` in method execute_command(). command: {}'.format(command))
+    return (out,err,proc_returncode)
+
+
+ready = True
+
+# Get current working directory
+try: original_dir = getcwd()
+except OSError as ose:
+    ready = False
+    print("Error encountered while trying to load the current working directory: {}"
+        .format(ose.strerror))
+
+# Get the $PRODUCT_DIR for this script
+if ready:
+    script_name = basename(__file__)
+    if script_name and '_version' in script_name:
+        env = script_name.replace('_version',str()).upper() + '_DIR'
+    else:
+        ready = False
+        print('ERROR: Assumption that the version script name {} '.format(script_name) +
+              'is of the form `product`_version is invalid.')
+    if ready:
+        try: product_dir = environ[env]
+        except:
+            ready = False
+            print('ERROR: Unable to load the environmental variable {}.'.format(env))
+        
+# Change directory to $PRODUCT_DIR
+if ready: chdir(product_dir)
+    
+# Check current working directory is a git repository
+if ready:
+    command = ['git','rev-parse','--is-inside-work-tree']
+    (out,err,proc_returncode) = execute_command(command=command)
+    if not (proc_returncode == 0 and out.strip() == 'true'):
+        ready = False
+        print('Error encountered while running the command `{}`, '
+                .format(' '.join(command)) +
+              'with the following error message. {}.'.format(err))
+         
+# check if a branch is checked out and, if so, print the branch name
+if ready:
+    command = ['git','symbolic-ref','-q','--short','HEAD']
+    (out,err,proc_returncode) = execute_command(command=command)
+    if ready:
+        if proc_returncode == 0:
+            print('{!s}'.format(out.strip()))
+        else:
+            # check if a tag is checked out and, if so, print the tag name
+            command = ['git','describe','--tags','--exact-match']
+            (out,err,proc_returncode) = execute_command(command=command)
+            if ready:
+                if proc_returncode == 0:
+                    print('{!s}'.format(out.strip()))
+                else:
+                    ready = False
+                    print('Error encountered while running the command `{}`, '
+                            .format(' '.join(command)) +
+                          'with the following error message. {}.'.format(err))
+
+# Change directory back to original_dir
+if ready: chdir(original_dir)
