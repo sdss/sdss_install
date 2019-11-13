@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# $Id: sdss_install_version 70491 2019-11-12 19:16:07Z nbmurphy $
+#
+from subprocess import Popen, PIPE
+
+def execute_command(command=None, argument=None):
+    '''Execute the passed terminal command.'''
+    (ready,out,err,proc_returncode) = (True,None,None,None)
+    if command:
+        proc = Popen(command, stdout=PIPE, stderr=PIPE)
+        if proc:
+            (out, err) = proc.communicate() if proc else (None,None)
+            proc_returncode = proc.returncode if proc else None
+            if argument:
+                out = out.decode("utf-8",argument) if isinstance(out,bytes) else out
+                err = err.decode("utf-8",argument) if isinstance(err,bytes) else err
+            else:
+                out = out.decode("utf-8") if isinstance(out,bytes) else out
+                err = err.decode("utf-8") if isinstance(err,bytes) else err
+        else:
+            ready = False
+            print('ERROR: subprocess.Popen constructor failed.')
+    else:
+        ready = False
+        print('ERROR: Missing command: {}'.format(command))
+    return (ready,out,err,proc_returncode)
+
+command = ['git','symbolic-ref','-q','--short','HEAD']
+(ready,out,err,proc_returncode) = execute_command(command=command)
+if ready:
+    if proc_returncode == 0 and 'HEAD' not in out:
+        print('%s' % out.strip())
+    else:
+        command = ['git','describe','--tags','--exact-match']
+        (ready,out,err,proc_returncode) = execute_command(command=command)
+        if proc_returncode == 0:
+            print('%s' % out.strip())
+        else:
+            ready = False
+            print('Error encountered while running command: {}. '.format(' '.join(command)) +
+                  'err: {}.'.format(err))
