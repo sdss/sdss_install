@@ -3,6 +3,7 @@
 #
 # $Id: sdss_install_version 70491 2019-11-12 19:16:07Z nbmurphy $
 #
+
 from subprocess import Popen, PIPE
 
 def execute_command(command=None, argument=None):
@@ -24,20 +25,34 @@ def execute_command(command=None, argument=None):
             print('ERROR: subprocess.Popen constructor failed.')
     else:
         ready = False
-        print('ERROR: Missing command: {}'.format(command))
+        print('ERROR: Missing argument `command` in method execute_command(). command: {}'.format(command))
     return (ready,out,err,proc_returncode)
 
-command = ['git','symbolic-ref','-q','--short','HEAD']
+# check current working directory is a git repository
+command = ['git','rev-parse','--is-inside-work-tree']
 (ready,out,err,proc_returncode) = execute_command(command=command)
 if ready:
-    if proc_returncode == 0 and 'HEAD' not in out:
-        print('%s' % out.strip())
+    if not (proc_returncode == 0 and out.strip() == 'true'):
+        ready = False
+        print('Error encountered while running the command `{}`, '
+                .format(' '.join(command)) +
+              'with the following error message. {}.'.format(err))
+if ready:
+    # check if a branch is checked out and, if so, print the branch name
+    command = ['git','symbolic-ref','-q','--short','HEAD']
+    (ready,out,err,proc_returncode) = execute_command(command=command)
+if ready:
+    if proc_returncode == 0:
+        print('{!s}'.format(out.strip()))
     else:
+        # check if a tag is checked out and, if so, print the tag name
         command = ['git','describe','--tags','--exact-match']
         (ready,out,err,proc_returncode) = execute_command(command=command)
-        if proc_returncode == 0:
-            print('%s' % out.strip())
-        else:
-            ready = False
-            print('Error encountered while running command: {}. '.format(' '.join(command)) +
-                  'err: {}.'.format(err))
+        if ready:
+            if proc_returncode == 0:
+                print('{!s}'.format(out.strip()))
+            else:
+                ready = False
+                print('Error encountered while running the command `{}`, '
+                        .format(' '.join(command)) +
+                      'with the following error message. {}.'.format(err))
