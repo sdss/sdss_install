@@ -38,6 +38,7 @@ ready = True
 try: original_dir = getcwd()
 except OSError as ose:
     ready = False
+    original_dir = None
     print("Error encountered while trying to load the current working directory: {}"
         .format(ose.strerror))
 
