@@ -314,7 +314,7 @@ class Install5:
                                   'err: {}.'.format(err))
 
     def checkout(self):
-        '''Checkout branch or tag, and delete .git directory if tag.'''
+        '''Checkout branch or tag and, if tag, remove git remote origin.'''
         if self.ready:
             version = None
             install_dir = None
@@ -331,7 +331,7 @@ class Install5:
                     elif self.external_product['is_tag']:
                         version = 'tags/' + self.external_product['version']
                         s = ('Completed checkout of tag {} '.format(version) +
-                             'and removal of .git directory')
+                             'and removal of git remote origin')
                         remove = True
                     else:
                         version = None
@@ -348,7 +348,7 @@ class Install5:
                     elif self.product['is_tag']:
                         version = 'tags/' + self.product['version']
                         s = ('Completed checkout of tag {} '.format(version) +
-                             'and removal of .git directory')
+                             'and removal of git remote origin')
                         remove = True
                     else:
                         version = None
@@ -360,17 +360,27 @@ class Install5:
                 # NOTE: err is non-empty even when git checkout is successful.
                 if proc_returncode == 0:
                     chdir(self.directory['original'])
-                    if remove: self.export()
-                    self.logger.info(s)
+                    if remove:     self.export()
+                    if self.ready: self.logger.info(s)
                 else:
                     self.ready = False
                     self.logger.error('Error encountered while running command: {}. '
                                         .format(' '.join(command)) +
                                       'err: {}.'.format(err))
             else: pass # version and install_dir can be None when is_master
-            
+
     def export(self):
-        if self.ready: rmtree(join(self.directory['work'],'.git'))
+        '''Remove git remote origin.'''
+        if self.ready:
+            chdir(self.directory['work'])
+            command = ['git','remote','rm','origin']
+            self.logger.debug('Running command: %s' % ' '.join(command))
+            (out,err,proc_returncode) = self.execute_command(command=command)
+            if not proc_returncode == 0:
+                self.ready = False
+                self.logger.error('Error encountered while running command: {}. '
+                                    .format(' '.join(command)) +
+                                  'err: {}.'.format(err))
 
     def execute_command(self, command=None):
         '''Execute the passed terminal command.'''

@@ -252,8 +252,8 @@ class Install:
                                 "{} (overwriting due to force option)".format(install_dir))
                             rmtree(install_dir)
                 else:
-                    self.logger.error("Install directory, %(install)s, " +
-                        "already exists!" % self.directory)
+                    self.logger.error("Install directory, %(install)s, already exists!"
+                        % self.directory)
                     self.logger.info("Use the -F (or --force) option " +
                         "to overwrite.")
                     self.ready = False
