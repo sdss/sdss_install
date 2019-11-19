@@ -10,7 +10,8 @@ from sdss_install.install import Install
 from sdss_install.install.modules import Modules
 
 
-print('environment stuff', os.environ.get("SDSS_GIT_ROOT"), os.environ.get("SDSS_SVN_MODULES"))
+print('environment stuff', os.environ.get(
+    "SDSS_GIT_ROOT"), os.environ.get("SDSS_SVN_MODULES"))
 
 options = Argument('sdss_install').options
 install = Install(options=options)
@@ -48,7 +49,7 @@ else:
         install.modules.set_keywords()
         install.modules.set_directory()
         install.modules.build()
-    
+
     # must be after install.fetch()
     if options.external_dependencies:
         install.install_external_dependencies()
@@ -60,9 +61,8 @@ else:
         install.build_package()
         if not options.keep:
             install.clean()
-            
+
     if options.bootstrap:
         install.checkout()
 
     install.finalize()
-
