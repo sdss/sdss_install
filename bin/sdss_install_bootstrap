@@ -34,6 +34,17 @@ while getopts hm:r:tU:v argname; do
     esac
 done
 shift $((OPTIND-1))
+
+#
+# Configure
+#
+source ./configure 
+# check that we actually have set the environment variables; if not exit the configuration
+if [[ -z $SDSS_GIT_ROOT ]]; then 
+    exit 1
+fi
+root=$SDSS_INSTALL_PRODUCT_ROOT
+
 #
 # Install
 #
@@ -47,15 +58,15 @@ if [[ -n "${modules}" ]]; then
 fi
 if [[ -n "${root}" ]]; then
     if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - root = \"-r ${root}\" "; fi
-    root = "-r ${root}"
+    root="-r ${root}"
 fi
 if [[ -z "${MODULESHOME}" ]]; then
     echo "sdss_install_bootstrap - INFO - You do not appear to have Modules installed."
     exit 1
 fi
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master"; fi
-export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master
+#if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master"; fi
+#export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}"; fi
 export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}

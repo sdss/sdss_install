@@ -3,16 +3,20 @@
 #
 # $Id: sdss_install 70491 2018-09-28 nbmurphy $
 #
+import os
 from sdss_install import __version__
 from sdss_install.application import Argument
 from sdss_install.install import Install
 from sdss_install.install.modules import Modules
 
 
+print('environment stuff', os.environ.get("SDSS_GIT_ROOT"), os.environ.get("SDSS_SVN_MODULES"))
+
 options = Argument('sdss_install').options
 install = Install(options=options)
 
-if options and options.version: print(__version__)
+if options and options.version:
+    print(__version__)
 else:
     install.set_ready()
     install.set_product()
@@ -54,9 +58,9 @@ else:
         install.build()
         install.build_documentation()
         install.build_package()
-        if not options.keep: install.clean()
+        if not options.keep:
+            install.clean()
             
-
     if options.bootstrap:
         install.checkout()
 
