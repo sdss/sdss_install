@@ -88,4 +88,6 @@ def sdss_install():
     parser.add_argument('-x', '--external_dependencies', action='store', dest='external_dependencies',
                         metavar='DIR', help='Set a string of external dependency clone commands',
                         default=str())
+    parser.add_argument('-o', '--skip-git-verdirs', action='store_true', dest='skip_git_verdirs', 
+                        help='Set to skip checkout of git repos in version subdirectories')
     return parser

@@ -209,20 +209,27 @@ class Install:
                                       "or set a SDSS_INSTALL_PRODUCT_ROOT " +
                                       "environmental variable.")
                     self.ready = False
+
         if self.ready:
             if self.options.root.endswith('/'):
                 self.options.root = dirname(self.options.root)
+
             if self.options.root is not None:
                 environ['SDSS_INSTALL_PRODUCT_ROOT'] = self.options.root
+
             if self.options.longpath is not None:
                 environ['SDSS4TOOLS_LONGPATH'] = 'True'
-            repo_type = 'github' if self.options.github else 'svn'
-            self.directory['root'] = (
-                join(self.options.root,
-                     repo_type,
-                     self.product['root'])
-                if self.product['root']
-                else join(self.options.root, repo_type))
+
+            #repo_type = 'github' if self.options.github else 'svn'
+            # set the GIT or SVN product ROOT
+            if self.options.github:
+                sub_root = environ.get("SDSS_GIT_ROOT")
+            else:
+                sub_root = environ.get("SDSS_SVN_ROOT")
+
+            self.directory['root'] = (join(sub_root, self.product['root'])
+                                      if self.product['root'] else sub_root)
+
             self.directory['install'] = join(self.directory['root'],
                                              self.product['name'],
                                              self.product['version'])
