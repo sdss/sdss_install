@@ -128,22 +128,22 @@ def _run_module(install):
         install.modules.load_dependencies()
         install.modules.set_keywords()
         install.modules.set_directory()
-        install.modules.build()
     return install
 
 
 @pytest.fixture()
-def module_nowork(setup):
-    ''' Fixture to generate an Install up to modulefile generation but without work checkout '''
-    setup = _run_module(setup)
-    yield setup
-    setup = None
+def module_setup(work):
+    ''' Fixture to generate an Install up to modulefile setup but without build '''
+    work = _run_module(work)
+    yield work
+    work = None
 
 
 @pytest.fixture()
 def module(work):
     ''' Fixture to generate an Install up to modulefile generation '''
     work = _run_module(work)
+    work.modules.build()
     yield work
     work = None
 
