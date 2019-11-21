@@ -29,10 +29,13 @@ from sdss_install.install import Install
 def monkey_setup(monkeypatch, tmpdir):
     ''' Fixture that automatically sets up a temporary install directory '''
     tmproot = tmpdir.mkdir("software").mkdir("sdss")
+    tmpwork = tmproot.mkdir("work")
     tmpgit = tmproot.mkdir("github")
     tmpsvn = tmproot.mkdir("svn")
     tmpgitmod = tmpgit.mkdir("modulefiles")
     tmpsvnmod = tmpsvn.mkdir("modulefiles")
+    # change to working directory
+    os.chdir(tmpwork)
 
     sdss_install_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
 
@@ -59,6 +62,7 @@ def monkey_diffdir(monkeypatch, tmpdir):
     monkeypatch.setenv("SDSS_GIT_MODULES", str(tmpgitmod))
     monkeypatch.setenv("SDSS_SVN_MODULES", str(tmpsvnmod))
 
+
 def core_install(params):
     ''' sets up the core sdss_install object
 
@@ -84,7 +88,7 @@ def install(request):
 
 
 @pytest.fixture()
-def setup_install(install):
+def setup(install):
     ''' Fixture to generate an Install up to setup '''
     install.set_ready()
     install.set_product()
@@ -96,61 +100,93 @@ def setup_install(install):
 
 
 @pytest.fixture()
-def get_install(setup_install):
-    ''' Fixture to generate an Install up to product checkout '''
-    options = setup_install.options
+def work(setup):
+    ''' Fixture to generate an Install up to work-product checkout '''
+    options = setup.options
     if not options.module_only:
-        setup_install.clean_directory_install()
+        setup.clean_directory_install()
         if options.github:
-            setup_install.set_sdss_github_remote_url()
+            setup.set_sdss_github_remote_url()
         else:
-            setup_install.set_svncommand()
-            setup_install.set_exists()
-        setup_install.fetch()
-    yield setup_install
-    setup_install = None
+            setup.set_svncommand()
+            setup.set_exists()
+        setup.fetch()
+    yield setup
+    setup = None
+
+
+def _run_module(install):
+    ''' run the module setup '''
+    install.reset_options_from_config()
+    install.set_build_type()
+
+    if install.ready:
+        install.set_modules()
+        install.modules.set_module()
+        install.modules.set_ready()
+        install.modules.set_file()
+        install.modules.load_dependencies()
+        install.modules.set_keywords()
+        install.modules.set_directory()
+        install.modules.build()
+    return install
 
 
 @pytest.fixture()
-def mod_install(get_install):
+def module_nowork(setup):
+    ''' Fixture to generate an Install up to modulefile generation but without work checkout '''
+    setup = _run_module(setup)
+    yield setup
+    setup = None
+
+
+@pytest.fixture()
+def module(work):
     ''' Fixture to generate an Install up to modulefile generation '''
-    get_install.reset_options_from_config()
-    get_install.set_build_type()
+    work = _run_module(work)
+    yield work
+    work = None
 
-    if get_install.ready:
-        get_install.set_modules()
-        get_install.modules.set_module()
-        get_install.modules.set_ready()
-        get_install.modules.set_file()
-        get_install.modules.load_dependencies()
-        get_install.modules.set_keywords()
-        get_install.modules.set_directory()
-        get_install.modules.build()
-
-    yield get_install
-    get_install = None
 
 @pytest.fixture()
-def full_install(mod_install):
-    ''' Fixture to generate an Install for full install process '''
-    options = mod_install.options
-
-    # must be after mod_install.fetch()
+def external(module):
+    ''' Fixture to generate and Install up to external dependency installation '''
+    options = module.options
+    # must be after module.fetch()
     if options.external_dependencies:
-        mod_install.install_external_dependencies()
+        module.install_external_dependencies()
+    yield module
+    module = None
 
-    mod_install.set_environ()
+
+@pytest.fixture()
+def build(external):
+    ''' Fixture to generate an Install for full install process '''
+    options = external.options
+
+    external.set_environ()
     if not options.module_only:
-        mod_install.build()
-        mod_install.build_documentation()
-        mod_install.build_package()
+        external.build()
+        external.build_documentation()
+        external.build_package()
         if not options.keep:
-            mod_install.clean()
+            external.clean()
+    yield external
+    external = None
+    external.clean_directory_install()
 
-    if options.bootstrap:
-        mod_install.checkout()
 
-    mod_install.finalize()
+@pytest.fixture()
+def bootstrap(build):
+    ''' Fixture for running bootstrap step for sdss_install '''
+    build.checkout()
+    yield build
+    build = None
 
-    yield mod_install
-    mod_install = None
+
+@pytest.fixture()
+def finalize(build):
+    build.finalize()
+
+    yield build
+    build = None

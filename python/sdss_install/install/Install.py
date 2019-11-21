@@ -220,19 +220,26 @@ class Install:
             if self.options.longpath is not None:
                 environ['SDSS4TOOLS_LONGPATH'] = 'True'
 
-            #repo_type = 'github' if self.options.github else 'svn'
-            # set the GIT or SVN product ROOT
+            # set the GIT or SVN product ROOT; this overrides main PRODUCT_ROOT
             if self.options.github:
                 sub_root = environ.get("SDSS_GIT_ROOT")
             else:
                 sub_root = environ.get("SDSS_SVN_ROOT")
 
+            # set the root directory for the product
             self.directory['root'] = (join(sub_root, self.product['root'])
                                       if self.product['root'] else sub_root)
 
-            self.directory['install'] = join(self.directory['root'],
-                                             self.product['name'],
-                                             self.product['version'])
+            # check to use version sub-directories or not
+            verdir = self.product['version']
+            if self.options.github and self.options.skip_git_verdirs:
+                verdir = None
+
+            # set the install directory for the product
+            self.directory['install'] = join(self.directory['root'], self.product['name'])
+            if verdir:
+                self.directory['install'] = join(self.directory['install'], verdir)
+
             self.export_data()
 
     def set_directory_work(self):

@@ -8,6 +8,7 @@ from os.path import basename, dirname, exists, isdir, join
 from subprocess import Popen, PIPE
 from sdss_install.utils import Module
 
+
 class Modules:
 
     def __init__(self,
@@ -27,7 +28,7 @@ class Modules:
         self.module = None
 
     def set_module(self):
-        self.module = Module(logger=self.logger,options=self.options)
+        self.module = Module(logger=self.logger, options=self.options)
 
     def set_ready(self):
         '''Set up Modules.'''
@@ -39,7 +40,7 @@ class Modules:
         if self.ready and not self.module.ready:
             self.ready = False
             self.logger.error("You do not appear to have Modules set up.")
-            
+
     def set_file(self, ext='.module'):
         '''Set product module file path.'''
         if self.ready:
@@ -47,7 +48,7 @@ class Modules:
             filename = (self.product['name']+alt+ext
                         if 'name' in self.product and ext
                         else None)
-            self.file = (join(self.directory['work'],'etc',filename)
+            self.file = (join(self.directory['work'], 'etc', filename)
                          if filename and 'work' in self.directory
                          else None)
 
@@ -55,36 +56,39 @@ class Modules:
         '''Load dependencies.'''
         if self.ready:
             self.set_dependencies()
-            for (product,version) in self.dependencies:
-                self.load(product=product,version=version)
+            for (product, version) in self.dependencies:
+                self.load(product=product, version=version)
 
     def set_dependencies(self):
         '''Set the dependencies by looking for modules loaded in the modules file'''
         self.dependencies = list()
         if self.ready:
             if exists(self.file):
-                with open(self.file) as file: lines = file.readlines()
+                with open(self.file) as file:
+                    lines = file.readlines()
                 from json import dumps
                 for product_version in [l.strip().split()[2] for l in lines if l.startswith('module load')]:
-                    self.dependencies.append(product_version.split('/',1)
+                    self.dependencies.append(product_version.split('/', 1)
                                              if '/' in product_version
                                              else (product_version, None))
 
-    def load(self,product=None,version=None):
+    def load(self, product=None, version=None):
         '''Hook to module load function.'''
         if self.ready:
             if product:
-                product_version = join(product,version) if version else product
+                product_version = join(
+                    product, version) if version else product
                 try:
-                    self.module.set_command('load',arguments=product_version)
+                    self.module.set_command('load', arguments=product_version)
                     self.module.execute_command()
-                    self.logger.info("module load %s (dependency)" % product_version)
+                    self.logger.info(
+                        "module load %s (dependency)" % product_version)
                 except:
                     self.logger.warning("unable to module load %s (dependency)"
                                         % product_version)
             else:
                 self.logger.error("module load command requires a " +
-                                    "product [version optional]")
+                                  "product [version optional]")
 
     def set_keywords(self, build_type=None):
         '''Set keywords to configure module.'''
@@ -99,11 +103,11 @@ class Modules:
             self.keywords['needs_ld_lib'] = '# '
             self.keywords['needs_idl'] = '# '
             self.keywords['pyversion'] = "python{0:d}.{1:d}".format(*version_info)
-            if isdir(join(self.directory['work'],'bin')):
+            if isdir(join(self.directory['work'], 'bin')):
                 self.keywords['needs_bin'] = ''
-            if isdir(join(self.directory['work'],'lib')):
+            if isdir(join(self.directory['work'], 'lib')):
                 self.keywords['needs_ld_lib'] = ''
-            if isdir(join(self.directory['work'],'pro')):
+            if isdir(join(self.directory['work'], 'pro')):
                 self.keywords['needs_idl'] = ''
             if 'python' in self.build_type:
                 if (self.product['is_branch'] or
@@ -134,14 +138,14 @@ class Modules:
                         except KeyError:
                             newpythonpath = lib_dir
                         environ['PYTHONPATH'] = newpythonpath
-                        path.insert(int(path[0] == ''),lib_dir)
-            elif isdir(join(self.directory['work'],'python')):
+                        path.insert(int(path[0] == ''), lib_dir)
+            elif isdir(join(self.directory['work'], 'python')):
                 self.keywords['needs_trunk_python'] = ''
 
-            if basename(self.options.product)=='sdss_install':
+            if basename(self.options.product) == 'sdss_install':
                 self.keywords['sdss_install_root'] = self.options.root
                 self.keywords['sdss_install_longpath'] = '# '
-            elif basename(self.options.product)=='sdss4tools':
+            elif basename(self.options.product) == 'sdss4tools':
                 self.keywords['sdss4tools_root'] = self.options.root
                 self.keywords['sdss4tools_longpath'] = self.options.longpath
 
@@ -154,7 +158,7 @@ class Modules:
             if self.ready and not self.options.test:
                 if not isdir(self.directory['modules']):
                     self.logger.info("Creating Modules directory %(modules)s"
-                                        % self.directory)
+                                     % self.directory)
                     try:
                         makedirs(self.directory['modules'])
                     except OSError as ose:
@@ -167,7 +171,7 @@ class Modules:
             (if there is an etc/product.module file or for the tree product)
         '''
         if self.ready:
-            if exists(self.file) or basename(self.options.product)=='tree':
+            if exists(self.file) or basename(self.options.product) == 'tree':
                 if not self.options.moduledir:
                     repo_type = 'github' if self.options.github else 'svn'
                     self.options.moduledir = join(self.options.root,
@@ -176,8 +180,9 @@ class Modules:
                     if not self.options.test:
                         if not isdir(self.options.moduledir):
                             self.logger.info("Creating Modules directory {0}"
-                                            .format(self.options.moduledir))
-                            try: makedirs(self.options.moduledir)
+                                             .format(self.options.moduledir))
+                            try:
+                                makedirs(self.options.moduledir)
                             except OSError as ose:
                                 self.ready = False
                                 self.logger.error(ose.strerror)
@@ -197,18 +202,17 @@ class Modules:
                     self.logger.debug(mod)
                 else:
                     self.logger.info("Adding module file %(modulefile)s"
-                                        % self.product)
-                    with open(self.product['modulefile'],'w') as file:
+                                     % self.product)
+                    with open(self.product['modulefile'], 'w') as file:
                         file.write(mod)
                     if self.options.default:
                         versionfile = ["#%Module1.0\n",
                                        "set ModulesVersion \"%(version)s\"\n"
                                        % self.product]
                         self.product['versionfile'] = (
-                            join(self.directory['modules'],'.version'))
-                        with open(self.product['versionfile'],'w') as file:
+                            join(self.directory['modules'], '.version'))
+                        with open(self.product['versionfile'], 'w') as file:
                             file.writelines(versionfile)
                     self.built = True
-            elif basename(self.options.product)!='tree': self.built = False
-
-
+            elif basename(self.options.product) != 'tree':
+                self.built = False

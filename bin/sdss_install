@@ -19,12 +19,14 @@ install = Install(options=options)
 if options and options.version:
     print(__version__)
 else:
+    # sets up product info and directory paths
     install.set_ready()
     install.set_product()
     install.set_directory()
     install.set_directory_install()
     install.set_directory_work()
 
+    # checkout product as a working version
     if not options.module_only:
         install.clean_directory_install()
         if options.github:
@@ -36,10 +38,13 @@ else:
 
     install.reset_options_from_config()
     install.set_build_type()
+
+    # creates the real product installation directory
     if not options.module_only:
         install.logger_build_message()
         install.make_directory_install()
 
+    # sets up the product module file
     if install.ready:
         install.set_modules()
         install.modules.set_module()
@@ -54,6 +59,7 @@ else:
     if options.external_dependencies:
         install.install_external_dependencies()
 
+    # performs real product installation
     install.set_environ()
     if not options.module_only:
         install.build()
