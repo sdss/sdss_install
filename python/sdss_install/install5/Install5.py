@@ -4,8 +4,8 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
-from os import environ, chdir
-from os.path import isdir, join, basename, dirname
+from os import environ, chdir, rename
+from os.path import isdir, join, basename, dirname, abspath
 from subprocess import Popen, PIPE
 from re import compile
 
@@ -132,18 +132,38 @@ class Install5:
         '''Return latest sdss_install tag, if present, otherwise 'master'.'''
         version = 'master'
         if self.ready:
-            try:
-                product_root = environ['SDSS_INSTALL_PRODUCT_ROOT']
-            except:
-                product_root = None
-                self.logger.error('Environmental variable not found: SDSS_INSTALL_PRODUCT_ROOT. '
-                                  'Please set before running sdss_install_bootstrap.')
+            # try:
+            #     product_root = environ['SDSS_INSTALL_PRODUCT_ROOT']
+            # except:
+            #     product_root = None
+            #     self.logger.error('Environmental variable not found: SDSS_INSTALL_PRODUCT_ROOT. '
+            #                       'Please set before running sdss_install_bootstrap.')
 
-            sdss_install_dir = (join(product_root, 'github', 'sdss_install')
-                                if product_root else None)
-            sdss_install_master_dir = (join(sdss_install_dir, 'master')
-                                       if sdss_install_dir else None)
+            # set the product root
+            product_root = environ.get('SDSS_GIT_ROOT', None)
+            if not product_root:
+                root = environ.get("SDSS_INSTALL_PRODUCT_ROOT", None)
+                if not root:
+                    self.logger.error('SDSS_INSTALL_PRODUCT_ROOT environment variable not found. '
+                                      'Please rerun sdss_install_bootstrap and set it during configuration.')
+                product_root = join(root, 'github') if root else None
 
+            # set the sdss_install directory path
+            sdss_install_dir = environ.get("SDSS_INSTALL_DIR", None)
+            if not sdss_install_dir:
+                if product_root:
+                    sdss_install_dir = join(product_root, 'sdss_install')
+                else:
+                    sdss_install_dir = abspath(join(dirname(__file__), '../../../'))
+
+            # check for version sub-directory
+            if version in sdss_install_dir:
+                sdss_install_dir = dirname(sdss_install_dir)
+                sdss_install_master_dir = join(sdss_install_dir, version)
+            else:
+                sdss_install_master_dir = sdss_install_dir
+
+            # run checkout commands to switch to tag
             if sdss_install_master_dir and isdir(sdss_install_master_dir):
                 self.logger.debug('Changing directory to: {}'.format(
                     sdss_install_master_dir))
@@ -162,27 +182,20 @@ class Install5:
                     match = matches[0] if matches else str()
                     if match:
                         version = match.strip()
-                        # rename directory name master to version name
-                        self.logger.debug(
-                            'Changing directory to: {}'.format(sdss_install_dir))
+                        # changing to directory above
+                        self.logger.debug('Changing directory to: {}'.format(sdss_install_dir))
                         chdir(sdss_install_dir)
                         sdss_install_version_dir = (join(sdss_install_dir, version)
                                                     if sdss_install_dir else None)
-                        command = ['mv', sdss_install_master_dir,
-                                   sdss_install_version_dir]
-                        self.logger.debug('Running command: %s' %
-                                          ' '.join(command))
-                        (out, err, proc_returncode) = self.execute_command(
-                            command=command)
-                        if not proc_returncode == 0:
-                            self.ready = False
-                            self.logger.error('Error encountered while running command: {}. '
-                                              .format(' '.join(command)) +
-                                              'err: {}.'.format(err))
+                        # rename directory name master to tag name (but does not check it out)
+                        rename(sdss_install_master_dir, sdss_install_version_dir)
+                        self.logger.debug('Renaming {0} to {1}'.format(sdss_install_master_dir,
+                                          sdss_install_version_dir))
                     else:
                         version = 'master'
-                    self.logger.debug(
-                        'Changing directory to: {}'.format(product_root))
+
+                    # changing directory to the product root
+                    self.logger.debug('Changing directory to: {}'.format(product_root))
                     chdir(product_root)
                 else:
                     self.ready = False

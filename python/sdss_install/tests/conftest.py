@@ -21,6 +21,8 @@ more information.
 import pytest
 import sys
 import os
+import shutil
+import subprocess
 from sdss_install.application import Argument
 from sdss_install.install import Install
 
@@ -38,6 +40,8 @@ def monkey_setup(monkeypatch, tmpdir):
     os.chdir(tmpwork)
 
     sdss_install_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
+    #shutil.copytree(sdss_install_dir, tmpgit / 'sdss_install/master')
+    #sdss_install_dir = tmpgit / 'sdss_install/master'
 
     monkeypatch.setenv("SDSS_INSTALL_PRODUCT_ROOT", str(tmproot))
     monkeypatch.setenv("SDSS_GIT_ROOT", str(tmpgit))
@@ -45,6 +49,22 @@ def monkey_setup(monkeypatch, tmpdir):
     monkeypatch.setenv("SDSS_GIT_MODULES", str(tmpgitmod))
     monkeypatch.setenv("SDSS_SVN_MODULES", str(tmpsvnmod))
     monkeypatch.setenv("SDSS_INSTALL_DIR", str(sdss_install_dir))
+
+
+@pytest.fixture(scope='function')
+def setup_sdss_install(monkeypatch):
+
+    def git(*args):
+        return subprocess.check_call(['git'] + list(args))
+
+    tmpgit = os.environ.get("SDSS_GIT_ROOT")
+    install_dir = os.path.join(tmpgit, 'sdss_install')
+    os.makedirs(install_dir)
+    os.chdir(install_dir)
+    git("clone", "https://github.com/sdss/sdss_install", "master")
+    sdss_install_dir = os.path.join(install_dir, "master")
+    monkeypatch.setenv("SDSS_INSTALL_DIR", str(sdss_install_dir))
+
 
 
 @pytest.fixture(scope='function')
