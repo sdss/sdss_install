@@ -172,8 +172,8 @@ def build(external):
         if not options.keep:
             external.clean()
     yield external
-    external = None
     external.clean_directory_install()
+    external = None
 
 
 @pytest.fixture()

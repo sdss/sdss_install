@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Friday, 22nd November 2019 11:50:50 am
+# Last Modified: Friday, 22nd November 2019 2:14:17 pm
 # Modified By: Brian Cherinka
 
 
@@ -153,12 +153,13 @@ class TestDiffDirs(object):
 
     @pytest.mark.parametrize('install', [('--github', 'sdssdb', 'master')], ids=['sdssdb'], indirect=True)
     def test_git_mod(self, monkey_diffdir, module):
+        ''' test that git modules get placed in custom directory '''
         _assert_mod_setup(module, 'git', 'sdssdb', 'master', work=True)
         _assert_mod_build(module, 'git', 'sdssdb', 'master')
 
     @pytest.mark.parametrize('install', [('sdss/template', 'trunk')], ids=['template'], indirect=True)
     def test_svn_mod(self, monkey_diffdir, module):
-        ''' test that the build works when the product is already checked out '''
+        ''' test that svn modules get placed in custom directory '''
         # note transfer product has old etc/module.in; use template product instead for etc/template.module
         _assert_mod_setup(module, 'svn', 'template', 'trunk', work=True)
         _assert_mod_build(module, 'svn', 'template', 'trunk')
@@ -288,3 +289,11 @@ class TestModules(object):
         # note transfer product has old etc/module.in; use template product instead for etc/template.module
         _assert_mod_setup(module, 'svn', 'template', 'trunk', work=True)
         _assert_mod_build(module, 'svn', 'template', 'trunk')
+
+
+class TestBuild(object):
+    
+    @pytest.mark.parametrize('install', [('-D', '--github', 'sdssdb', 'master')], ids=['sdssdb'], indirect=True)
+    def test_git_build(self, build):
+        assert os.listdir(build.directory['install'])
+
