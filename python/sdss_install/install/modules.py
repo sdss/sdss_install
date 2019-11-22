@@ -171,12 +171,20 @@ class Modules:
             (if there is an etc/product.module file or for the tree product)
         '''
         if self.ready:
+            # only check for modulefiles if the original template modulefile exists
             if exists(self.file) or basename(self.options.product) == 'tree':
                 if not self.options.moduledir:
-                    repo_type = 'github' if self.options.github else 'svn'
-                    self.options.moduledir = join(self.options.root,
-                                                  repo_type,
-                                                  'modulefiles')
+                    # check for SDSS_GIT/SVN_MODULES environment variable first
+                    repo = 'GIT' if self.options.github else 'SVN'
+                    mod_dir = environ.get('SDSS_{0}_MODULES'.format(repo), None)
+                    # if none found, build the default modulefile path
+                    if not mod_dir:
+                        repo_type = 'github' if self.options.github else 'svn'
+                        mod_dir = join(self.options.root, repo_type, 'modulefiles')
+                    # set the modulefile directory
+                    self.options.moduledir = mod_dir
+                    
+                    # create the modulefiles directory if it doesn't exist
                     if not self.options.test:
                         if not isdir(self.options.moduledir):
                             self.logger.info("Creating Modules directory {0}"

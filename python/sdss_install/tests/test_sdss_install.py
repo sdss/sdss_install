@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Thursday, 21st November 2019 6:35:35 pm
+# Last Modified: Friday, 22nd November 2019 11:50:50 am
 # Modified By: Brian Cherinka
 
 
@@ -17,6 +17,18 @@ import logging
 import os
 from sdss_install.install.modules import Modules
 from sdss_install.utils.module import Module
+
+#
+#  34.7 seconds to run w/ "pytest" using orig_conftest.py 
+#
+# by class
+# TestOptions (0.04s)
+# TestGitSetup (1.26s)
+# TestSvnSetup (0.06s)
+# TestDiffDirs (13.21s)
+# TestNoVerDirs (1.46s)
+# TestInstall (10.74s)
+# TestModules (8.97s)
 
 
 class TestOptions(object):
@@ -138,7 +150,19 @@ class TestDiffDirs(object):
         work.build()
         assert os.listdir(work.directory['install'])
         assert os.environ.get("SDSS_SVN_ROOT") in work.directory['install']
-        
+
+    @pytest.mark.parametrize('install', [('--github', 'sdssdb', 'master')], ids=['sdssdb'], indirect=True)
+    def test_git_mod(self, monkey_diffdir, module):
+        _assert_mod_setup(module, 'git', 'sdssdb', 'master', work=True)
+        _assert_mod_build(module, 'git', 'sdssdb', 'master')
+
+    @pytest.mark.parametrize('install', [('sdss/template', 'trunk')], ids=['template'], indirect=True)
+    def test_svn_mod(self, monkey_diffdir, module):
+        ''' test that the build works when the product is already checked out '''
+        # note transfer product has old etc/module.in; use template product instead for etc/template.module
+        _assert_mod_setup(module, 'svn', 'template', 'trunk', work=True)
+        _assert_mod_build(module, 'svn', 'template', 'trunk')
+
 
 class TestNoVerDirs(object):
     ''' Tests for not setting a version sub-directory for git installs '''
@@ -212,52 +236,55 @@ class TestInstall(object):
         self._assert_install(work)
 
 
-class TestModules(object):
+def _assert_mod_setup(install, repo, name, version, work=False):
+    ''' assert some stuff regarding modulefile setup '''
+    assert isinstance(install.modules, Modules)
+    assert isinstance(install.modules.module, Module)
+    assert isinstance(install.modules.ready, Module)
+    modname = '{0}/etc/{1}.module'.format(version, name)
+    assert modname in install.modules.file
+    assert install.modules.keywords['name'] == name
+    assert install.modules.keywords['version'] == version
+    moddir = os.environ.get('SDSS_{0}_MODULES'.format(repo.upper()))
+    assert install.modules.directory['modules'] == name if not work else os.path.join(
+        moddir, name)
 
-    def _assert_setup(self, install, repo, name, version, work=False):
-        ''' assert some stuff regarding modulefile setup '''
-        assert isinstance(install.modules, Modules)
-        assert isinstance(install.modules.module, Module)
-        assert isinstance(install.modules.ready, Module)
-        modname = '{0}/etc/{1}.module'.format(version, name)
-        assert modname in install.modules.file
-        assert install.modules.keywords['name'] == name
-        assert install.modules.keywords['version'] == version
-        moddir = os.environ.get('SDSS_{0}_MODULES'.format(repo.upper()))
-        assert install.modules.directory['modules'] == name if not work else os.path.join(moddir, name)
-    
-    def _assert_build(self, install, repo, name, version):
-        ''' assert some stuff regarding post built module file '''
-        assert install.modules.built is True
-        moddir = os.environ.get('SDSS_{0}_MODULES'.format(repo.upper()))
-        modfile = os.path.join(moddir, name, version)
-        assert install.modules.product['modulefile'] == modfile
-        assert os.path.exists(modfile)
+
+def _assert_mod_build(install, repo, name, version):
+    ''' assert some stuff regarding post built module file '''
+    assert install.modules.built is True
+    moddir = os.environ.get('SDSS_{0}_MODULES'.format(repo.upper()))
+    modfile = os.path.join(moddir, name, version)
+    assert install.modules.product['modulefile'] == modfile
+    assert os.path.exists(modfile)
+
+
+class TestModules(object):
     
     @pytest.mark.parametrize('install', [('--module-only', '--github', 'sdssdb', 'master')], ids=['sdssdb'], indirect=True)
     def test_git_setup(self, module_setup):
-        self._assert_setup(module_setup, 'git', 'sdssdb', 'master')
+        _assert_mod_setup(module_setup, 'git', 'sdssdb', 'master')
 
     @pytest.mark.parametrize('install', [('--module-only', 'sdss/transfer', 'trunk')], ids=['transfer'], indirect=True)
     def test_svn_setup(self, module_setup):
-        self._assert_setup(module_setup, 'svn', 'transfer', 'trunk')
+        _assert_mod_setup(module_setup, 'svn', 'transfer', 'trunk')
 
     @pytest.mark.parametrize('install', [('--module-only', '--github', 'sdssdb', 'master')], ids=['sdssdb'], indirect=True)
     def test_build_fail_no_work(self, module):
         ''' test that the build fails when the product is not already checked out '''
-        self._assert_setup(module, 'git', 'sdssdb', 'master')
+        _assert_mod_setup(module, 'git', 'sdssdb', 'master')
         assert module.modules.built is False
         assert 'modulefile' not in module.modules.product
 
     @pytest.mark.parametrize('install', [('--github', 'sdssdb', 'master')], ids=['sdssdb'], indirect=True)
     def test_git_build(self, module):
         ''' test that the build works when the product is already checked out '''
-        self._assert_setup(module, 'git', 'sdssdb', 'master', work=True)
-        self._assert_build(module, 'git', 'sdssdb', 'master')
+        _assert_mod_setup(module, 'git', 'sdssdb', 'master', work=True)
+        _assert_mod_build(module, 'git', 'sdssdb', 'master')
         
     @pytest.mark.parametrize('install', [('sdss/template', 'trunk')], ids=['template'], indirect=True)
     def test_svn_build(self, module):
         ''' test that the build works when the product is already checked out '''
         # note transfer product has old etc/module.in; use template product instead for etc/template.module
-        self._assert_setup(module, 'svn', 'template', 'trunk', work=True)
-        self._assert_build(module, 'svn', 'template', 'trunk')
+        _assert_mod_setup(module, 'svn', 'template', 'trunk', work=True)
+        _assert_mod_build(module, 'svn', 'template', 'trunk')
