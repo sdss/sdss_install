@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Monday, 25th November 2019 1:36:56 pm
+# Last Modified: Monday, 25th November 2019 6:49:12 pm
 # Modified By: Brian Cherinka
 
 
@@ -351,17 +351,26 @@ class TestBuild(object):
 
 
 def git(*args):
+    ''' run a git command '''
     return subprocess.run(['git'] + list(args), capture_output=True)
+
+
+def get_tag():
+    ''' get the latest git tag '''
+    tmp = git('describe', '--tags')
+    tag = tmp.stdout.strip().decode('utf-8').split('-')[0]
+    return tag
 
 
 class TestBootstrap(object):
     ''' Test for bootstrap install of sdss_install '''
+    tag = get_tag()
 
     @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap')], ids=['sdss_install'], indirect=True)
     def test_setup(self, setup_sdss_install, setup):
         assert setup.options.product == 'sdss_install'
         assert setup.product['name'] == 'sdss_install'
-        assert setup.product['version'] == '1.0.5'
+        assert setup.product['version'] == self.tag
         assert setup.product['is_tag'] is True
         assert setup.directory['install'] == setup.directory['work']
         assert os.path.exists(setup.directory['install'])
@@ -374,13 +383,18 @@ class TestBootstrap(object):
         assert module.modules.built is True
         assert os.path.isfile(module.modules.product['modulefile'])
         assert os.environ.get("SDSS_GIT_MODULES") in module.modules.product['modulefile']
-        
+
+        # test the modulefile
+        _assert_mod_setup(module, 'git', 'sdss_install', self.tag, work=True)
+        _assert_mod_build(module, 'git', 'sdss_install', self.tag)
+        _assert_mod_version(module, 'sdss_install', self.tag)
+
     @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap')], ids=['sdss_install'], indirect=True)
     def test_bootstrap(self, setup_sdss_install, bootstrap):
         assert os.listdir(bootstrap.directory['install'])
         os.chdir(bootstrap.directory['install'])
         status = git('status')
-        assert 'HEAD detached at 1.0.5' in str(status.stdout)
+        assert 'HEAD detached at {0}'.format(self.tag) in str(status.stdout)
 
     @pytest.mark.parametrize('setup_sdss_install', [('--skip-git-verdirs',)], ids=['novers'], indirect=True)
     @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap', '--skip-git-verdirs')], ids=['sdss_install'], indirect=True)
@@ -388,4 +402,4 @@ class TestBootstrap(object):
         assert os.listdir(bootstrap.directory['install'])
         os.chdir(bootstrap.directory['install'])
         status = git('status')
-        assert 'HEAD detached at 1.0.5' in str(status.stdout)
+        assert 'HEAD detached at {0}'.format(self.tag) in str(status.stdout)
