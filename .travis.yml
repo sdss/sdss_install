@@ -22,7 +22,8 @@ notifications:
 
 # repo branches to test
 branches:
-- master
+  only:
+  - /.*/
 
 install:
 - pip install -U pip wheel --quiet
