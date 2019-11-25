@@ -182,6 +182,11 @@ class Install5:
                     match = matches[0] if matches else str()
                     if match:
                         version = match.strip()
+
+                        # exit if skipping version subdirectories
+                        if self.options.skip_git_verdirs:
+                            return version
+
                         # changing to directory above
                         self.logger.debug('Changing directory to: {}'.format(sdss_install_dir))
                         chdir(sdss_install_dir)

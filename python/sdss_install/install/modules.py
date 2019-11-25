@@ -204,6 +204,7 @@ class Modules:
             if exists(self.file):
                 self.product['modulefile'] = join(self.directory['modules'],
                                                   self.product['version'])
+                # read the modulefile template and substitute keywords
                 with open(self.file) as file:
                     mod = file.read().format(**self.keywords)
                 if self.options.test:
@@ -211,8 +212,12 @@ class Modules:
                 else:
                     self.logger.info("Adding module file %(modulefile)s"
                                      % self.product)
+                    # check if skipping version subdirectory
+                    mod = self._check_skip_version(mod)
+                    # write the new modulefile
                     with open(self.product['modulefile'], 'w') as file:
                         file.write(mod)
+                    # write the default .version file
                     if self.options.default:
                         versionfile = ["#%Module1.0\n",
                                        "set ModulesVersion \"%(version)s\"\n"
@@ -224,3 +229,63 @@ class Modules:
                     self.built = True
             elif basename(self.options.product) != 'tree':
                 self.built = False
+    
+    def _check_skip_version(self, data):
+        ''' Check to skip the version sub-directory in the module file
+        
+        Checks if the version sub-directory is being skipped or not.
+        If so, then it removes it from the modulefile data content.
+
+        Parameters:
+            data (str):
+                The modulefile data content
+        
+        Returns:
+            The modified modulefile data content
+        '''
+    
+        # do nothing if we aren't a git repo
+        if not self.options.github:
+            return data
+
+        # do nothing if we aren't skipping the version sub-directory
+        if not self.options.skip_git_verdirs:
+            return data
+
+        vstring = self._find_string('set PRODUCT_DIR', data)
+        if not vstring:
+            # return the original data if no PRODUCT_DIR can be found
+            return data
+
+        # remove the $version subdirectory from the modulefile
+        new_vstring = vstring.replace('/$version', '')
+        data = data.replace(vstring, new_vstring)
+        return data
+        
+
+    @staticmethod
+    def _find_string(data_string, data):
+        ''' Find a substring in some data
+        
+        Searches for a substring in read in modulefile data.
+        Searches from the substring up to the first "\n" entry.
+
+        Parameters:
+            data_string (str):
+                A sub_string to search for
+            data (str):
+                The full string data to search in
+        
+        Returns:
+            The substring
+        '''
+        # find starting index
+        vstart = data.find(data_string)
+        # if don't find anything return empty string
+        if vstart == -1:
+            return ''
+        # find ending index
+        vend = data.find('\n', vstart)
+        # extract the subtring
+        vstring = data[vstart:vend]
+        return vstring

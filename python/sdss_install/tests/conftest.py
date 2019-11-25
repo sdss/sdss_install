@@ -52,17 +52,23 @@ def monkey_setup(monkeypatch, tmpdir):
 
 
 @pytest.fixture(scope='function')
-def setup_sdss_install(monkeypatch):
+def setup_sdss_install(monkeypatch, request):
+    skipver = hasattr(request, 'param')
 
     def git(*args):
         return subprocess.check_call(['git'] + list(args))
 
     tmpgit = os.environ.get("SDSS_GIT_ROOT")
     install_dir = os.path.join(tmpgit, 'sdss_install')
-    os.makedirs(install_dir)
-    os.chdir(install_dir)
-    git("clone", "https://github.com/sdss/sdss_install", "master")
-    sdss_install_dir = os.path.join(install_dir, "master")
+    if skipver:
+        os.chdir(tmpgit)
+        git("clone", "https://github.com/sdss/sdss_install")
+    else:
+        install_dir = os.path.join(tmpgit, 'sdss_install')
+        os.makedirs(install_dir)
+        os.chdir(install_dir)
+        git("clone", "https://github.com/sdss/sdss_install", "master")
+    sdss_install_dir = os.path.join(install_dir, "master") if not skipver else install_dir
     monkeypatch.setenv("SDSS_INSTALL_DIR", str(sdss_install_dir))
 
 
@@ -192,7 +198,6 @@ def build(external):
         if not options.keep:
             external.clean()
     yield external
-    external.clean_directory_install()
     external = None
 
 

@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Friday, 22nd November 2019 5:53:52 pm
+# Last Modified: Monday, 25th November 2019 1:36:56 pm
 # Modified By: Brian Cherinka
 
 
@@ -194,6 +194,18 @@ class TestNoVerDirs(object):
         assert 'python' in idirs
         assert os.path.isdir(os.path.join(work.directory['install'], 'python/sdssdb'))
 
+    @pytest.mark.parametrize('install', [('--skip-git-verdirs', '--github', 'sdssdb', 'master')], ids=['sdssdb'], indirect=True)
+    def test_nover_modulefile(self, module):
+        _assert_mod_setup(module, 'git', 'sdssdb', 'master', work=True)
+        _assert_mod_build(module, 'git', 'sdssdb', 'master')
+        _assert_mod_version(module, 'sdssdb', 'master', skipver=True)
+
+    @pytest.mark.parametrize('install', [('--skip-git-verdirs', 'sdss/template', 'trunk')], ids=['template'], indirect=True)
+    def test_svn_nover_modulefile(self, module):
+        _assert_mod_setup(module, 'svn', 'template', 'trunk', work=True)
+        _assert_mod_build(module, 'svn', 'template', 'trunk')
+        _assert_mod_version(module, 'template', 'trunk')
+
 
 class TestInstall(object):
     ''' Test various installation steps for Git install '''
@@ -283,6 +295,7 @@ class TestModules(object):
         ''' test that the build works when the product is already checked out '''
         _assert_mod_setup(module, 'git', 'sdssdb', 'master', work=True)
         _assert_mod_build(module, 'git', 'sdssdb', 'master')
+        _assert_mod_version(module, 'sdssdb', 'master')
         
     @pytest.mark.parametrize('install', [('sdss/template', 'trunk')], ids=['template'], indirect=True)
     def test_svn_build(self, module):
@@ -290,7 +303,45 @@ class TestModules(object):
         # note transfer product has old etc/module.in; use template product instead for etc/template.module
         _assert_mod_setup(module, 'svn', 'template', 'trunk', work=True)
         _assert_mod_build(module, 'svn', 'template', 'trunk')
+        _assert_mod_version(module, 'template', 'trunk')
 
+
+def _find_string(data_string, data):
+    ''' Find a substring in some data
+    
+    Parameters:
+        data_string (str):
+            A sub_string to search for
+        data (str):
+            The full string data to search in
+    '''
+    vstart = data.find(data_string)
+    vend = data.find('\n', vstart)
+    vstring = data[vstart:vend]
+    return vstring
+    
+    
+def _assert_mod_version(install, name, version, skipver=None):
+    ''' asserts version inside output module file '''
+
+    modfile = install.modules.product['modulefile']
+    # open file
+    with open(modfile, 'r') as file:
+        data = file.read()
+
+    # find strings
+    name_string = _find_string('set product', data)
+    version_string = _find_string('set version', data)
+    product_string = _find_string('set PRODUCT_DIR', data)
+    
+    assert name in name_string
+    assert version in version_string
+
+    if skipver:
+        assert '$version' not in product_string
+    else:
+        assert '$version' in product_string
+            
 
 class TestBuild(object):
     
@@ -326,6 +377,14 @@ class TestBootstrap(object):
         
     @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap')], ids=['sdss_install'], indirect=True)
     def test_bootstrap(self, setup_sdss_install, bootstrap):
+        assert os.listdir(bootstrap.directory['install'])
+        os.chdir(bootstrap.directory['install'])
+        status = git('status')
+        assert 'HEAD detached at 1.0.5' in str(status.stdout)
+
+    @pytest.mark.parametrize('setup_sdss_install', [('--skip-git-verdirs',)], ids=['novers'], indirect=True)
+    @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap', '--skip-git-verdirs')], ids=['sdss_install'], indirect=True)
+    def test_diffdirs_novers(self, monkey_diffdir, setup_sdss_install, bootstrap):
         assert os.listdir(bootstrap.directory['install'])
         os.chdir(bootstrap.directory['install'])
         status = git('status')
