@@ -31,8 +31,7 @@ branches:
 before_install:
   - sudo apt-get update -y
   - sudo apt-get install -y lmod
-  - source /opt/apps/lmod/lmod/init/profile
-  - which module
+  - source /usr/share/lmod/lmod/init/profile
 
 install:
 - git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
