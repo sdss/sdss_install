@@ -54,7 +54,7 @@ def monkey_setup(monkeypatch, tmpdir):
     tmpgitmod = tmpgit.mkdir("modulefiles")
     tmpsvnmod = tmpsvn.mkdir("modulefiles")
     # change to working directory
-    os.chdir(tmpwork)
+    os.chdir(str(tmpwork))
 
     sdss_install_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
     #shutil.copytree(sdss_install_dir, tmpgit / 'sdss_install/master')
@@ -79,7 +79,7 @@ def setup_sdss_install(monkeypatch, request):
     tmpgit = os.environ.get("SDSS_GIT_ROOT")
     install_dir = os.path.join(tmpgit, 'sdss_install')
     if skipver:
-        os.chdir(tmpgit)
+        os.chdir(str(tmpgit))
         git("clone", "https://github.com/sdss/sdss_install")
     else:
         install_dir = os.path.join(tmpgit, 'sdss_install')
