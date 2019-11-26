@@ -10,12 +10,15 @@ python:
 - '2.7'
 - '3.5'
 - '3.6'
+- '3.7'
 
 os:
 - linux
 
 matrix:
   fast_finish: true
+  allow_failures:
+    - python: '2.7'
 
 notifications:
   email: false

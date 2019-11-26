@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Tuesday, 26th November 2019 11:13:50 am
+# Last Modified: Tuesday, 26th November 2019 11:54:19 am
 # Modified By: Brian Cherinka
 
 
@@ -16,6 +16,7 @@ import pytest
 import logging
 import subprocess
 import os
+import sys
 from sdss_install.install.modules import Modules
 from sdss_install.utils.module import Module
 
@@ -374,7 +375,11 @@ class TestBuild(object):
 
 def git(*args):
     ''' run a git command '''
-    return subprocess.run(['git'] + list(args), capture_output=True)
+    if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+        kwargs = {'capture_output': True}
+    else:
+        kwargs = {'stdout': subprocess.PIPE}
+    return subprocess.run(['git'] + list(args), **kwargs)
 
 
 def get_tag():
