@@ -71,7 +71,7 @@ class Install5:
                 if self.options.product_version.endswith('/'):
                     self.options.product_version = (
                         dirname(self.options.product_version))
-                self.validate_product_and_version()
+                self.validate_product_and_version(github_url=self.options.github_url)
             else:
                 self.ready = False
                 self.logger.error(

@@ -90,4 +90,9 @@ def sdss_install():
                         default=str())
     parser.add_argument('-o', '--skip-git-verdirs', action='store_true', dest='skip_git_verdirs', 
                         help='Set to skip checkout of git repos in version subdirectories')
+
+    parser.add_argument('--github-url', action='store', dest='github_url',
+                        metavar='GITHUB_URL', help='Github url to use',
+                        default=None)
+    #https: // github.com/sdss
     return parser

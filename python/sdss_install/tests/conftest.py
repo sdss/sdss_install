@@ -66,6 +66,7 @@ def monkey_setup(monkeypatch, tmpdir):
     monkeypatch.setenv("SDSS_GIT_MODULES", str(tmpgitmod))
     monkeypatch.setenv("SDSS_SVN_MODULES", str(tmpsvnmod))
     monkeypatch.setenv("SDSS_INSTALL_DIR", str(sdss_install_dir))
+    monkeypatch.setenv("SDSS4TOOLS_LONGPATH", 'True')
 
 
 @pytest.fixture(scope='function')
@@ -117,6 +118,7 @@ def core_install(params):
     '''
     sys.argv[1:] = params
     options = Argument('sdss_install').options
+    options.github_url = 'https://github.com/sdss'
     install = Install(options=options)
     return install
 

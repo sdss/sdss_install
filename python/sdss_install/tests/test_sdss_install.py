@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Tuesday, 26th November 2019 11:54:19 am
+# Last Modified: Tuesday, 26th November 2019 1:10:03 pm
 # Modified By: Brian Cherinka
 
 
@@ -21,16 +21,18 @@ from sdss_install.install.modules import Modules
 from sdss_install.utils.module import Module
 
 #
-#  34.7 seconds to run w/ "pytest" using orig_conftest.py 
+#  68.92 seconds to run w/ "pytest" using conftest.py 
 #
 # by class
-# TestOptions (0.04s)
-# TestGitSetup (1.26s)
+# TestOptions (0.13s)
+# TestGitSetup (0.6s)
 # TestSvnSetup (0.06s)
-# TestDiffDirs (13.21s)
-# TestNoVerDirs (1.46s)
-# TestInstall (10.74s)
-# TestModules (8.97s)
+# TestDiffDirs (21.07s)
+# TestNoVerDirs (9.7s)
+# TestInstall (17.85s)
+# TestModules (9.6s)
+# TestBuild (1.11s)
+# TestBoostrap (9.38s)
 
 
 class TestOptions(object):
@@ -44,6 +46,7 @@ class TestOptions(object):
         assert install.ready is False
         assert install.options.root == os.environ.get('SDSS_INSTALL_PRODUCT_ROOT')
         assert 'pytest' in install.options.root
+        assert install.options.github_url == 'https://github.com/sdss'
 
 
 def _assert_product(install, repo, name, version, tag=False, branch=False):
