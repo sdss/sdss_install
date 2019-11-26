@@ -313,11 +313,12 @@ class Install5:
                                   'type: {}'.format(type))
         return bool(out)
 
-    def set_sdss_github_remote_url(self):
+    def set_sdss_github_remote_url(self, use_public=None):
         '''Set the SDSS GitHub HTTPS remote URL'''
         if self.ready:
             product = self.options.product if self.options else None
-            self.github_remote_url = ('git@github.com:sdss/%s.git' % product
+            url = 'https://github.com/sdss' if use_public else 'git@github.com:sdss'
+            self.github_remote_url = (url + '/%s.git' % product
                                       if product else None)
 
     def fetch(self):

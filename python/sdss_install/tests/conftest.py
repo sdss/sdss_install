@@ -151,7 +151,7 @@ def work(setup):
     if not options.module_only:
         setup.clean_directory_install()
         if options.github:
-            setup.set_sdss_github_remote_url()
+            setup.set_sdss_github_remote_url(use_public=True)
         else:
             setup.set_svncommand()
             setup.set_exists()
