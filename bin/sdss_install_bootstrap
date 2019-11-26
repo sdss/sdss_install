@@ -14,6 +14,7 @@ function usage() {
     echo "    -r = Set or override the product root for sdss_install"
     echo "    -t = Test mode.  Do not make any changes.  Implies -v."
     echo "    -v = Verbose mode. Print lots of extra information."
+    echo "    -s = Skip git version sub-directories "
     ) >&2
 }
 #
@@ -23,6 +24,7 @@ modules=''
 root=''
 test=''
 verbose=''
+skipgitver=''
 while getopts hm:r:tU:v argname; do
     case ${argname} in
         h) usage; exit 0 ;;
@@ -30,6 +32,7 @@ while getopts hm:r:tU:v argname; do
         r) root=${OPTARG} ;;
         t) test='-t' ;;
         v) verbose='-v' ;;
+        s) skipgitver='--skip-git-verdirs' ;;
         *) usage; exit 1 ;;
     esac
 done
@@ -80,5 +83,5 @@ else
 fi
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - {SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
-${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}
+${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose} ${skipgitver}
 
