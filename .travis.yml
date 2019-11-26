@@ -29,6 +29,8 @@ branches:
   - /.*/
 
 install:
+- git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+- git fetch --unshallow --tags
 - pip install -U pip wheel --quiet
 - pip install --upgrade setuptools --quiet
 - pip install -r requirements.txt --quiet
