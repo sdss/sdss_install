@@ -29,13 +29,12 @@ branches:
   - /.*/
 
 before_install:
+  # installing lmod modules
   - sudo apt-get update -y
   - sudo apt-get install -y lmod
   - source /usr/share/lmod/lmod/init/profile
 
 install:
-- git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
-- git fetch --unshallow --tags
 - pip install -U pip wheel --quiet
 - pip install --upgrade setuptools --quiet
 - pip install -r requirements.txt --quiet

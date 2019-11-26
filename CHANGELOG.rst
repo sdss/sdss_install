@@ -18,6 +18,8 @@ Added
 - Added new --skip-git-verdirs option to turn off use of version sub-directories for git repos
 - Initial test suite for better failure tracking and robustness
 - Updated changelog
+- Set up testing on Travis-CI
+- Added new --github-url option to optionally set a different public git url
 
 Fixed
 ^^^^^
