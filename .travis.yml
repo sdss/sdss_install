@@ -35,7 +35,7 @@ install:
 #- python setup.py install 
 
 script:
-- pytest python/sdss_install/tests --cov python/sdss_install --cov-report html
+- pytest --public-svn-only python/sdss_install/tests --cov python/sdss_install --cov-report html
 
 after_success:
 - coveralls
