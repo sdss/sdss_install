@@ -21,7 +21,6 @@ more information.
 import pytest
 import sys
 import os
-import shutil
 import subprocess
 from sdss_install.application import Argument
 from sdss_install.install import Install
@@ -43,7 +42,7 @@ def pytest_runtest_setup(item):
 
 #
 # Fixtures
-# 
+
 
 @pytest.fixture(scope='function', autouse=True)
 def monkey_setup(monkeypatch, tmpdir):
