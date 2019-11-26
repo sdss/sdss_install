@@ -57,7 +57,7 @@ class Install5:
                     self.options.default = True
                     self.options.product = 'sdss_install'
                     self.options.product_version = self.get_bootstrap_version()
-                    if self.get_valid_version() and self.ready:
+                    if self.get_valid_version(github_url=self.options.github_url) and self.ready:
                         self.logger.info(
                             "Selected sdss_install/{} for bootstrap installation."
                             .format(self.options.product_version))
