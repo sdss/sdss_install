@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Monday, 25th November 2019 6:49:12 pm
+# Last Modified: Tuesday, 26th November 2019 11:13:50 am
 # Modified By: Brian Cherinka
 
 
@@ -105,6 +105,7 @@ class TestGitSetup(object):
 
 
 @pytest.mark.parametrize('install', [('-t', 'sdss/transfer', 'trunk')], ids=['transfer'], indirect=True)
+@pytest.mark.privatesvn
 class TestSvnSetup(object):
     ''' tests the initial setup when installing an svn product '''
 
@@ -133,6 +134,7 @@ class TestDiffDirs(object):
 
 
     @pytest.mark.parametrize('install', [('-t', 'transfer', 'trunk')], ids=['transfer'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_root(self, monkey_diffdir, setup):
         root = setup.options.root
         assert root not in setup.directory['root']
@@ -146,6 +148,7 @@ class TestDiffDirs(object):
         assert os.environ.get("SDSS_GIT_ROOT") in work.directory['install']
 
     @pytest.mark.parametrize('install', [('sdss/transfer', 'trunk')], ids=['sdssdb'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_install(self, monkey_diffdir, work):
         work.set_build_type()
         work.build()
@@ -159,6 +162,7 @@ class TestDiffDirs(object):
         _assert_mod_build(module, 'git', 'sdssdb', 'master')
 
     @pytest.mark.parametrize('install', [('sdss/template', 'trunk')], ids=['template'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_mod(self, monkey_diffdir, module):
         ''' test that svn modules get placed in custom directory '''
         # note transfer product has old etc/module.in; use template product instead for etc/template.module
@@ -176,6 +180,7 @@ class TestNoVerDirs(object):
                      noverdir=setup.options.skip_git_verdirs)
 
     @pytest.mark.parametrize('install', [('-t', '--skip-git-verdirs', 'sdss/transfer', 'trunk')], ids=['transfer'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_no_version_dir(self, setup):
         ''' ensure version is still set for svn installs '''
         assert setup.options.skip_git_verdirs is True
@@ -201,6 +206,7 @@ class TestNoVerDirs(object):
         _assert_mod_version(module, 'sdssdb', 'master', skipver=True)
 
     @pytest.mark.parametrize('install', [('--skip-git-verdirs', 'sdss/template', 'trunk')], ids=['template'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_nover_modulefile(self, module):
         _assert_mod_setup(module, 'svn', 'template', 'trunk', work=True)
         _assert_mod_build(module, 'svn', 'template', 'trunk')
@@ -239,6 +245,7 @@ class TestInstall(object):
         self._assert_install(work)
         
     @pytest.mark.parametrize('install', [('sdss/transfer', 'trunk')], ids=['transfer'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_install(self, work):
         # assert work dir stuff
         self._assert_work(work, 'svn', 'transfer')
@@ -248,6 +255,19 @@ class TestInstall(object):
 
         # assert the install directory gets populated
         self._assert_install(work)
+
+    @pytest.mark.parametrize('install', [('--public', 'sdss/sdss4tools', 'trunk')], ids=['sdss4tools'], indirect=True)
+    def test_public_svn(self, work):
+        # assert work dir stuff
+        self._assert_work(work, 'svn', 'sdss4tools')
+
+        # assert the proper build type
+        self._assert_build(work)
+
+        # assert the install directory gets populated
+        self._assert_install(work)
+
+        assert 'public' in work.product['url']
 
 
 def _assert_mod_setup(install, repo, name, version, work=False):
@@ -280,6 +300,7 @@ class TestModules(object):
         _assert_mod_setup(module_setup, 'git', 'sdssdb', 'master')
 
     @pytest.mark.parametrize('install', [('--module-only', 'sdss/transfer', 'trunk')], ids=['transfer'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_setup(self, module_setup):
         _assert_mod_setup(module_setup, 'svn', 'transfer', 'trunk')
 
@@ -298,6 +319,7 @@ class TestModules(object):
         _assert_mod_version(module, 'sdssdb', 'master')
         
     @pytest.mark.parametrize('install', [('sdss/template', 'trunk')], ids=['template'], indirect=True)
+    @pytest.mark.privatesvn
     def test_svn_build(self, module):
         ''' test that the build works when the product is already checked out '''
         # note transfer product has old etc/module.in; use template product instead for etc/template.module

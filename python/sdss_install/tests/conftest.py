@@ -27,6 +27,24 @@ from sdss_install.application import Argument
 from sdss_install.install import Install
 
 
+# PYTEST MODIFIERS
+# -----------------
+def pytest_addoption(parser):
+    """Add new options"""
+    # run public svn tests only
+    parser.addoption('--public-svn-only', action='store_true',
+                     default=False, help='Run public svn tests.')
+
+
+def pytest_runtest_setup(item):
+    """Skip private svn tests."""
+    if 'privatesvn' in item.keywords and item.config.getoption('--public-svn-only'):
+        pytest.skip('Not a public svn test')
+
+#
+# Fixtures
+# 
+
 @pytest.fixture(scope='function', autouse=True)
 def monkey_setup(monkeypatch, tmpdir):
     ''' Fixture that automatically sets up a temporary install directory '''
