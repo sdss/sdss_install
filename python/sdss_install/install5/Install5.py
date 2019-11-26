@@ -253,9 +253,9 @@ class Install5:
             self.product['is_master'] = (
                 self.options.product_version == 'master')
             self.product['is_branch'] = (True if self.product['is_master']
-                                         else self.is_type(type='branch'))
+                                         else self.is_type(type='branch', github_url=self.options.github_url))
             self.product['is_tag'] = (False if self.product['is_branch']
-                                      else self.is_type(type='tag'))
+                                      else self.is_type(type='tag', github_url=self.options.github_url))
             self.product['is_master_or_branch'] = (self.product['is_master'] or
                                                    self.product['is_branch'])
             self.product['checkout_or_export'] = ('checkout'
