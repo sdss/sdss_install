@@ -84,4 +84,6 @@ def sdss_install():
     parser.add_argument('-x', '--external_dependencies', action='store', dest='external_dependencies',
         metavar='DIR', help='Set a string of external dependency clone commands',
         default=str())
+    parser.add_argument('-H', '--https', action='store_true', dest='https',
+        help='Use GitHub https instead of ssh', default=False)
     return parser
