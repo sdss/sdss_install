@@ -61,8 +61,9 @@ read mysvnmod
 
 # set sdss_install dir
 ((steps++))
-defsdssinstall=$git/sdss_install/master
-echo $steps'.) Set $SDSS_INSTALL_DIR environment variable. ' [Default: $defsdssinstall]
+curdir=$(pwd)
+defsdssinstall=${curdir/\/bin}
+echo $steps'.) Set temporary $SDSS_INSTALL_DIR environment variable. ' [Default: $defsdssinstall]
 read mysdssinstall
 
 [[ -z $mysdssinstall ]] && sdssinstall=$defsdssinstall || sdssinstall=$mysdssinstall
@@ -123,7 +124,7 @@ read answer
 
 case "$answer" in
     [yY] | [yY][eE][sS])
-        python add_to_config.py -e SDSS_INSTALL_PRODUCT_ROOT=${root} SDSS_GIT_ROOT=${git} SDSS_SVN_ROOT=${svn} SDSS_GIT_MODULES=${gitmod} SDSS_SVN_MODULES=${svnmod} SDSS_INSTALL_DIR=${sdssinstall} ;;
+        python add_to_config.py -e SDSS_INSTALL_PRODUCT_ROOT=${root} SDSS_GIT_ROOT=${git} SDSS_SVN_ROOT=${svn} SDSS_GIT_MODULES=${gitmod} SDSS_SVN_MODULES=${svnmod} ;;
 esac
 
 

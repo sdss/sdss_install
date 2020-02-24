@@ -7,6 +7,4 @@ envs:
   SDSS_GIT_MODULES: $SDSS_GIT_ROOT/modulefiles
   SDSS_SVN_MODULES: $SDSS_SVN_ROOT/modulefiles
   SDSS_GITHUB_KEY: ''
-  SDSS_INSTALL_DIR: $SDSS_GIT_ROOT/sdss_install/master
-
 
