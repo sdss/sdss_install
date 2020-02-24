@@ -40,9 +40,9 @@ class Module:
         if self.ready:
             self.options = options if options else None
             if not self.options:
-                self.ready = False
-                self.logger.error('Unable to set_options' +
-                                  'self.options: {}'.format(self.options))
+                #self.ready = False # Don't require in the case of testing
+                self.logger.warning('Unable to set_options' +
+                                    'self.options: {}'.format(self.options))
 
     def set_modules(self):
         self.set_modules_home()
@@ -55,7 +55,7 @@ class Module:
         self.modules_home = dict()
         if self.ready:
             modules_home = None
-            if self.options.modules_home:
+            if self.options and self.options.modules_home:
                 modules_home = self.options.modules_home
             else:
                 try: modules_home = environ['MODULESHOME']
@@ -120,7 +120,10 @@ class Module:
         if self.command:
             proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
             if proc:
-                (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
+                (out, err) = proc.communicate() if proc else (None,None)
+                self.stdout = out.decode("utf-8") if isinstance(out,bytes) else out
+                self.stderr = err.decode("utf-8") if isinstance(err,bytes) else err
+
                 self.returncode = proc.returncode if proc else None
             else:
                 self.ready = False
