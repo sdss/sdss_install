@@ -298,10 +298,10 @@ class Install:
                                  % self.directory)
             self.export_data()
 
-    def set_sdss_github_remote_url():
-        '''Wrapper for method Install5.set_sdss_github_remote_url()'''
+    def set_sdss_github_remote_url(self, use_public=None):
+        '''Set the set_sdss_github_remote_url() of class Install5'''
         if self.ready and self.options.github and self.install5:
-            self.install5.set_sdss_github_remote_url()
+            self.install5.set_sdss_github_remote_url(use_public=use_public)
             self.import_data()
 
     def set_svncommand(self):
@@ -574,11 +574,6 @@ class Install:
         if self.ready:
             self.install5.checkout()
             self.import_data()
-
-    def set_sdss_github_remote_url(self, use_public=None):
-        '''Set the set_sdss_github_remote_url() of class Install5'''
-        if self.ready and self.options.github:
-            self.install5.set_sdss_github_remote_url(use_public=use_public)
 
     def reset_options_from_config(self):
         '''
