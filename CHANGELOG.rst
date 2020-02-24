@@ -6,8 +6,8 @@ Change Log
 
 This document records the main changes to the sdss_install code.
 
-.. _changelog-1.0.6:
-1.0.6 (unreleased)
+.. _changelog-1.0.7:
+1.0.7 (unreleased)
 ------------------
 
 Added
@@ -24,6 +24,18 @@ Added
 Fixed
 ^^^^^
 - synchronized package version with tag versions
+
+.. _changelog-1.0.6:
+1.0.6 (2019-12-09)
+------------------
+
+Added
+^^^^^
+- The new command line option --https enables the user to use sdss_install with either https or ssh.
+
+Fixed
+^^^^^
+- Fixes Issue :issue:`#46` - no option for git install from https
 
 .. _changelog-1.0.5:
 1.0.5 (2019-11-13)
