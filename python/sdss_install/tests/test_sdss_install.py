@@ -7,7 +7,7 @@
 # Created: Tuesday, 19th November 2019 11:02:59 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2019 Brian Cherinka
-# Last Modified: Tuesday, 26th November 2019 1:10:03 pm
+# Last Modified: Monday, 24th February 2020 6:08:28 pm
 # Modified By: Brian Cherinka
 
 
@@ -396,19 +396,16 @@ class TestBootstrap(object):
     ''' Test for bootstrap install of sdss_install '''
     tag = get_tag()
 
-    @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap')], ids=['sdss_install'], indirect=True)
+    @pytest.mark.parametrize('install', [('--github', '--bootstrap')], ids=['sdss_install'], indirect=True)
     def test_setup(self, setup_sdss_install, setup):
         assert setup.options.product == 'sdss_install'
         assert setup.product['name'] == 'sdss_install'
         assert setup.product['version'] == self.tag
         assert setup.product['is_tag'] is True
-        assert setup.directory['install'] == setup.directory['work']
-        assert os.path.exists(setup.directory['install'])
-        os.chdir(setup.directory['install'])
-        status = git('status')
-        assert 'On branch master' in str(status.stdout)
+        assert setup.directory['install'] == os.path.join(os.getenv("SDSS_GIT_ROOT"), 'sdss_install', self.tag)
+        assert setup.directory['work'] == os.path.join(os.getenv("SDSS_GIT_ROOT"), 'sdss_install-{0}'.format(self.tag))
 
-    @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap')], ids=['sdss_install'], indirect=True)
+    @pytest.mark.parametrize('install', [('--github', '--bootstrap')], ids=['sdss_install'], indirect=True)
     def test_module(self, setup_sdss_install, module):
         assert module.modules.built is True
         assert os.path.isfile(module.modules.product['modulefile'])
@@ -419,7 +416,7 @@ class TestBootstrap(object):
         _assert_mod_build(module, 'git', 'sdss_install', self.tag)
         _assert_mod_version(module, 'sdss_install', self.tag)
 
-    @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap')], ids=['sdss_install'], indirect=True)
+    @pytest.mark.parametrize('install', [('--github', '--bootstrap')], ids=['sdss_install'], indirect=True)
     def test_bootstrap(self, setup_sdss_install, bootstrap):
         assert os.listdir(bootstrap.directory['install'])
         os.chdir(bootstrap.directory['install'])
@@ -427,7 +424,7 @@ class TestBootstrap(object):
         assert 'HEAD detached at {0}'.format(self.tag) in str(status.stdout)
 
     @pytest.mark.parametrize('setup_sdss_install', [('--skip-git-verdirs',)], ids=['novers'], indirect=True)
-    @pytest.mark.parametrize('install', [('--github', '--module-only', '--bootstrap', '--skip-git-verdirs')], ids=['sdss_install'], indirect=True)
+    @pytest.mark.parametrize('install', [('--github', '--bootstrap', '--skip-git-verdirs')], ids=['sdss_install'], indirect=True)
     def test_diffdirs_novers(self, monkey_diffdir, setup_sdss_install, bootstrap):
         assert os.listdir(bootstrap.directory['install'])
         os.chdir(bootstrap.directory['install'])

@@ -67,6 +67,7 @@ def monkey_setup(monkeypatch, tmpdir):
     monkeypatch.setenv("SDSS_SVN_MODULES", str(tmpsvnmod))
     monkeypatch.setenv("SDSS_INSTALL_DIR", str(sdss_install_dir))
     monkeypatch.setenv("SDSS4TOOLS_LONGPATH", 'True')
+    monkeypatch.setenv("WORKDIR", tmpwork)
 
 
 @pytest.fixture(scope='function')
@@ -76,13 +77,15 @@ def setup_sdss_install(monkeypatch, request):
     def git(*args):
         return subprocess.check_call(['git'] + list(args))
 
-    tmpgit = os.environ.get("SDSS_GIT_ROOT")
-    install_dir = os.path.join(tmpgit, 'sdss_install')
+    #tmpgit = os.environ.get("SDSS_GIT_ROOT")
+    #tmpwork = os.path.join(os.path.dirname(os.getenv("SDSS_GIT_ROOT")), 'work')
+    tmpwork = os.environ.get("WORKDIR")
+    install_dir = os.path.join(tmpwork, 'sdss_install')
     if skipver:
-        os.chdir(str(tmpgit))
+        os.chdir(str(tmpwork))
         git("clone", "https://github.com/sdss/sdss_install")
     else:
-        install_dir = os.path.join(tmpgit, 'sdss_install')
+        install_dir = os.path.join(tmpwork, 'sdss_install')
         os.makedirs(install_dir)
         os.chdir(install_dir)
         git("clone", "https://github.com/sdss/sdss_install", "master")
@@ -90,14 +93,14 @@ def setup_sdss_install(monkeypatch, request):
     monkeypatch.setenv("SDSS_INSTALL_DIR", str(sdss_install_dir))
 
 
-
 @pytest.fixture(scope='function')
 def monkey_diffdir(monkeypatch, tmpdir):
     ''' Fixture to monkeypatch different git and svn root directories '''
     tmproot = tmpdir / "software" / "sdss"
-    tmpgit = (tmpdir / 'software').mkdir('Work').mkdir('git')
+    tmpwork = (tmpdir / 'software').mkdir('Work')
+    tmpgit = tmpwork.mkdir('git')
     tmpsvn = (tmpdir / 'software').mkdir('svn')
-    tmpgitmod = (tmpdir / "software" / 'Work').mkdir("modulefiles")
+    tmpgitmod = tmpwork.mkdir("modulefiles")
     tmpsvnmod = tmpsvn.mkdir("modulefiles")
 
     monkeypatch.setenv("SDSS_INSTALL_PRODUCT_ROOT", str(tmproot))
@@ -105,6 +108,7 @@ def monkey_diffdir(monkeypatch, tmpdir):
     monkeypatch.setenv("SDSS_SVN_ROOT", str(tmpsvn))
     monkeypatch.setenv("SDSS_GIT_MODULES", str(tmpgitmod))
     monkeypatch.setenv("SDSS_SVN_MODULES", str(tmpsvnmod))
+    monkeypatch.setenv("WORKDIR", tmpwork)
 
 
 def core_install(params):
@@ -221,16 +225,21 @@ def build(external):
 
 
 @pytest.fixture()
-def bootstrap(build):
-    ''' Fixture for running bootstrap step for sdss_install '''
-    build.checkout()
+def finalize(build):
+    ''' Fixture to finalize an installation '''
+    build.finalize()
+
     yield build
     build = None
 
 
 @pytest.fixture()
-def finalize(build):
-    build.finalize()
+def bootstrap(finalize):
+    ''' Fixture for running bootstrap step for sdss_install
 
-    yield build
-    build = None
+    As of PR #48, this now just returns the finalize fixture
+    since bootstrap now just uses sdss_install to install
+    sdss_install
+    '''
+    yield finalize
+    finalize = None

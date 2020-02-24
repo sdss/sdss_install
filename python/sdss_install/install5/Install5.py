@@ -4,8 +4,8 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
-from os import environ, chdir, rename
-from os.path import isdir, join, basename, dirname, abspath
+from os import environ, chdir, rename, makedirs
+from os.path import isdir, join, basename, dirname, abspath, exists
 from subprocess import Popen, PIPE
 from re import compile
 
@@ -132,13 +132,6 @@ class Install5:
         '''Return latest sdss_install tag, if present, otherwise 'master'.'''
         version = 'master'
         if self.ready:
-            # try:
-            #     product_root = environ['SDSS_INSTALL_PRODUCT_ROOT']
-            # except:
-            #     product_root = None
-            #     self.logger.error('Environmental variable not found: SDSS_INSTALL_PRODUCT_ROOT. '
-            #                       'Please set before running sdss_install_bootstrap.')
-
             # set the product root
             product_root = environ.get('SDSS_GIT_ROOT', None)
             if not product_root:
@@ -147,6 +140,9 @@ class Install5:
                     self.logger.error('SDSS_INSTALL_PRODUCT_ROOT environment variable not found. '
                                       'Please rerun sdss_install_bootstrap and set it during configuration.')
                 product_root = join(root, 'github') if root else None
+            if not exists(product_root):
+                self.logger.info('Creating product_root {0}'.format(product_root))
+                makedirs(product_root)
 
             # set the sdss_install directory path
             sdss_install_dir = environ.get("SDSS_INSTALL_DIR", None)
@@ -190,12 +186,6 @@ class Install5:
                         # changing to directory above
                         self.logger.debug('Changing directory to: {}'.format(sdss_install_dir))
                         chdir(sdss_install_dir)
-                        sdss_install_version_dir = (join(sdss_install_dir, version)
-                                                    if sdss_install_dir else None)
-                        # rename directory name master to tag name (but does not check it out)
-                        rename(sdss_install_master_dir, sdss_install_version_dir)
-                        self.logger.debug('Renaming {0} to {1}'.format(sdss_install_master_dir,
-                                          sdss_install_version_dir))
                     else:
                         version = 'master'
 
@@ -358,62 +348,64 @@ class Install5:
 
     def checkout(self):
         '''Checkout branch or tag and, if tag, remove git remote origin.'''
-        if self.ready:
-            version = None
-            install_dir = None
-            if self.external_product:
-                install_dir = self.external_product['install_dir']
-                if self.external_product['is_master']:
-                    self.logger.debug('Skipping checkout for {} branch'
-                                      .format(self.external_product['version']))
-                else:
-                    if self.external_product['is_branch']:
-                        version = self.external_product['version']
-                        s = 'Completed checkout of branch {}'.format(version)
-                        remove = False
-                    elif self.external_product['is_tag']:
-                        version = 'tags/' + self.external_product['version']
-                        s = ('Completed checkout of tag {} '.format(version) +
-                             'and removal of git remote origin')
-                        remove = True
-                    else:
-                        version = None
+        if not self.ready:
+            return
+
+        version = None
+        install_dir = None
+        if self.external_product:
+            install_dir = self.external_product['install_dir']
+            if self.external_product['is_master']:
+                self.logger.debug('Skipping checkout for {} branch'
+                                    .format(self.external_product['version']))
             else:
-                install_dir = self.directory['work']
-                if self.product['is_master']:
-                    self.logger.debug('Skipping checkout for {} branch'
-                                      .format(self.product['version']))
+                if self.external_product['is_branch']:
+                    version = self.external_product['version']
+                    s = 'Completed checkout of branch {}'.format(version)
+                    remove = False
+                elif self.external_product['is_tag']:
+                    version = 'tags/' + self.external_product['version']
+                    s = ('Completed checkout of tag {} '.format(version) +
+                            'and removal of git remote origin')
+                    remove = True
                 else:
-                    if self.product['is_branch']:
-                        version = self.product['version']
-                        s = 'Completed checkout of branch {}'.format(version)
-                        remove = False
-                    elif self.product['is_tag']:
-                        version = 'tags/' + self.product['version']
-                        s = ('Completed checkout of tag {} '.format(version) +
-                             'and removal of git remote origin')
-                        remove = True
-                    else:
-                        version = None
-            if version and install_dir:
-                chdir(install_dir)
-                command = ['git', 'checkout', version]
-                self.logger.debug('Running command: %s' % ' '.join(command))
-                (out, err, proc_returncode) = self.execute_command(command=command)
-                # NOTE: err is non-empty even when git checkout is successful.
-                if proc_returncode == 0:
-                    chdir(self.directory['original'])
-                    if remove:
-                        self.export()
-                    if self.ready:
-                        self.logger.info(s)
-                else:
-                    self.ready = False
-                    self.logger.error('Error encountered while running command: {}. '
-                                      .format(' '.join(command)) +
-                                      'err: {}.'.format(err))
+                    version = None
+        else:
+            install_dir = self.directory['work']
+            if self.product['is_master']:
+                self.logger.debug('Skipping checkout for {} branch'
+                                    .format(self.product['version']))
             else:
-                pass  # version and install_dir can be None when is_master
+                if self.product['is_branch']:
+                    version = self.product['version']
+                    s = 'Completed checkout of branch {}'.format(version)
+                    remove = False
+                elif self.product['is_tag']:
+                    version = 'tags/' + self.product['version']
+                    s = ('Completed checkout of tag {} '.format(version) +
+                            'and removal of git remote origin')
+                    remove = True
+                else:
+                    version = None
+        if version and install_dir:
+            chdir(install_dir)
+            command = ['git', 'checkout', version]
+            self.logger.debug('Running command: %s' % ' '.join(command))
+            (out, err, proc_returncode) = self.execute_command(command=command)
+            # NOTE: err is non-empty even when git checkout is successful.
+            if proc_returncode == 0:
+                chdir(self.directory['original'])
+                if remove:
+                    self.export()
+                if self.ready:
+                    self.logger.info(s)
+            else:
+                self.ready = False
+                self.logger.error('Error encountered while running command: {}. '
+                                    .format(' '.join(command)) +
+                                    'err: {}.'.format(err))
+        else:
+            pass  # version and install_dir can be None when is_master
 
     def export(self):
         '''Remove git remote origin.'''
