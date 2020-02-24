@@ -268,7 +268,9 @@ class Install5:
             if type:
                 product = product if product else self.options.product
                 version = version if version else self.options.product_version
-                github_url = github_url if github_url else 'git@github.com:sdss'
+                github_url = (
+                    github_url if github_url else 'https://github.com/sdss'
+                    if self.options.https else 'git@github.com:sdss')
                 url = join(github_url, product + '.git')
                 options = {'repository': '--heads',  # for validating product
                            'branch': '--heads',  # for validating product_version
@@ -315,11 +317,12 @@ class Install5:
 
     def set_sdss_github_remote_url(self, use_public=None):
         '''Set the SDSS GitHub HTTPS remote URL'''
+        self.github_remote_url = None
         if self.ready:
             product = self.options.product if self.options else None
-            url = 'https://github.com/sdss' if use_public else 'git@github.com:sdss'
-            self.github_remote_url = (url + '/%s.git' % product
-                                      if product else None)
+            url = 'https://github.com/sdss' if use_public or self.options.https \
+                else 'git@github.com:sdss'
+            self.github_remote_url = join(url, '{!s}.git'.format(product)) if product else None
 
     def fetch(self):
         '''
