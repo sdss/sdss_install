@@ -11,18 +11,18 @@
 from __future__ import print_function, division, absolute_import
 
 
-class Sdss_installError(Exception):
-    """A custom core Sdss_install exception"""
+class SdssInstallError(Exception):
+    """A custom core SdssInstall exception"""
 
     def __init__(self, message=None):
 
         message = 'There has been an error' \
             if not message else message
 
-        super(Sdss_installError, self).__init__(message)
+        super(SdssInstallError, self).__init__(message)
 
 
-class Sdss_installNotImplemented(Sdss_installError):
+class SdssInstallNotImplemented(SdssInstallError):
     """A custom exception for not yet implemented features."""
 
     def __init__(self, message=None):
@@ -30,45 +30,45 @@ class Sdss_installNotImplemented(Sdss_installError):
         message = 'This feature is not implemented yet.' \
             if not message else message
 
-        super(Sdss_installNotImplemented, self).__init__(message)
+        super(SdssInstallNotImplemented, self).__init__(message)
 
 
-class Sdss_installAPIError(Sdss_installError):
+class SdssInstallAPIError(SdssInstallError):
     """A custom exception for API errors"""
 
     def __init__(self, message=None):
         if not message:
-            message = 'Error with Http Response from Sdss_install API'
+            message = 'Error with Http Response from SdssInstall API'
         else:
-            message = 'Http response error from Sdss_install API. {0}'.format(message)
+            message = 'Http response error from SdssInstall API. {0}'.format(message)
 
-        super(Sdss_installAPIError, self).__init__(message)
+        super(SdssInstallAPIError, self).__init__(message)
 
 
-class Sdss_installApiAuthError(Sdss_installAPIError):
+class SdssInstallApiAuthError(SdssInstallAPIError):
     """A custom exception for API authentication errors"""
     pass
 
 
-class Sdss_installMissingDependency(Sdss_installError):
+class SdssInstallMissingDependency(SdssInstallError):
     """A custom exception for missing dependencies."""
     pass
 
 
-class Sdss_installWarning(Warning):
-    """Base warning for Sdss_install."""
+class SdssInstallWarning(Warning):
+    """Base warning for SdssInstall."""
 
 
-class Sdss_installUserWarning(UserWarning, Sdss_installWarning):
+class SdssInstallUserWarning(UserWarning, SdssInstallWarning):
     """The primary warning class."""
     pass
 
 
-class Sdss_installSkippedTestWarning(Sdss_installUserWarning):
+class SdssInstallSkippedTestWarning(SdssInstallUserWarning):
     """A warning for when a test is skipped."""
     pass
 
 
-class Sdss_installDeprecationWarning(Sdss_installUserWarning):
+class SdssInstallDeprecationWarning(SdssInstallUserWarning):
     """A warning for deprecated features."""
     pass
