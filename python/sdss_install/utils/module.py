@@ -40,8 +40,8 @@ class Module:
             self.options = options if options else None
             if not self.options:
                 self.ready = False
-                self.logger.error('Unable to set_options' +
-                                  'self.options: {}'.format(self.options))
+                self.logger.warning('Unable to set_options' +
+                                    'self.options: {}'.format(self.options))
 
     def set_modules(self):
         self.set_modules_home()
@@ -54,7 +54,7 @@ class Module:
         self.modules_home = dict()
         if self.ready:
             modules_home = None
-            if self.options.modules_home:
+            if self.options and self.options.modules_home:
                 modules_home = self.options.modules_home
             else:
                 try:
@@ -123,7 +123,9 @@ class Module:
         if self.command:
             proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
             if proc:
-                (self.stdout, self.stderr) = proc.communicate() if proc else (None, None)
+                (out, err) = proc.communicate() if proc else (None, None)
+                self.stdout = out.decode("utf-8") if isinstance(out, bytes) else out
+                self.stderr = err.decode("utf-8") if isinstance(err, bytes) else err
                 self.returncode = proc.returncode if proc else None
             else:
                 self.ready = False
@@ -172,6 +174,19 @@ class Module:
                                   'self.version: {}.'.format(self.version) +
                                   'self.verson_lang: {}.'.format(self.verson_lang)
                                   )
+
+    def list_modules(self):
+        ''' List the currently loaded modules '''
+
+        self.set_command(command='list')
+        self.execute_command()
+
+        if self.returncode != 0:
+            self.logger.info('module list failed.')
+            return
+        
+        modules = re.findall('[a-z_]+/[a-z_.0-9]+', self.stderr)
+        return modules
 
 
 
