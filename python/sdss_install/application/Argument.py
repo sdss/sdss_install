@@ -64,7 +64,7 @@ def sdss_install():
                         default=getenv('SDSS_INSTALL_PRODUCT_ROOT'))
     try:
         longpath = eval(environ['SDSS4TOOLS_LONGPATH'])
-    except:
+    except TypeError:
         longpath = False
     parser.add_argument('-l', '--longpath', action='store_true', dest='longpath',
                         help='Keep the long path hierarchy in the install directory', default=longpath)
