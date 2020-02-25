@@ -1,9 +1,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
-# The line above will help with 2to3 support.
-from sys import argv
+
+from argparse import ArgumentParser
 from os import environ, getenv
 from os.path import basename
-from argparse import ArgumentParser
+from sys import argv
 
 
 class Argument:

@@ -9,6 +9,7 @@ from subprocess import PIPE, Popen
 
 from sdss_install.application import Argument
 
+
 try:
     from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError:

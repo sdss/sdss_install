@@ -3,11 +3,11 @@
 """Install SDSS-V software.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-# The line above will help with 2to3 support.
-from os import environ, chdir, makedirs
-from os.path import isdir, join, basename, dirname, abspath, exists
-from subprocess import Popen, PIPE
+
 import re
+from os import chdir, environ, makedirs
+from os.path import abspath, basename, dirname, exists, isdir, join
+from subprocess import PIPE, Popen
 
 
 class Install5:
