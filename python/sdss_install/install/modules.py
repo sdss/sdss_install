@@ -3,9 +3,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
 from sys import path, version_info
-from os import environ, makedirs, sep
-from os.path import basename, dirname, exists, isdir, join
-from subprocess import Popen, PIPE
+from os import environ, makedirs
+from os.path import basename, exists, isdir, join
 from sdss_install.utils import Module
 
 

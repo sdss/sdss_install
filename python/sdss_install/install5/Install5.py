@@ -4,10 +4,10 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
-from os import environ, chdir, rename, makedirs
+from os import environ, chdir, makedirs
 from os.path import isdir, join, basename, dirname, abspath, exists
 from subprocess import Popen, PIPE
-from re import compile
+import re
 
 
 class Install5:
@@ -211,7 +211,7 @@ class Install5:
             if regex and string:
                 string = string.decode(
                     "utf-8") if isinstance(string, bytes) else string
-                pattern = compile(regex)
+                pattern = re.compile(regex)
                 iterator = pattern.finditer(string)
                 matches = list()
                 for match in iterator:

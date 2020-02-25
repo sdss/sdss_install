@@ -4,22 +4,20 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
-import glob
 import logging
-import subprocess
 import datetime
-from sys import argv, executable, path
+from sys import executable
 from shutil import copyfile, copytree, rmtree
 from os import chdir, environ, getcwd, getenv, makedirs, walk
 from os.path import basename, dirname, exists, isdir, join
 from subprocess import Popen, PIPE
-from argparse import ArgumentParser
-from json import loads, dumps, load
+from json import load
+
 try:
     from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError:
     from configparser import SafeConfigParser, RawConfigParser
-#from .most_recent_tag import most_recent_tag
+
 from .modules import Modules
 from sdss_install.application import Argument
 from sdss_install.install4 import Install4

@@ -3,25 +3,16 @@
 """Install SDSS-IV software.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-# The line above will help with 2to3 support.
+
+from os.path import basename, dirname, join
+from subprocess import PIPE, Popen
 
 from sdss_install.application import Argument
 
-import glob
-import logging
-import subprocess
-import datetime
-from sys import argv, executable, path
-from shutil import copyfile, copytree, rmtree
-from os import chdir, environ, getcwd, getenv, makedirs, walk
-from os.path import basename, dirname, exists, isdir, join
-from argparse import ArgumentParser
 try:
     from ConfigParser import SafeConfigParser, RawConfigParser
 except ImportError:
     from configparser import SafeConfigParser, RawConfigParser
-from .most_recent_tag import most_recent_tag
-from subprocess import Popen, PIPE
 
 
 class Install4:

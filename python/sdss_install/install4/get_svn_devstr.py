@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
+
+
 def get_svn_devstr(product):
     """Get the svn revision number.
 
@@ -19,15 +21,16 @@ def get_svn_devstr(product):
     """
     from subprocess import Popen, PIPE
     from os import getenv
-    path = getenv(product.upper()+'_DIR')
+    path = getenv(product.upper() + '_DIR')
     if path is None:
         return '0'
-    proc = Popen(['svnversion','-n',path],stdout=PIPE,stderr=PIPE)
+    proc = Popen(['svnversion', '-n', path], stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
     rev = out.decode()
-    if rev == 'Unversioned directory': rev = '0'
+    if rev == 'Unversioned directory':
+        rev = '0'
     elif ':' in rev:
         rev = rev.split(':')[1]
-        rev = rev.replace('M','').replace('S','').replace('P','')
+        rev = rev.replace('M', '').replace('S', '').replace('P', '')
     return rev
 

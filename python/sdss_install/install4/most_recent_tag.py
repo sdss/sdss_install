@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 # The line above will help with 2to3 support.
-def most_recent_tag(tags,username=None):
+
+
+def most_recent_tag(tags, username=None):
     """Scan an SVN tags directory and return the most recent tag.
 
     Parameters
@@ -34,19 +36,20 @@ def most_recent_tag(tags,username=None):
     from distutils.version import StrictVersion
     from subprocess import Popen, PIPE
     import re
-    bare_digit_re = re.compile(r'^v?([0-9]+)(a|b|)$') # match things like v3a or v4
-    almost_good_re = re.compile(r'^v?([0-9]+)(\.[0-9]+)(\.[0-9]+)*(a|b|)$') # match things like v5.0.2a
+    bare_digit_re = re.compile(r'^v?([0-9]+)(a|b|)$')  # match things like v3a or v4
+    almost_good_re = re.compile(r'^v?([0-9]+)(\.[0-9]+)(\.[0-9]+)*(a|b|)$')  # match things like v5.0.2a
     command = ['svn']
-    if username is not None: command += ['--username', username]
-    command += ['ls',tags]
-    proc = Popen(command,stdout=PIPE,stderr=PIPE)
+    if username is not None:
+        command += ['--username', username]
+    command += ['ls', tags]
+    proc = Popen(command, stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
-    out = out.decode("utf-8") if isinstance(out,bytes) else out
-    err = err.decode("utf-8") if isinstance(err,bytes) else err
+    out = out.decode("utf-8") if isinstance(out, bytes) else out
+    err = err.decode("utf-8") if isinstance(err, bytes) else err
     try:
-        tags = [v.rstrip('/').replace('_','.') for v in out.split('\n') if len(v) > 0]
+        tags = [v.rstrip('/').replace('_', '.') for v in out.split('\n') if len(v) > 0]
     except TypeError:
-        tags = [v.rstrip('/').replace('_','.') for v in out.decode('utf-8').split('\n') if len(v) > 0]
+        tags = [v.rstrip('/').replace('_', '.') for v in out.decode('utf-8').split('\n') if len(v) > 0]
     valid_tags = list()
     for t in tags:
         v = None
@@ -61,20 +64,20 @@ def most_recent_tag(tags,username=None):
                     if m is not None:
                         g = m.groups()
                         if len(g[1]) > 0:
-                            v = StrictVersion(g[0]+'.0'+g[1]+'0')
+                            v = StrictVersion(g[0] + '.0' + g[1] + '0')
                         else:
-                            v = StrictVersion(g[0]+'.0')
+                            v = StrictVersion(g[0] + '.0')
                     else:
                         m = almost_good_re.match(t)
                         if m is not None:
                             g = m.groups()
-                            tt = g[0]+g[1]
+                            tt = g[0] + g[1]
                             if g[2] is None:
                                 tt += '.0'
                             else:
                                 tt += g[2]
                             if len(g[3]) > 0:
-                                tt += g[3]+'0'
+                                tt += g[3] + '0'
                             try:
                                 v = StrictVersion(tt)
                             except ValueError:
