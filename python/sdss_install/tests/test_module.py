@@ -7,7 +7,7 @@
 # Created: Tuesday, 25th February 2020 9:28:37 am
 # License: BSD 3-clause "New" or "Revised" License
 # Copyright (c) 2020 Brian Cherinka
-# Last Modified: Tuesday, 25th February 2020 11:49:51 am
+# Last Modified: Tuesday, 25th February 2020 11:52:31 am
 # Modified By: Brian Cherinka
 
 
@@ -30,6 +30,6 @@ def test_module_ready(module):
 
 
 @pytest.mark.parametrize('install', [('-v', '-t', '--github')], ids=['options'], indirect=True)
-def test_module_list(module, capsys):
+def test_module_list(module):
     loaded_modules = module.list_modules()
     assert loaded_modules
