@@ -10,12 +10,16 @@
 # SDSS_SVN_ROOT - the directory where all SDSS svn products will be installed 
 # SDSS_GIT_MODULES - the directory containing all SDSS git module files
 # SDSS_SVN_MODULES - the directory containing all SDSS svn module files 
-# SDSS_INSTALL_DIR - the directory where sdss_install is installed 
+# SDSS_INSTALL_DIR - temporary directory where current sdss_install is installed 
 
 
 steps=1
 echo 'sdss_install configuration'
 echo '--------------------------'
+echo 'Follow these steps to set up directory paths to your root products and modulefiles.'
+echo 'Type a new absolute directory path or hit enter to accept the default.'
+echo 'For new users, we recommend to accept all defaults (hit enter to all).'
+echo ' '
 
 # set root installation directory
 defroot=$HOME'/software/sdss'
