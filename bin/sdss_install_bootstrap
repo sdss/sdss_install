@@ -82,11 +82,10 @@ else
     export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}
 fi
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - {SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
-${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --https ${root} ${test} ${verbose} ${skipgitver}
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - {SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --force --https ${root} ${test} ${verbose}" ; fi
+$(${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --force --https ${root} ${test} ${verbose} ${skipgitver}
 
 #
 # Indicate installation completion
 #
 echo 'Installation of sdss_install is complete.  You can now safely delete this sdss_install directory: '$SDSS_INSTALL_DIR
-exit 1
