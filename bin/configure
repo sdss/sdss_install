@@ -115,6 +115,8 @@ read answer
 case "$answer" in
     [yY] | [yY][eE][sS])
         echo 'Adding. To make this permanent, place "module use '$gitmod'", "module use '$svnmod'" in your bashrc or tcshrc'
+        [ -d $gitmod ] || mkdir -p $gitmod
+        [ -d $svnmod ] || mkdir -p $svnmod
         eval module use $gitmod
         eval module use $svnmod ;;
 esac
