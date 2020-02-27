@@ -16,6 +16,7 @@ A description of the package can go here.
 
 * :ref:`What's new in sdss_install? <changelog>`
 * :ref:`Introduction to sdss_install <intro>`
+* :ref:`Options for sdss_install command-line tool <usage>`
 
 Reference
 ---------

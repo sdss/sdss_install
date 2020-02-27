@@ -9,6 +9,8 @@ from sdss_install.utils import Module
 
 
 class Modules:
+    ''' Class for handling and preparing the installation of module files
+    '''
 
     def __init__(self,
                  options=None,
