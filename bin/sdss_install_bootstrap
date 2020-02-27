@@ -83,7 +83,7 @@ else
 fi
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - {SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --force --https ${root} ${test} ${verbose}" ; fi
-$(${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --force --https ${root} ${test} ${verbose} ${skipgitver}
+${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --force --https ${root} ${test} ${verbose} ${skipgitver}
 
 #
 # Indicate installation completion
