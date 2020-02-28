@@ -97,7 +97,7 @@ To check for a successful installation, look for the following:
 - The last ``stdout`` log line should be `sdss_install - INFO - Install.py - line 1005 - Ready to load module sdss_install/x.x.x`
 - Check inside the `$SDSS_GIT_ROOT` folder for a new `sdss_install` product using the latest tag, e.g. ``1.0.7``.
 - Check inside the `$SDSS_GIT_MODULES` folder for a new `sdss_install` module file, named as the latest tag, e.g. ``1.0.7``.
-- Check that you can load the module: `module load sdss_install`  
+- Run `module use $SDSS_GIT_ROOT` and check that you can load the module: `module load sdss_install`  
 
 Once the installation of `sdss_install` is complete, and if successful, you can now safely delete your temporary checkout. 
 
