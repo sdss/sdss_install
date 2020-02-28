@@ -12,7 +12,7 @@ This is the Sphinx documentation for the SDSS Python product sdss_install
 Introduction
 ------------
 
-A description of the package can go here.
+`sdss_install` is a tool for easily installing versioned SDSS software products on Github, or SVN.
 
 * :ref:`What's new in sdss_install? <changelog>`
 * :ref:`Introduction to sdss_install <intro>`
