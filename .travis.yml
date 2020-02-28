@@ -33,12 +33,8 @@ before_install:
   - sudo apt-get update -y
   - sudo apt-get install -y lmod
   - source /usr/share/lmod/lmod/init/profile
-  # create a test module and load it
-  - mkdir $TRAVIS_HOME/modules
-  - module use $TRAVIS_HOME/modules
-  - echo 'setenv("TEST_DIR","/home/travis/test/")' > $TRAVIS_HOME/modules/test.lua
-  - module load test 
 
+  
 install:
 - pip install -U pip wheel --quiet
 - pip install --upgrade setuptools --quiet
