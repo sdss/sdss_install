@@ -36,7 +36,7 @@ before_install:
   # create a test module and load it
   - mkdir $TRAVIS_HOME/modules
   - module use $TRAVIS_HOME/modules
-  - echo 'setenv("TEST_DIR","/home/travis/test/")' > modules/test.lua
+  - echo 'setenv("TEST_DIR","/home/travis/test/")' > $TRAVIS_HOME/modules/test.lua
   - module load test 
 
 install:
