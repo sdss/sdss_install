@@ -19,7 +19,7 @@ import sys
 # The NAME variable should be of the format "sdss-sdss_install".
 # Please check your NAME adheres to that format.
 NAME = 'sdss_install'
-VERSION = '1.0.7dev'
+VERSION = '1.1.0dev'
 RELEASE = 'dev' in VERSION
 
 

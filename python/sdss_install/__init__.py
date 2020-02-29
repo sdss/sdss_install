@@ -69,4 +69,4 @@ if os.path.exists(custom_config_fn):
 config = expand(config)
 add_to_os(config)
 
-__version__ = '1.0.7dev'
+__version__ = '1.1.0dev'
