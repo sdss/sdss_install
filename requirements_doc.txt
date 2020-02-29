@@ -3,3 +3,5 @@
 Sphinx>=1.6.5
 sphinx_bootstrap_theme>=0.4.12
 sphinx-argparse>=0.2.5
+releases>=1.6.3
+semantic-version==2.6.0
