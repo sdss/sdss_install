@@ -24,9 +24,6 @@ jobs:
       osx_image: xcode11.2  # Python 3.7.7 running on macOS 10.14.6
       language: shell       # 'language: python' is an error on Travis CI macOS
       python: 3.7
-      before_install:
-        alias python='python3'
-        alias pip='pip3'
 
 notifications:
   email: false
@@ -48,12 +45,12 @@ before_install:
 
 
 install:
-- pip install -U pip wheel --quiet
-- pip install --upgrade setuptools --quiet
-- pip install -r requirements.txt --quiet
-- pip install pytest
-- pip install pytest-coverage
-- pip install coveralls
+- pip3 install -U pip wheel --quiet
+- pip3 install --upgrade setuptools --quiet
+- pip3 install -r requirements.txt --quiet
+- pip3 install pytest
+- pip3 install pytest-coverage
+- pip3 install coveralls
 #- python setup.py install
 
 script:
