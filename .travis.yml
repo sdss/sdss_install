@@ -4,8 +4,6 @@ cache:
   pip: true
   timeout: 1000
 
-sudo: false
-
 python:
 - '2.7'
 - '3.5'
@@ -16,13 +14,11 @@ os:
 - linux
 - osx
 
-matrix:
+jobs:
   fast_finish: true
   allow_failures:
     - python: '2.7'
     - os: osx
-
-jobs:
   include:
     - name: "Python 3.7.4 on macOS"
       os: osx
