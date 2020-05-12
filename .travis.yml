@@ -24,13 +24,11 @@ jobs:
       osx_image:
         - xcode11.2  # Python 3.7.7 running on macOS 10.14.6
       language: shell       # 'language: python' is an error on Travis CI macOS
-      python: 3.7
     - name: "Python 3.6 on macOS"
       os: osx
       osx_image:
-        - xcode9.4  # Python 3.6 running on macOS 10.13
+        - xcode9.4  # Python 3.6.5 running on macOS 10.13
       language: shell
-      python: 3.6
 
 notifications:
   email: false

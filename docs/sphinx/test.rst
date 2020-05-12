@@ -33,5 +33,6 @@ Operating System      Module Environment  Python(s)                Shell        
 ===================   ==================  =======================  ======================  ================
 Ubuntu Xenial Linux   Lua Modules 5.8     2.7, 3.5, 3.6, 3.7, 3.8  bash 4.3.48(1)-release  apt-get 1.2.31
 Mac OS X 10.14.6      Lua Modules 8.3.10  3.7.7                    bash 3.2.57(1)-release  homebrew 2.2.16
+Mac OS X 10.13.6      Lua Modules 8.3.10  3.6.5                    bash 3.2.57(1)-release  homebrew 2.2.16
 ===================   ==================  =======================  ======================  ================
 
