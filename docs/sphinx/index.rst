@@ -7,7 +7,7 @@
 
 .. rubric:: :header_no_toc:`Welcome to sdss_install's documentation!`
 
-This is the Sphinx documentation for the SDSS Python product sdss_install 
+This is the Sphinx documentation for the SDSS Python product sdss_install
 
 Introduction
 ------------
@@ -16,6 +16,7 @@ Introduction
 
 * :ref:`What's new in sdss_install? <changelog>`
 * :ref:`Introduction to sdss_install <intro>`
+* :ref:`Installation Testing <testing>`
 * :ref:`Options for sdss_install command-line tool <usage>`
 
 Reference
