@@ -14,6 +14,7 @@ function usage() {
     echo "    -r = Set or override the product root for sdss_install"
     echo "    -t = Test mode.  Do not make any changes.  Implies -v."
     echo "    -v = Verbose mode. Print lots of extra information."
+    echo "    -s = Skip git version sub-directories "
     ) >&2
 }
 #
@@ -23,17 +24,30 @@ modules=''
 root=''
 test=''
 verbose=''
-while getopts hm:r:tU:v argname; do
+skipgitver=''
+while getopts hm:r:tU:v:s argname; do
     case ${argname} in
         h) usage; exit 0 ;;
         m) modules=${OPTARG} ;;
         r) root=${OPTARG} ;;
         t) test='-t' ;;
         v) verbose='-v' ;;
+        s) skipgitver='--skip-git-verdirs' ;;
         *) usage; exit 1 ;;
     esac
 done
 shift $((OPTIND-1))
+
+#
+# Configure
+#
+source ./configure 
+# check that we actually have set the environment variables; if not exit the configuration
+if [[ -z $SDSS_GIT_ROOT ]]; then 
+    exit 1
+fi
+root=$SDSS_INSTALL_PRODUCT_ROOT
+
 #
 # Install
 #
@@ -47,15 +61,15 @@ if [[ -n "${modules}" ]]; then
 fi
 if [[ -n "${root}" ]]; then
     if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - root = \"-r ${root}\" "; fi
-    root = "-r ${root}"
+    root="-r ${root}"
 fi
 if [[ -z "${MODULESHOME}" ]]; then
     echo "sdss_install_bootstrap - INFO - You do not appear to have Modules installed."
     exit 1
 fi
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master"; fi
-export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master
+#if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master"; fi
+#export SDSS_INSTALL_DIR=${SDSS_INSTALL_PRODUCT_ROOT}/github/sdss_install/master
 
 if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - DEBUG - export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}"; fi
 export PATH=${SDSS_INSTALL_DIR}/bin:${PATH}
@@ -68,6 +82,10 @@ else
     export PYTHONPATH=${SDSS_INSTALL_DIR}/python:${PYTHONPATH}
 fi
 
-if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - {SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only ${root} ${test} ${verbose}" ; fi
-${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --module-only --https ${root} ${test} ${verbose}
+if [[ -n "${verbose}" ]]; then echo "sdss_install_bootstrap - INFO - {SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --force --https ${root} ${test} ${verbose}" ; fi
+${SDSS_INSTALL_DIR}/bin/sdss_install --github --bootstrap --force --https ${root} ${test} ${verbose} ${skipgitver}
 
+#
+# Indicate installation completion
+#
+echo 'Installation of sdss_install is complete.  You can now safely delete this sdss_install directory: '$SDSS_INSTALL_DIR

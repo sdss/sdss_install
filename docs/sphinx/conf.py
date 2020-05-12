@@ -37,7 +37,11 @@ from pkg_resources import parse_version
 # ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
               'sphinx.ext.todo', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'sphinx.ext.intersphinx']
+              'sphinx.ext.intersphinx', 'sphinxarg.ext', 'releases']
+
+# 'releases' (changelog) settings
+releases_issue_uri = "https://github.com/sdss/sdss_install/issues/%s"
+releases_release_uri = "https://github.com/sdss/sdss_install/tree/%s"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -124,6 +128,8 @@ rst_epilog = """
 .. |HDUList| replace:: :class:`~astropy.io.fits.HDUList`
 """
 
+releases_github_path = 'sdss/sdss_install'
+releases_document_name = ['CHANGELOG']
 
 # -- Options for HTML output ----------------------------------------------
 

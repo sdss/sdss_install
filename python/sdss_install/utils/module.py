@@ -8,11 +8,10 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import string
 from os import environ
 from subprocess import Popen, PIPE
 from os.path import join, exists
-from re import search, compile
+import re
 
 
 class Module:
@@ -20,29 +19,29 @@ class Module:
     Replaces system module's python shell, which
     has poor pipe handling.'''
 
-    def __init__(self,logger=None,options=None):
+    def __init__(self, logger=None, options=None):
         self.set_logger(logger=logger)
         self.set_options(options=options)
         self.set_modules()
         self.set_version()
         self.set_version_major_minor_patch()
 
-    def set_logger(self,logger=None):
+    def set_logger(self, logger=None):
         '''Set the class logger'''
         self.logger = logger if logger else None
         self.ready = bool(self.logger)
         if not self.ready:
             print('ERROR: %r> Unable to set_logger.' % self.__class__)
 
-    def set_options(self,options=None):
+    def set_options(self, options=None):
         '''Set command line argument options'''
         self.options = None
         if self.ready:
             self.options = options if options else None
             if not self.options:
                 self.ready = False
-                self.logger.error('Unable to set_options' +
-                                  'self.options: {}'.format(self.options))
+                self.logger.warning('Unable to set_options' +
+                                    'self.options: {}'.format(self.options))
 
     def set_modules(self):
         self.set_modules_home()
@@ -55,11 +54,13 @@ class Module:
         self.modules_home = dict()
         if self.ready:
             modules_home = None
-            if self.options.modules_home:
+            if self.options and self.options.modules_home:
                 modules_home = self.options.modules_home
             else:
-                try: modules_home = environ['MODULESHOME']
-                except: modules_home = dict()
+                try:
+                    modules_home = environ['MODULESHOME']
+                except:
+                    modules_home = dict()
             if modules_home:
                 self.modules_home = {'dir': modules_home}
                 self.modules_home['lmod'] = join(modules_home, "libexec", "lmod")
@@ -83,10 +84,12 @@ class Module:
         '''Set tclsh exec directory.'''
         self.tclsh = None
         if self.ready and self.modules_lang['tcl']:
-            try: self.tclsh = environ['TCLSH']
+            try:
+                self.tclsh = environ['TCLSH']
             except:
-                for self.tclsh in ['/usr/bin/tclsh','/bin/tclsh', None]:
-                    if self.tclsh and exists(self.tclsh): break
+                for self.tclsh in ['/usr/bin/tclsh', '/bin/tclsh', None]:
+                    if self.tclsh and exists(self.tclsh):
+                        break
             if not self.tclsh:
                 self.ready = False
                 self.logger.error('Unable to set_tclsh. ' +
@@ -108,7 +111,7 @@ class Module:
                 self.command = ([self.modules_home['lmod'], 'bash', command]
                                 if self.modules_lang['lua'] else
                                 [self.tclsh, self.modules_home['tcl'], 'python', command]
-                                if self.modules_lang['tcl'] else None )
+                                if self.modules_lang['tcl'] else None)
                 if self.command and arguments:
                     self.command.append(join(arguments))
             else:
@@ -120,7 +123,9 @@ class Module:
         if self.command:
             proc = Popen(self.command, stdout=PIPE, stderr=PIPE)
             if proc:
-                (self.stdout, self.stderr) = proc.communicate() if proc else (None,None)
+                (out, err) = proc.communicate() if proc else (None, None)
+                self.stdout = out.decode("utf-8") if isinstance(out, bytes) else out
+                self.stderr = err.decode("utf-8") if isinstance(err, bytes) else err
                 self.returncode = proc.returncode if proc else None
             else:
                 self.ready = False
@@ -153,11 +158,12 @@ class Module:
                              )
                 version_string = str(self.version) if self.version else str()
                 text = str()
-                p1 = compile('\d+\.\d+\.\d+|\d+\.\d+')
+                p1 = re.compile('\d+\.\d+\.\d+|\d+\.\d+')
                 iterator = p1.finditer(version_string)
                 for match in iterator:
-                    text = version_string[match.start() : match.end()] if match else str()
-                    if text: break
+                    text = version_string[match.start(): match.end()] if match else str()
+                    if text:
+                        break
                 split = text.split('.') if text else list()
                 self.major = split[0].strip() if split and len(split) >= 1 else str()
                 self.minor = split[1].strip() if split and len(split) >= 2 else str()
@@ -168,6 +174,19 @@ class Module:
                                   'self.version: {}.'.format(self.version) +
                                   'self.verson_lang: {}.'.format(self.verson_lang)
                                   )
+
+    def list_modules(self):
+        ''' List the currently loaded modules '''
+
+        self.set_command(command='list')
+        self.execute_command()
+
+        if self.returncode != 0:
+            self.logger.info('module list failed.')
+            return
+        
+        modules = re.findall('[a-z_]+/[a-z_.0-9]+', self.stderr)
+        return modules
 
 
 

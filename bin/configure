@@ -1,0 +1,173 @@
+#!/bin/bash
+#
+
+#
+# Runs configuration setup
+#
+# Prompts configuration of environment variables
+# SDSS_INSTALL_PRODUCT_ROOT - a base directory where all SDSS products will be installed
+# SDSS_GIT_ROOT - the directory where all SDSS github products will be installed
+# SDSS_SVN_ROOT - the directory where all SDSS svn products will be installed 
+# SDSS_GIT_MODULES - the directory containing all SDSS git module files
+# SDSS_SVN_MODULES - the directory containing all SDSS svn module files 
+# SDSS_INSTALL_DIR - temporary directory where current sdss_install is installed 
+
+
+steps=1
+echo 'sdss_install configuration'
+echo '--------------------------'
+echo 'Follow these steps to set up directory paths to your root products and modulefiles.'
+echo 'Type a new absolute directory path or hit enter to accept the default.'
+echo 'For new users, we recommend to accept all defaults (hit enter to all).'
+echo ' '
+
+# set root installation directory
+defroot=$HOME'/software/sdss'
+echo $steps'.) Set $SDSS_INSTALL_PRODUCT_ROOT environment variable. ' [Default: $defroot]
+read myroot
+
+[[ -z $myroot ]] && root=$defroot || root=$myroot
+
+
+# set git installation directory
+((steps++))
+defgit=$root/github
+echo $steps'.) Set $SDSS_GIT_ROOT environment variable. ' [Default: $defgit]
+read mygit
+
+[[ -z $mygit ]] && git=$defgit || git=$mygit
+
+
+# set svn installation directory
+((steps++))
+defsvn=$root/svn
+echo $steps'.) Set $SDSS_SVN_ROOT environment variable. ' [Default: $defsvn]
+read mysvn
+
+[[ -z $mysvn ]] && svn=$defsvn || svn=$mysvn
+
+
+# set git modulefiles directory
+((steps++))
+defgitmod=$git/modulefiles
+echo $steps'.) Set $SDSS_GIT_MODULES environment variable. ' [Default: $defgitmod]
+read mygitmod
+
+[[ -z $mygitmod ]] && gitmod=$defgitmod || gitmod=$mygitmod
+
+# set svn modulefiles directory
+((steps++))
+defsvnmod=$svn/modulefiles
+echo $steps'.) Set $SDSS_SVN_MODULES environment variable. ' [Default: $defsvnmod]
+read mysvnmod
+
+[[ -z $mysvnmod ]] && svnmod=$defsvnmod || svnmod=$mysvnmod
+
+# set sdss_install dir
+((steps++))
+curdir=$(pwd)
+defsdssinstall=${curdir/\/bin}
+echo $steps'.) Set temporary $SDSS_INSTALL_DIR environment variable. ' [Default: $defsdssinstall]
+read mysdssinstall
+
+[[ -z $mysdssinstall ]] && sdssinstall=$defsdssinstall || sdssinstall=$mysdssinstall
+
+
+# check the defined paths
+echo 'export SDSS_INSTALL_PRODUCT_ROOT='$root
+echo 'export SDSS_GIT_ROOT='$git
+echo 'export SDSS_SVN_ROOT='$svn
+echo 'export SDSS_GIT_MODULES='$gitmod
+echo 'export SDSS_SVN_MODULES='$svnmod
+echo 'export SDSS_INSTALL_DIR='$sdssinstall
+
+echo 'Are these paths correct? (Y/N)'
+read answer 
+
+# set default to yes if they just hit enter
+[[ -z $answer ]] && answer='y'
+
+
+# set the environment variables
+case "$answer" in
+    [yY] | [yY][eE][sS])
+        export SDSS_INSTALL_PRODUCT_ROOT=${root}
+        export SDSS_GIT_ROOT=${git}
+        export SDSS_SVN_ROOT=${svn}
+        export SDSS_GIT_MODULES=${gitmod}
+        export SDSS_SVN_MODULES=${svnmod}
+        export SDSS_INSTALL_DIR=${sdssinstall} ;;
+    [nN] | [nN][oO])
+        echo 'Resetting.  Please rerun configure.'
+        return 1 ;;
+    *)
+        echo "I don't understand '$answer'"
+        return 1 ;;
+esac
+
+# adding module paths to MODULESPATH
+((steps++))
+echo $steps'.) Add modulefile paths to $MODULEPATH? (Y/N) [Default: Y]'
+read answer 
+# set default to yes if they just hit enter
+[[ -z $answer ]] && answer='y'
+
+case "$answer" in
+    [yY] | [yY][eE][sS])
+        echo 'Adding. To make this permanent, place "module use '$gitmod'", "module use '$svnmod'" in your bashrc or tcshrc'
+        [ -d $gitmod ] || mkdir -p $gitmod
+        [ -d $svnmod ] || mkdir -p $svnmod
+        eval module use $gitmod
+        eval module use $svnmod ;;
+esac
+
+# add environment variables into the user custom sdss_install.yaml config file
+((steps++))
+echo $steps'.) Add environment variables to custom sdss_install yaml file? (Y/N) [Default: Y]'
+read answer 
+# set default to yes if they just hit enter
+[[ -z $answer ]] && answer='y'
+
+case "$answer" in
+    [yY] | [yY][eE][sS])
+        python add_to_config.py -e SDSS_INSTALL_PRODUCT_ROOT=${root} SDSS_GIT_ROOT=${git} SDSS_SVN_ROOT=${svn} SDSS_GIT_MODULES=${gitmod} SDSS_SVN_MODULES=${svnmod} ;;
+esac
+
+
+# # append environment variables to bashrc file
+# ((steps++))
+# echo $steps'.) Append environment variables to bashrc file?' [Default: N]
+# read answer 
+# # set default to yes if they just hit enter
+# [[ -z $answer ]] && answer='y'
+# 
+# # add the environment variables to the bashrc
+# case "$answer" in
+#     [yY] | [yY][eE][sS])
+
+#         # get the shell
+#         x=`sh -c 'ps -p $$ -o ppid=' | xargs ps -o comm= -p`
+
+#         file=$HOME/.bashrc
+#         if [ ! -f "$file" ]; then
+#             echo $file does not exist
+#             return 1
+#         fi
+#         echo $file
+#         echo '\n' >> $file
+#         echo '# SDSS Environment Variables' >> $file
+#         echo 'export SDSS_INSTALL_PRODUCT_ROOT='${root} >> $file
+#         echo 'export SDSS_GIT_ROOT='${git} >> $file
+#         echo 'export SDSS_SVN_ROOT='${svn} >> $file
+#         echo 'export SDSS_GIT_MODULES='${gitmod} >> $file
+#         echo 'export SDSS_SVN_MODULES='${svnmod} >> $file
+#         echo 'export SDSS_INSTALL_DIR='${sdssinstall} >> $file ;;
+
+#     [nN] | [nN][oO])
+#         return 1 ;;
+#     *)
+#         echo "I don't understand '$answer'"
+#         return 1 ;;
+# esac
+
+

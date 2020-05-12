@@ -3,23 +3,17 @@
 """Install SDSS-IV software.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-# The line above will help with 2to3 support.
+
+from os.path import basename, dirname, join
+from subprocess import PIPE, Popen
 
 from sdss_install.application import Argument
 
-import glob
-import logging
-import subprocess
-import datetime
-from sys import argv, executable, path
-from shutil import copyfile, copytree, rmtree
-from os import chdir, environ, getcwd, getenv, makedirs, walk
-from os.path import basename, dirname, exists, isdir, join
-from argparse import ArgumentParser
-try: from ConfigParser import SafeConfigParser, RawConfigParser
-except ImportError: from configparser import SafeConfigParser, RawConfigParser
-from .most_recent_tag import most_recent_tag
-from subprocess import Popen, PIPE
+
+try:
+    from ConfigParser import SafeConfigParser, RawConfigParser
+except ImportError:
+    from configparser import SafeConfigParser, RawConfigParser
 
 
 class Install4:
@@ -48,18 +42,20 @@ class Install4:
         '''Set command line argument options'''
         self.options = options if options else None
         if not self.options:
-            if self.logger: self.logger.error('Unable to set_options')
-            else:           print('ERROR: Unable to set_options')
+            if self.logger:
+                self.logger.error('Unable to set_options')
+            else:
+                print('ERROR: Unable to set_options')
 
     def set_ready(self):
         '''Set self.ready after sanity check self.options.'''
         self.ready = self.options and self.logger
         if self.ready:
-            self.url = (join(self.options.url,'public')
+            self.url = (join(self.options.url, 'public')
                         if self.options.public
                         else self.options.url)
             if (self.options.product == 'NO PACKAGE' or
-                self.options.product_version == 'NO VERSION'):
+                    self.options.product_version == 'NO VERSION'):
                 self.logger.error("You must specify a product " +
                                   "and the version (after a space)!")
                 self.ready = False
@@ -69,12 +65,13 @@ class Install4:
                 if self.options.product_version.endswith('/'):
                     self.options.product_version = (
                         dirname(self.options.product_version))
-                svnroots = ['repo','data','deprecated']
+                svnroots = ['repo', 'data', 'deprecated']
                 validproduct = [svnroot for svnroot in svnroots
                                 if self.options.product.startswith(svnroot)]
                 if not validproduct:
-                    self.options.product = join('repo',self.options.product)
-        else: self.url = None
+                    self.options.product = join('repo', self.options.product)
+        else:
+            self.url = None
 
     def set_product(self):
         '''Set self.product dict containing product and version names etc.'''
@@ -118,9 +115,9 @@ class Install4:
         '''Check for existence of the product URL.'''
         if self.ready:
             self.logger.info("Contacting {url} ".format(url=self.url))
-            command = self.svncommand + ['ls',self.product['url']]
+            command = self.svncommand + ['ls', self.product['url']]
             self.logger.debug(' '.join(command))
-            (out,err,proc_returncode) = self.execute_command(command=command)
+            (out, err, proc_returncode) = self.execute_command(command=command)
             self.logger.debug(out)
             self.exists = proc_returncode == 0
             if self.exists:
@@ -140,24 +137,25 @@ class Install4:
             self.logger.info("Running %(checkout_or_export)s of %(url)s"
                              % self.product)
             self.logger.debug(' '.join(command))
-            (out,err,proc_returncode) = self.execute_command(command=command)
+            (out, err, proc_returncode) = self.execute_command(command=command)
             self.logger.debug(out)
             self.ready = not len(err)
             if self.ready:
                 self.logger.info("Completed svn %(checkout_or_export)s " +
                                  "of %(url)s" % self.product)
-            else: self.logger.error("svn error during %(checkout_or_export)s " +
-                                    "of %(url)s: " % self.product + err)
+            else:
+                self.logger.error("svn error during %(checkout_or_export)s " +
+                                  "of %(url)s: " % self.product + err)
 
     def execute_command(self, command=None):
         '''Execute the passed terminal command.'''
-        (out,err,proc_returncode) = (None,None,None)
+        (out, err, proc_returncode) = (None, None, None)
         if command:
             proc = Popen(command, stdout=PIPE, stderr=PIPE)
             if proc:
-                (out, err) = proc.communicate() if proc else (None,None)
-                out = out.decode("utf-8") if isinstance(out,bytes) else out
-                err = err.decode("utf-8") if isinstance(err,bytes) else err
+                (out, err) = proc.communicate() if proc else (None, None)
+                out = out.decode("utf-8") if isinstance(out, bytes) else out
+                err = err.decode("utf-8") if isinstance(err, bytes) else err
                 proc_returncode = proc.returncode if proc else None
             else:
                 self.ready = False
@@ -167,4 +165,4 @@ class Install4:
             self.ready = False
             self.logger.error('Unable to execute_command. ' +
                               'command: {}'.format(command))
-        return (out,err,proc_returncode)
+        return (out, err, proc_returncode)

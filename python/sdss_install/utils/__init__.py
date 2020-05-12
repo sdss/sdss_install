@@ -1,3 +1,3 @@
 
-from .logger import log
+from .logger import *
 from .module import Module

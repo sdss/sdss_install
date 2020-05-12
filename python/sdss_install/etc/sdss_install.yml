@@ -1,9 +1,10 @@
 ---
 
-option1:
-    suboption1: 1
-    suboption2: "some text"
-    suboption3:
-        subsuboption1: [1, 2, 3]
+envs:
+  SDSS_INSTALL_PRODUCT_ROOT: $HOME/software/sdss
+  SDSS_GIT_ROOT: $SDSS_INSTALL_PRODUCT_ROOT/github
+  SDSS_SVN_ROOT: $SDSS_INSTALL_PRODUCT_ROOT/svn
+  SDSS_GIT_MODULES: $SDSS_GIT_ROOT/modulefiles
+  SDSS_SVN_MODULES: $SDSS_SVN_ROOT/modulefiles
+  SDSS_GITHUB_KEY: ''
 
-option2: 2.0

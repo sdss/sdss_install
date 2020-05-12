@@ -4,37 +4,62 @@ cache:
   pip: true
   timeout: 1000
 
-sudo: false
-
 python:
 - '2.7'
 - '3.5'
 - '3.6'
+- '3.7'
 
 os:
 - linux
 
-matrix:
+jobs:
   fast_finish: true
+  allow_failures:
+    - python: '2.7'
+    - os: osx
+  include:
+    - name: "Python 3.7 on macOS"
+      os: osx
+      osx_image:
+        - xcode11.2  # Python 3.7.7 running on macOS 10.14.6
+      language: shell       # 'language: python' is an error on Travis CI macOS
+    - name: "Python 3.6 on macOS"
+      os: osx
+      osx_image:
+        - xcode9.4  # Python 3.6.5 running on macOS 10.13
+      language: shell
 
 notifications:
   email: false
 
 # repo branches to test
 branches:
-- master
+  only:
+  - /.*/
+
+before_install:
+  # installing lmod modules on linux
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -y ; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y lmod; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then source /usr/share/lmod/lmod/init/profile; fi
+  # installing lmod modules on osx
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update ; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install lmod ; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then source /usr/local/opt/lmod/init/profile; fi
+
 
 install:
-- pip install -U pip wheel --quiet
-- pip install --upgrade setuptools --quiet
-- pip install -r requirements.txt --quiet
-- pip install pytest
-- pip install pytest-coverage
-- pip install coveralls
-#- python setup.py install 
+- pip3 install -U pip wheel --quiet
+- pip3 install --upgrade setuptools --quiet
+- pip3 install -r requirements.txt --quiet
+- pip3 install pytest
+- pip3 install pytest-coverage
+- pip3 install coveralls
+#- python setup.py install
 
 script:
-- pytest python/sdss_install/tests --cov python/sdss_install --cov-report html
+- pytest --public-svn-only python/sdss_install/tests --cov python/sdss_install --cov-report html
 
 after_success:
 - coveralls
