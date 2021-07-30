@@ -222,19 +222,17 @@ class Install5:
                                          else self.is_type(type='branch'))
             self.product['is_tag']    = (False if self.product['is_branch']
                                          else self.is_type(type='tag'))
-            self.product['is_main_master_or_branch'] = (self.product['is_master'] or self.product['is_main'] or
+            self.product['is_not_tag'] = (self.product['is_master'] or self.product['is_main'] or
                                                    self.product['is_branch'])
             self.product['checkout_or_export'] = ('checkout'
-                                                  if self.product['is_main_master_or_branch']
+                                                  if self.product['is_not_tag']
                                                   else 'export')
 
     def is_type(self,type=None,github_url=None,product=None,version=None):
         check_type = None
         if not check_type:
-            self.logger.debug("Checking origin: master")
             check_type = self.check_origin(type=type,github_url=github_url,product=product,version=version,origin='master')
         if not check_type:
-            self.logger.debug("Checking origin: main")
             check_type = self.check_origin(type=type,github_url=github_url,product=product,version=version,origin='main')
         return check_type
             

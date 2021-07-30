@@ -89,10 +89,10 @@ class Install4:
             self.product['is_master'] = self.options.product_version == 'trunk'
             self.product['is_branch'] = (
                 self.options.product_version.startswith('branches'))
-            self.product['is_master_or_branch'] = (self.product['is_master'] or
+            self.product['is_not_tag'] = (self.product['is_master'] or
                                                    self.product['is_branch'])
             self.product['url'] = (self.options.product_version
-                                   if self.product['is_master_or_branch']
+                                   if self.product['is_not_tag']
                                    else join('tags',
                                              self.options.product_version))
             self.product['url'] = join(self.url,
@@ -100,7 +100,7 @@ class Install4:
                                        self.product['url'])
             self.product['checkout_or_export'] = (
                 'checkout'
-                if self.product['is_master_or_branch']
+                if self.product['is_not_tag']
                 and not self.options.public
                 else 'export')
 

@@ -660,7 +660,7 @@ class Install:
         # If this is a trunk or branch install or nothing to build,
         # this directory will be created by other means.
         if self.ready:
-            if not (self.product['is_master_or_branch'] or
+            if not (self.product['is_not_tag'] or
                     self.options.no_python_package or
                     self.options.evilmake or not
                     self.build_type or
@@ -688,7 +688,7 @@ class Install:
     def build(self):
         '''Build the installed product.'''
         if self.ready:
-            if (self.product['is_master_or_branch'] or
+            if (self.product['is_not_tag'] or
                 self.options.no_python_package or
                 self.options.evilmake or not
                 self.build_type):
