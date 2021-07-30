@@ -146,7 +146,7 @@ class Install5:
                 chdir(sdss_install_master_dir)
                 # get most recent tag information
                 command = ['git','describe','--tags']
-                self.logger.debug('Running command: %s' % ' '.join(command))
+                #self.logger.debug('Running command: %s' % ' '.join(command))
                 (out,err,proc_returncode) = self.execute_command(command=command)
                 if proc_returncode == 0:
                     # set version to most recent tag
@@ -161,7 +161,7 @@ class Install5:
                         sdss_install_version_dir = (join(sdss_install_dir,version)
                                                     if sdss_install_dir else None)
                         command = ['mv',sdss_install_master_dir,sdss_install_version_dir]
-                        self.logger.debug('Running command: %s' % ' '.join(command))
+                        #self.logger.debug('Running command: %s' % ' '.join(command))
                         (out,err,proc_returncode) = self.execute_command(command=command)
                         if not proc_returncode == 0:
                             self.ready = False
@@ -259,7 +259,7 @@ class Install5:
                                options[type],
                                url,
                                product_version]
-                    self.logger.debug('Running command: %s' % ' '.join(command))
+                    #self.logger.debug('Running command: %s' % ' '.join(command))
                     (out,err,proc_returncode) = self.execute_command(command=command)
                     if proc_returncode != 0:
                         regex = '(?i)Permission denied \(publickey\)'
@@ -316,7 +316,7 @@ class Install5:
                          if self.external_product else
                          self.directory['work'])
             command = ['git','clone',github_remote_url,clone_dir]
-            self.logger.debug('Running command: %s' % ' '.join(command))
+            #self.logger.debug('Running command: %s' % ' '.join(command))
             (out,err,proc_returncode) = self.execute_command(command=command)
             # NOTE: err is non-empty even when git clone is successful.
             if proc_returncode == 0:
@@ -371,7 +371,7 @@ class Install5:
             if version and install_dir:
                 chdir(install_dir)
                 command = ['git','checkout',version]
-                self.logger.debug('Running command: %s' % ' '.join(command))
+                #self.logger.debug('Running command: %s' % ' '.join(command))
                 (out,err,proc_returncode) = self.execute_command(command=command)
                 # NOTE: err is non-empty even when git checkout is successful.
                 if proc_returncode == 0:
@@ -390,7 +390,7 @@ class Install5:
         if self.ready:
             chdir(self.directory['work'])
             command = ['git','remote','rm','origin']
-            self.logger.debug('Running command: %s' % ' '.join(command))
+            #self.logger.debug('Running command: %s' % ' '.join(command))
             (out,err,proc_returncode) = self.execute_command(command=command)
             if not proc_returncode == 0:
                 self.ready = False
