@@ -230,9 +230,11 @@ class Install5:
 
     def is_type(self,type=None,github_url=None,product=None,version=None):
         check_type = None
+        ready = self.ready
         if self.ready:
             check_type = self.check_origin(type=type,github_url=github_url,product=product,version=version,origin='master')
         if not self.ready:
+            self.ready = ready
             check_type = self.check_origin(type=type,github_url=github_url,product=product,version=version,origin='main')
         return check_type
             
