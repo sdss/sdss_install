@@ -89,7 +89,7 @@ class Install5:
         if self.ready:
             self.logger.info('Validating product')
             product = product if product else self.options.product
-            # check for master branch
+            # check for master/main branch
             valid_product = self.is_type(type='repository',
                                          github_url=github_url,
                                          product=product,
@@ -109,7 +109,8 @@ class Install5:
             version = version if version else self.options.product_version
             self.logger.info('Validating version')
             is_master = (version == 'master')
-            is_branch = True if is_master else self.is_type(type='branch',
+            is_main = (version == 'main')
+            is_branch = True if ( is_master or is_main ) else self.is_type(type='branch',
                                                             github_url=github_url,
                                                             product=product,
                                                             version=version)
@@ -117,7 +118,7 @@ class Install5:
                                                              github_url=github_url,
                                                              product=product,
                                                              version=version)
-            valid_version =  bool(is_master or is_branch or is_tag)
+            valid_version =  bool(is_master or is_main or is_branch or is_tag)
             if self.ready:
                 if valid_version:
                     self.logger.debug('Valid version: {}'.format(version))
@@ -145,7 +146,7 @@ class Install5:
                 chdir(sdss_install_master_dir)
                 # get most recent tag information
                 command = ['git','describe','--tags']
-                self.logger.debug('Running command: %s' % ' '.join(command))
+                #self.logger.debug('Running command: %s' % ' '.join(command))
                 (out,err,proc_returncode) = self.execute_command(command=command)
                 if proc_returncode == 0:
                     # set version to most recent tag
@@ -160,7 +161,7 @@ class Install5:
                         sdss_install_version_dir = (join(sdss_install_dir,version)
                                                     if sdss_install_dir else None)
                         command = ['mv',sdss_install_master_dir,sdss_install_version_dir]
-                        self.logger.debug('Running command: %s' % ' '.join(command))
+                        #self.logger.debug('Running command: %s' % ' '.join(command))
                         (out,err,proc_returncode) = self.execute_command(command=command)
                         if not proc_returncode == 0:
                             self.ready = False
@@ -208,7 +209,7 @@ class Install5:
         #
         # For backwards compatibility, we will maintain the use of trunk
         # used in sdss4install for SVN, with the understanding that trunk is
-        # synonomuous with master for GitHub.
+        # synonomuous with master/main for GitHub.
         #
         if self.ready:
             self.product = dict()
@@ -216,17 +217,26 @@ class Install5:
             self.product['name']      = self.options.product
             self.product['version']   = self.options.product_version
             self.product['is_master'] = (self.options.product_version == 'master')
-            self.product['is_branch'] = (True if self.product['is_master']
+            self.product['is_main'] = (self.options.product_version == 'main')
+            self.product['is_branch'] = (True if ( self.product['is_master'] or self.product['is_main'] )
                                          else self.is_type(type='branch'))
             self.product['is_tag']    = (False if self.product['is_branch']
                                          else self.is_type(type='tag'))
-            self.product['is_master_or_branch'] = (self.product['is_master'] or
+            self.product['is_not_tag'] = (self.product['is_master'] or self.product['is_main'] or
                                                    self.product['is_branch'])
             self.product['checkout_or_export'] = ('checkout'
-                                                  if self.product['is_master_or_branch']
+                                                  if self.product['is_not_tag']
                                                   else 'export')
 
     def is_type(self,type=None,github_url=None,product=None,version=None):
+        check_type = None
+        if not check_type:
+            check_type = self.check_origin(type=type,github_url=github_url,product=product,version=version,origin='master')
+        if not check_type:
+            check_type = self.check_origin(type=type,github_url=github_url,product=product,version=version,origin='main')
+        return check_type
+            
+    def check_origin(self,type=None,github_url=None,product=None,version=None,origin=None):
         '''Check if the product_version is a valid Github branch.'''
         if self.ready:
             if type:
@@ -243,13 +253,13 @@ class Install5:
                 if type in options:
                     product_version = (version
                                        if type != 'repository'
-                                       else 'master') # every product has master branch
+                                       else origin)
                     command = ['git',
                                'ls-remote',
                                options[type],
                                url,
                                product_version]
-                    self.logger.debug('Running command: %s' % ' '.join(command))
+                    #self.logger.debug('Running command: %s' % ' '.join(command))
                     (out,err,proc_returncode) = self.execute_command(command=command)
                     if proc_returncode != 0:
                         regex = '(?i)Permission denied \(publickey\)'
@@ -289,7 +299,7 @@ class Install5:
 
     def fetch(self):
         '''
-            Clone master branch of product version from GitHub then checkout
+            Clone master/main branch of product version from GitHub then checkout
             other branch or tag if necessary.
         '''
         self.clone()
@@ -306,7 +316,7 @@ class Install5:
                          if self.external_product else
                          self.directory['work'])
             command = ['git','clone',github_remote_url,clone_dir]
-            self.logger.debug('Running command: %s' % ' '.join(command))
+            #self.logger.debug('Running command: %s' % ' '.join(command))
             (out,err,proc_returncode) = self.execute_command(command=command)
             # NOTE: err is non-empty even when git clone is successful.
             if proc_returncode == 0:
@@ -361,7 +371,7 @@ class Install5:
             if version and install_dir:
                 chdir(install_dir)
                 command = ['git','checkout',version]
-                self.logger.debug('Running command: %s' % ' '.join(command))
+                #self.logger.debug('Running command: %s' % ' '.join(command))
                 (out,err,proc_returncode) = self.execute_command(command=command)
                 # NOTE: err is non-empty even when git checkout is successful.
                 if proc_returncode == 0:
@@ -380,7 +390,7 @@ class Install5:
         if self.ready:
             chdir(self.directory['work'])
             command = ['git','remote','rm','origin']
-            self.logger.debug('Running command: %s' % ' '.join(command))
+            #self.logger.debug('Running command: %s' % ' '.join(command))
             (out,err,proc_returncode) = self.execute_command(command=command)
             if not proc_returncode == 0:
                 self.ready = False
